@@ -6,7 +6,8 @@ import type {AddRule, Store, Action, Rule} from './types'
 let listBefore;
 let listInstead;
 let listAfter;
-let buffer;
+let pendingWhen;
+let pendingUntil;
 let backlog;
 
 export const INSERT_BEFORE = 'INSERT_BEFORE'
@@ -17,7 +18,8 @@ export default function middleware(store:Store<any>){
   listBefore = createKeyedRuleSet()
   listInstead = createKeyedRuleSet()
   listAfter = createKeyedRuleSet()
-  buffer = createBuffer(store)
+  pendingWhen = createBuffer(store)
+  pendingUntil = createBuffer(store)
   backlog = null
 
   return (action:Action) => (next:Function) => {
@@ -40,8 +42,9 @@ export default function middleware(store:Store<any>){
       if(shouldApplyRule(rule, action, store)) rule.consequence(store, action)
     })
 
-    // apply 'when' logic
-    buffer.yieldAction(action)
+    // apply 'when' and 'until' logic
+    pendingWhen.yieldAction(action)
+    pendingUntil.yieldAction(action)
 
     return result
   }
@@ -64,19 +67,25 @@ function shouldApplyRule(rule:Rule<any>,action:Action,store:Store<any>):boolean 
 }
 
 export const addRule:AddRule<any> = (rule, options={}) => {
+  const add = ruleList => {
+    ruleList.add(rule)
+    if(options.addUntil){
+      pendingUntil.add(options.addUntil, () => ruleList.remove(rule))
+    }
+  }
   if(options.addWhen){
     switch(rule.position){
-      case INSERT_BEFORE: return buffer.add(options, () => listBefore.add(rule))
-      case INSERT_INSTEAD: return buffer.add(options, () => listInstead.add(rule))
-      case INSERT_AFTER: return buffer.add(options, () => listAfter.add(rule))
+      case INSERT_BEFORE: return pendingWhen.add(options.addWhen, () => add(listBefore))
+      case INSERT_INSTEAD: return pendingWhen.add(options.addWhen, () => add(listInstead))
+      case INSERT_AFTER: return pendingWhen.add(options.addWhen, () => add(listAfter))
       default: return
     }
   }
   if(!options.addWhen){
     switch(rule.position){
-      case INSERT_BEFORE: return listBefore.add(rule)
-      case INSERT_INSTEAD: return listInstead.add(rule)
-      case INSERT_AFTER: return listAfter.add(rule)
+      case INSERT_BEFORE: return add(listBefore)
+      case INSERT_INSTEAD: return add(listInstead)
+      case INSERT_AFTER: return add(listAfter)
       default: return
     }
   }

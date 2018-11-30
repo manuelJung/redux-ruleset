@@ -7,11 +7,11 @@ export function createBuffer(store){
       listeners.forEach(l => l(action))
       listeners = []
     },
-    add(options, addRule){
+    add(whenFn, cb){
       const gen = cb => new Promise(resolve => {
         listeners.push(action => resolve(cb(action)))
       })
-      options.addWhen(gen, store.getState).then(addRule)
+      whenFn(gen, store.getState).then(cb)
     }
   }
 }
