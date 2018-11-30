@@ -70,7 +70,24 @@ export const addRule:AddRule<any> = (rule, options={}) => {
   const add = ruleList => {
     ruleList.add(rule)
     if(options.addUntil){
-      pendingUntil.add(options.addUntil, () => ruleList.remove(rule))
+      const addUntil = ruleList => {
+        pendingUntil.add(options.addUntil, removeLogic => {
+          if(removeLogic === 'REMOVE_RULE'){
+            ruleList.remove(rule)
+          }
+          else if(removeLogic === 'ABORT'){
+            return
+          }
+          else if(removeLogic === 'REAPPLY_WHEN'){
+            ruleList.remove(rule)
+            addWhen(ruleList)
+          }
+          else if(removeLogic === 'REAPPLY_REMOVE'){
+            addUntil(ruleList)
+          }
+        })
+      }
+      addUntil(ruleList)
     }
   }
   const addWhen = ruleList => {
@@ -78,8 +95,11 @@ export const addRule:AddRule<any> = (rule, options={}) => {
       if(addLogic === 'ADD_RULE'){
         add(ruleList)
       }
-      if(addLogic === 'ABORT'){
+      else if(addLogic === 'ABORT'){
         return
+      }
+      else if(addLogic === 'REAPPLY_WHEN'){
+        addWhen(ruleList)
       }
     })
   }

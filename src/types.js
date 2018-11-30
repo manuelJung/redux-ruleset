@@ -13,9 +13,9 @@ export type Store<S> = {
 
 type Position = 'INSERT_BEFORE' | 'INSERT_INSTEAD' | 'INSERT_AFTER'
 
-type LogicAdd = 'ADD_RULE' | 'ABORT'
+type LogicAdd = 'ADD_RULE' | 'ABORT' | 'REAPPLY_WHEN'
 
-type LogicRemove = 'REAPPLY_WHEN' | 'REMOVE_RULE'
+type LogicRemove = 'REAPPLY_WHEN' | 'REMOVE_RULE' | 'REAPPLY_REMOVE' | 'ABORT'
 
 type NextAction = (
   condition?: (action:Action) => boolean
