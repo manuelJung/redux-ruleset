@@ -1,0 +1,15 @@
+{
+  "name": "redux-interrupt",
+  "version": "1.0.0",
+  "description": "",
+  "main": "types.js",
+  "dependencies": {},
+  "devDependencies": {
+    "flow-bin": "^0.87.0"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}
