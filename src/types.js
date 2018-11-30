@@ -36,4 +36,4 @@ export type Options<S> = {
   addUntil: (next:NextAction,getState:GetState<S>) => Promise<LogicRemove>
 }
 
-export type AddRule<S> = (rule:Rule<S>,opt?:Options<S>) => Rule<S>
+export type AddRule<S> = (rule:Rule<S>,opt?:Options<S>) => void

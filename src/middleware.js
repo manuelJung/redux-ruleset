@@ -55,27 +55,25 @@ function shouldApplyRule(rule:Rule<any>,action:Action,store:Store<any>):boolean 
 
 export const addRule:AddRule<any> = (rule, options={}) => {
 
-  if(!options.addWhen)
-  switch(rule.position){
-    case INSERT_BEFORE: {listBefore.add(rule); break}
-    case INSERT_INSTEAD: {listBefore.add(rule); break}
-    case INSERT_AFTER: {listBefore.add(rule); break}
-    default: break;
-  }
-
   if(!options.addWhen){
     buffer.add(rule)
   }
 
-  return rule
+  if(!options.addWhen)
+  switch(rule.position){
+    case INSERT_BEFORE: return listBefore.add(rule)
+    case INSERT_INSTEAD: return listBefore.add(rule)
+    case INSERT_AFTER: return listBefore.add(rule)
+    default: return
+  }
 }
-// export const removeRule = program => {
-//   switch(program.position){
-//     case INSERT_BEFORE: return listBefore = listBefore.filter(o => o !== program)
-//     case INSERT_INSTEAD: return listInstead = listInstead.filter(o => o !== program)
-//     case INSERT_AFTER: return listAfter = listAfter.filter(o => o !== program)
-//   }
-// }
+export const removeRule = (rule:Rule<any>):void => {
+  switch(rule.position){
+    case INSERT_BEFORE: return listBefore.remove(rule)
+    case INSERT_INSTEAD: return listInstead.remove(rule)
+    case INSERT_AFTER: return listAfter.remove(rule)
+  }
+}
 
 
 const rule = {
