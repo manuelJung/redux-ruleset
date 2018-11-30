@@ -28,7 +28,7 @@ export function createRuleSet(){
     remove(rule:R){
       list = list.filter(entry => entry !== rule)
     },
-    forEach(cb:(rule:R)=>void){
+    forEach(cb:(rule:R)=>any){
       list.forEach(cb)
     }
   }
@@ -51,7 +51,7 @@ export function createKeyedRuleSet(){
       if(keys[0] === '*') keys = ['global']
       keys.forEach(key => dict[key].remove(rule))
     },
-    forEach(key:string, cb:(rule:R)=>void){
+    forEach(key:string, cb:(rule:R)=>any){
       dict.global && dict.global.forEach(cb)
       dict[key] && dict[key].forEach(cb)
     }

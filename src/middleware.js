@@ -26,21 +26,16 @@ export default function middleware(store:Store<any>){
     let instead = false
 
     listInstead.forEach(action.type, rule => {
-      if(shouldApplyRule(rule, action, store)) {
+      if(applyRule(rule, action, store)){
         instead = true
-        rule.consequence(store, action)
       }
     })
 
-    !instead && listBefore.forEach(action.type, rule => {
-      if(shouldApplyRule(rule, action, store)) rule.consequence(store, action)
-    })
+    !instead && listBefore.forEach(action.type, rule => applyRule(rule, action, store))
 
     const result = instead ? null : next(action)
 
-    !instead && listAfter.forEach(action.type, rule => {
-      if(shouldApplyRule(rule, action, store)) rule.consequence(store, action)
-    })
+    !instead && listAfter.forEach(action.type, rule => applyRule(rule, action, store))
 
     // apply 'when' and 'until' logic
     pendingWhen.yieldAction(action)
@@ -50,7 +45,7 @@ export default function middleware(store:Store<any>){
   }
 }
 
-function shouldApplyRule(rule:Rule<any>,action:Action,store:Store<any>):boolean {
+function applyRule(rule:Rule<any>,action:Action,store:Store<any>):boolean {
   // skip if 'skipRule' condition matched
   if(action.meta && action.meta.skipRule){
     const skipRules = Array.isArray(action.meta.skipRule) 
@@ -62,6 +57,12 @@ function shouldApplyRule(rule:Rule<any>,action:Action,store:Store<any>):boolean 
   }
   // skip if rule condition does not match
   if(rule.condition && !rule.condition(action, store.getState)) return false
+
+  const result = rule.consequence(store, action)
+
+  if(result && result.type){
+    store.dispatch(result)
+  }
 
   return true
 }
