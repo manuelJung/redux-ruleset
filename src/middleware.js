@@ -1,11 +1,12 @@
 // @flow 
+import {createRuleSet, createKeyedRuleSet} from './ruleSet'
 import type {AddRule, Store, Action, Rule} from './types'
 
-let listBefore = {}
-let listInstead = {}
-let listAfter = {}
-let buffer = new Map()
-let backlog = new Map()
+let listBefore = createKeyedRuleSet()
+let listInstead = createKeyedRuleSet()
+let listAfter = createKeyedRuleSet()
+let buffer = createRuleSet()
+let backlog = createRuleSet()
 
 export const INSERT_BEFORE = 'INSERT_BEFORE'
 export const INSERT_INSTEAD = 'INSERT_INSTEAD'
@@ -15,35 +16,20 @@ export default function middleware(store:Store<any>){
   return (action:Action) => (next:Function) => {
     let instead = false
 
-    listInstead.global && listInstead.global.forEach((_,rule) => {
+    listInstead.forEach(action.type, rule => {
       if(shouldApplyRule(rule, action, store)) {
         instead = true
         rule.consequence(store, action)
       }
     })
 
-    listInstead[action.type] && listInstead[action.type].forEach((_,rule) => {
-      if(shouldApplyRule(rule, action, store)) {
-        instead = true
-        rule.consequence(store, action)
-      }
-    })
-
-    !instead && listBefore.global && listBefore.global.forEach((_,rule:any) => {
-      if(shouldApplyRule(rule, action, store)) rule.consequence(store, action)
-    })
-
-    !instead && listBefore[action.type] && listBefore[action.type].forEach((_,rule) => {
+    !instead && listBefore.forEach(action.type, rule => {
       if(shouldApplyRule(rule, action, store)) rule.consequence(store, action)
     })
 
     const result = instead ? null : next(action)
 
-    !instead && listAfter.global && listAfter.global.forEach((_,rule:any) => {
-      if(shouldApplyRule(rule, action, store)) rule.consequence(store, action)
-    })
-
-    !instead && listAfter[action.type] && listAfter[action.type].forEach((_,rule) => {
+    !instead && listAfter.forEach(action.type, rule => {
       if(shouldApplyRule(rule, action, store)) rule.consequence(store, action)
     })
 
@@ -68,25 +54,17 @@ function shouldApplyRule(rule:Rule<any>,action:Action,store:Store<any>):boolean 
 }
 
 export const addRule:AddRule<any> = (rule, options={}) => {
-  const add = list => {
-    const targets = Array.isArray(rule.target) ? rule.target : [rule.target]
-    if(targets[0] === '*') targets[0] = 'global'
-    // create missing keys
-    targets.forEach(target => {if(!list[target]) list[target] = new Map()})
-    // push rule
-    targets.forEach(target => {list[target].set(rule.id, rule)})
-  }
 
   if(!options.addWhen)
   switch(rule.position){
-    case INSERT_BEFORE: {add(listBefore); break}
-    case INSERT_INSTEAD: {add(listInstead); break}
-    case INSERT_AFTER: {add(listAfter); break}
+    case INSERT_BEFORE: {listBefore.add(rule); break}
+    case INSERT_INSTEAD: {listBefore.add(rule); break}
+    case INSERT_AFTER: {listBefore.add(rule); break}
     default: break;
   }
 
   if(!options.addWhen){
-    buffer.set(rule.id, rule)
+    buffer.add(rule)
   }
 
   return rule
