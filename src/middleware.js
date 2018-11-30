@@ -15,6 +15,13 @@ export default function middleware(store:Store<any>){
   return (action:Action) => (next:Function) => {
     let instead = false
 
+    listInstead.global && listInstead.global.forEach((_,rule) => {
+      if(rule.condition(action)) {
+        instead = true
+        rule.consequence(store, action)
+      }
+    })
+
     listInstead[action.type] && listInstead[action.type].forEach((_,rule) => {
       if(rule.condition(action)) {
         instead = true
@@ -22,11 +29,19 @@ export default function middleware(store:Store<any>){
       }
     })
 
+    !instead && listBefore.global && listBefore.global.forEach((_,rule:any) => {
+      if(rule.condition(action)) rule.consequence(store, action)
+    })
+
     !instead && listBefore[action.type] && listBefore[action.type].forEach((_,rule) => {
       if(rule.condition(action)) rule.consequence(store, action)
     })
 
     const result = instead ? null : next(action)
+
+    !instead && listAfter.global && listAfter.global.forEach((_,rule:any) => {
+      if(rule.condition(action)) rule.consequence(store, action)
+    })
 
     !instead && listAfter[action.type] && listAfter[action.type].forEach((_,rule) => {
       if(rule.condition(action)) rule.consequence(store, action)
@@ -39,6 +54,7 @@ export default function middleware(store:Store<any>){
 export const addRule:AddRule<any> = (rule, options={}) => {
   const add = list => {
     const targets = Array.isArray(rule.target) ? rule.target : [rule.target]
+    if(targets[0] === '*') targets[0] = 'global'
     // create missing keys
     targets.forEach(target => {if(!list[target]) list[target] = new Map()})
     // push rule
