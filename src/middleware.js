@@ -129,7 +129,7 @@ export const removeRule = (rule:Rule<any>):void => {
   }
 }
 
-
+/**
 const rule = {
   id: 'PING_PONG',
   target: 'PING',
@@ -148,3 +148,4 @@ addRule(rule, {
     return 'REAPPLY_WHEN'
   }
 })
+ */
