@@ -31,7 +31,7 @@ export type Rule<S> = {
 }
 
 export type Options<S> = {
-  allowConcurrent?: boolean,
+  // allowConcurrent?: boolean,
   addWhen: (next:NextAction,getState:GetState<S>) => Promise<LogicAdd>,
   addUntil: (next:NextAction,getState:GetState<S>) => Promise<LogicRemove>
 }

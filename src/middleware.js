@@ -73,6 +73,16 @@ export const addRule:AddRule<any> = (rule, options={}) => {
       pendingUntil.add(options.addUntil, () => ruleList.remove(rule))
     }
   }
+  const addWhen = ruleList => {
+    pendingWhen.add(options.addWhen, addLogic => {
+      if(addLogic === 'ADD_RULE'){
+        add(ruleList)
+      }
+      if(addLogic === 'ABORT'){
+        return
+      }
+    })
+  }
   if(options.addWhen){
     switch(rule.position){
       case INSERT_BEFORE: return pendingWhen.add(options.addWhen, () => add(listBefore))
