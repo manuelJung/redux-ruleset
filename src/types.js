@@ -1,6 +1,9 @@
 // @flow
 
-export type Action = { type: string }
+export type Action = { 
+  type: string,
+  meta?: { skipRule?: '*' | string | string[], }
+  }
 type GetState<State> = () => State
 type Dispatch = (action:Action) => Action
 export type Store<S> = {
@@ -18,17 +21,16 @@ type NextAction = (
   condition?: (action:Action) => boolean
 ) => Promise<void>
 
-type Rule<S> = {
+export type Rule<S> = {
   id: string,
   target: '*' | string | string[],
-  skipRule?: '*' | string | string[],
   position?: Position,
   zIndex?: number,
   condition?: (action:Action,getState:GetState<S>) => boolean,
   consequence: (store:Store<S>,action:Action) => Action | void,
 }
 
-type Options<S> = {
+export type Options<S> = {
   allowConcurrent?: boolean,
   addWhen: (next:NextAction,getState:GetState<S>) => Promise<LogicAdd>,
   addUntil: (next:NextAction,getState:GetState<S>) => Promise<LogicRemove>

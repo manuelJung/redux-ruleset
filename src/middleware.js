@@ -1,5 +1,5 @@
 // @flow 
-import type {AddRule, Store, Action} from './types'
+import type {AddRule, Store, Action, Rule} from './types'
 
 let listBefore = {}
 let listInstead = {}
@@ -16,39 +16,55 @@ export default function middleware(store:Store<any>){
     let instead = false
 
     listInstead.global && listInstead.global.forEach((_,rule) => {
-      if(rule.condition(action)) {
+      if(shouldApplyRule(rule, action, store)) {
         instead = true
         rule.consequence(store, action)
       }
     })
 
     listInstead[action.type] && listInstead[action.type].forEach((_,rule) => {
-      if(rule.condition(action)) {
+      if(shouldApplyRule(rule, action, store)) {
         instead = true
         rule.consequence(store, action)
       }
     })
 
     !instead && listBefore.global && listBefore.global.forEach((_,rule:any) => {
-      if(rule.condition(action)) rule.consequence(store, action)
+      if(shouldApplyRule(rule, action, store)) rule.consequence(store, action)
     })
 
     !instead && listBefore[action.type] && listBefore[action.type].forEach((_,rule) => {
-      if(rule.condition(action)) rule.consequence(store, action)
+      if(shouldApplyRule(rule, action, store)) rule.consequence(store, action)
     })
 
     const result = instead ? null : next(action)
 
     !instead && listAfter.global && listAfter.global.forEach((_,rule:any) => {
-      if(rule.condition(action)) rule.consequence(store, action)
+      if(shouldApplyRule(rule, action, store)) rule.consequence(store, action)
     })
 
     !instead && listAfter[action.type] && listAfter[action.type].forEach((_,rule) => {
-      if(rule.condition(action)) rule.consequence(store, action)
+      if(shouldApplyRule(rule, action, store)) rule.consequence(store, action)
     })
 
     return result
   }
+}
+
+function shouldApplyRule(rule:Rule<any>,action:Action,store:Store<any>):boolean {
+  // skip if 'skipRule' condition matched
+  if(action.meta && action.meta.skipRule){
+    const skipRules = Array.isArray(action.meta.skipRule) 
+      ? action.meta.skipRule 
+      : [action.meta.skipRule]
+    if(skipRules[0] === '*' || skipRules.find(id => id === rule.id)){
+      return false
+    }
+  }
+  // skip if rule condition does not match
+  if(rule.condition && !rule.condition(action, store.getState)) return false
+
+  return true
 }
 
 export const addRule:AddRule<any> = (rule, options={}) => {
