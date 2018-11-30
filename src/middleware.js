@@ -1,18 +1,25 @@
 // @flow 
 import {createRuleSet, createKeyedRuleSet} from './ruleSet'
+import {createBuffer} from './buffer'
 import type {AddRule, Store, Action, Rule} from './types'
 
-let listBefore = createKeyedRuleSet()
-let listInstead = createKeyedRuleSet()
-let listAfter = createKeyedRuleSet()
-let buffer = createRuleSet()
-let backlog = createRuleSet()
+let listBefore;
+let listInstead;
+let listAfter;
+let buffer;
+let backlog;
 
 export const INSERT_BEFORE = 'INSERT_BEFORE'
 export const INSERT_INSTEAD = 'INSERT_INSTEAD'
 export const INSERT_AFTER = 'INSERT_AFTER'
 
 export default function middleware(store:Store<any>){
+  listBefore = createKeyedRuleSet()
+  listInstead = createKeyedRuleSet()
+  listAfter = createKeyedRuleSet()
+  buffer = createBuffer(store)
+  backlog = null
+
   return (action:Action) => (next:Function) => {
     let instead = false
 
@@ -32,6 +39,9 @@ export default function middleware(store:Store<any>){
     !instead && listAfter.forEach(action.type, rule => {
       if(shouldApplyRule(rule, action, store)) rule.consequence(store, action)
     })
+
+    // apply 'when' logic
+    buffer.yieldAction(action)
 
     return result
   }
@@ -54,19 +64,24 @@ function shouldApplyRule(rule:Rule<any>,action:Action,store:Store<any>):boolean 
 }
 
 export const addRule:AddRule<any> = (rule, options={}) => {
-
-  if(!options.addWhen){
-    buffer.add(rule)
+  if(options.addWhen){
+    switch(rule.position){
+      case INSERT_BEFORE: return buffer.add(options, () => listBefore.add(rule))
+      case INSERT_INSTEAD: return buffer.add(options, () => listInstead.add(rule))
+      case INSERT_AFTER: return buffer.add(options, () => listAfter.add(rule))
+      default: return
+    }
   }
-
-  if(!options.addWhen)
-  switch(rule.position){
-    case INSERT_BEFORE: return listBefore.add(rule)
-    case INSERT_INSTEAD: return listBefore.add(rule)
-    case INSERT_AFTER: return listBefore.add(rule)
-    default: return
+  if(!options.addWhen){
+    switch(rule.position){
+      case INSERT_BEFORE: return listBefore.add(rule)
+      case INSERT_INSTEAD: return listInstead.add(rule)
+      case INSERT_AFTER: return listAfter.add(rule)
+      default: return
+    }
   }
 }
+
 export const removeRule = (rule:Rule<any>):void => {
   switch(rule.position){
     case INSERT_BEFORE: return listBefore.remove(rule)

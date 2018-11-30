@@ -52,8 +52,8 @@ export function createKeyedRuleSet(){
       keys.forEach(key => dict[key].remove(rule))
     },
     forEach(key:string, cb:(rule:R)=>void){
-      dict.global.forEach(cb)
-      dict[key].forEach(cb)
+      dict.global && dict.global.forEach(cb)
+      dict[key] && dict[key].forEach(cb)
     }
   }
 }
