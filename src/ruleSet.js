@@ -12,13 +12,13 @@ export function createRuleSet(){
         list.push(rule)
         return
       }
-      // CHECK IF ZINDEX EXISTS (IF MORE THAN 1 ENTRY)
-      // if(typeof rule.zIndex !== 'number'){
-      //   console.error('you tried to ')
-      //   return
-      // }
 
-      const index = (list:any).reduce((p,n,i) => {
+      const index = list.reduce((p,n,i) => {
+        if(typeof n.zIndex !== 'number'){
+          console.warn('if multiple rules are attached to a action you have to specify the order (zIndex)', n)
+          return p
+        }
+        if(typeof rule.zIndex !== 'number') return p
         if(rule.zIndex < n.zIndex) return i
         else return p
       }, 0)
