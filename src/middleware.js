@@ -22,13 +22,13 @@ export default function middleware(store:Store<any>){
   pendingRulesUntil = createYielder(store)
   backlog = null
 
-  window.__ruleset__ && window.__ruleset__.push(
-    ['rulesBefore', rulesBefore],
-    ['rulesInstead', rulesInstead],
-    ['rulesAfter', rulesAfter],
-    ['pendingRulesWhen', pendingRulesWhen],
-    ['pendingRulesUntil', pendingRulesUntil]
-  )
+  // window.__ruleset__ && window.__ruleset__.push(
+  //   ['rulesBefore', rulesBefore],
+  //   ['rulesInstead', rulesInstead],
+  //   ['rulesAfter', rulesAfter],
+  //   ['pendingRulesWhen', pendingRulesWhen],
+  //   ['pendingRulesUntil', pendingRulesUntil]
+  // )
 
   return (next:Function) => (action:Action) => {
     let instead = false
@@ -81,7 +81,7 @@ function applyRule(rule:Rule<any>,action:Action,store:Store<any>):boolean {
     removeRule(rule)
   }
 
-  window.__ruleset__ && window.__ruleset__.push(['applyRule', rule])
+  // window.__ruleset__ && window.__ruleset__.push(['applyRule', rule])
 
   return true
 }

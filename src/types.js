@@ -17,6 +17,8 @@ export type LogicAdd = 'ADD_RULE' | 'ABORT' | 'REAPPLY_WHEN'
 
 export type LogicRemove = 'REAPPLY_WHEN' | 'REMOVE_RULE' | 'REAPPLY_REMOVE' | 'ABORT'
 
+export type LogicConsequenceConcurrency = 'DEFAULT' | 'ORDERED' | 'FIRST' | 'LAST'
+
 export type YieldAction<Logic,State> = (
   condition: (cb?:(action:Action) => boolean) => Promise<void>,
   getState: GetState<State>
@@ -27,6 +29,7 @@ export type Rule<S> = {
   target: '*' | string | string[],
   position?: Position,
   zIndex?: number,
+  consequenceConcurrency?: LogicConsequenceConcurrency,
   condition?: (action:Action, getState:GetState<S>) => boolean,
   consequence: (store:Store<S>, action:Action) => Action | Promise<Action> | Promise<void> | void,
   addOnce?: boolean,
