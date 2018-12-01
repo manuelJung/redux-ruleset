@@ -114,7 +114,7 @@ export const addRule:AddRule<any> = (rule) => {
       case INSERT_BEFORE: return pendingWhen.add(rule.addWhen, () => add(listBefore))
       case INSERT_INSTEAD: return pendingWhen.add(rule.addWhen, () => add(listInstead))
       case INSERT_AFTER: return pendingWhen.add(rule.addWhen, () => add(listAfter))
-      default: return
+      default: return pendingWhen.add(rule.addWhen, () => add(listAfter))
     }
   }
   if(!rule.addWhen){
@@ -122,7 +122,7 @@ export const addRule:AddRule<any> = (rule) => {
       case INSERT_BEFORE: return add(listBefore)
       case INSERT_INSTEAD: return add(listInstead)
       case INSERT_AFTER: return add(listAfter)
-      default: return
+      default: return add(listAfter)
     }
   }
 }
@@ -132,6 +132,7 @@ export const removeRule = (rule:Rule<any>):void => {
     case INSERT_BEFORE: return listBefore.remove(rule)
     case INSERT_INSTEAD: return listInstead.remove(rule)
     case INSERT_AFTER: return listAfter.remove(rule)
+    default: return listAfter.remove(rule)
   }
 }
 
