@@ -30,6 +30,9 @@ export function createRuleSet(){
     },
     forEach(cb:(rule:R)=>any){
       list.forEach(cb)
+    },
+    inspect(){
+      return list
     }
   }
 }

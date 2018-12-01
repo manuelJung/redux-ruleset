@@ -5,8 +5,14 @@
   "main": "types.js",
   "dependencies": {},
   "devDependencies": {
+    "babel-core": "^6.26.3",
+    "babel-jest": "^23.6.0",
+    "babel-preset-env": "^1.7.0",
+    "babel-preset-flow": "^6.23.0",
     "flow-bin": "^0.87.0",
-    "jest": "^23.6.0"
+    "jest": "^23.6.0",
+    "redux-mock-store": "^1.5.3",
+    "regenerator-runtime": "^0.13.1"
   },
   "scripts": {
     "test": "jest"
