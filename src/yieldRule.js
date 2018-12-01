@@ -1,5 +1,5 @@
 
-export function createBuffer(store){
+export function createYielder(store){
   let listeners = []
   
   return {

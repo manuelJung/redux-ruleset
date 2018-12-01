@@ -1,6 +1,6 @@
 // @flow 
 import {createRuleSet, createKeyedRuleSet} from './ruleSet'
-import {createBuffer} from './buffer'
+import {createYielder} from './yieldRule'
 import type {AddRule, Store, Action, Rule} from './types'
 
 let listBefore;
@@ -18,8 +18,8 @@ export default function middleware(store:Store<any>){
   listBefore = createKeyedRuleSet()
   listInstead = createKeyedRuleSet()
   listAfter = createKeyedRuleSet()
-  pendingWhen = createBuffer(store)
-  pendingUntil = createBuffer(store)
+  pendingWhen = createYielder(store)
+  pendingUntil = createYielder(store)
   backlog = null
 
   return (action:Action) => (next:Function) => {
