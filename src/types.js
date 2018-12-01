@@ -22,7 +22,7 @@ type NextAction = (
 ) => Promise<void>
 
 export type Rule<S> = {
-  id: string,
+  id?: string,
   target: '*' | string | string[],
   position?: Position,
   zIndex?: number,

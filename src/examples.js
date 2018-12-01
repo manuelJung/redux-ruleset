@@ -1,3 +1,10 @@
+// simple
+addRule({
+  target: 'PING',
+  consequence: () => ({type:'PONG'})
+})
+
+
 // navigate 500
 
 addRule({
