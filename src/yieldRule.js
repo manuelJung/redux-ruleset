@@ -6,13 +6,16 @@ export function createYielder(store:Store<any>){
   
   return {
     yieldAction(action:Action){
-      listeners.forEach(l => l(action))
+      const _listeners = [...listeners]
       listeners = []
+      listeners.forEach(l => l(action))
     },
     add(whenFn:YieldAction<any,any>, cb:Function){
-      const gen = (cb:any) => new Promise(resolve => {
-        listeners.push(action => resolve(cb(action)))
-      })
+      const createListener = (cb,resolve) => action => {
+        if(!cb || cb(action)) resolve()
+        else listeners.push(createListener(cb, resolve))
+      }
+      const gen = cb => new Promise(resolve => listeners.push(createListener(cb, () => resolve())))
       whenFn(gen, store.getState).then(cb)
     }
   }

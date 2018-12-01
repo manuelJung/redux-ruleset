@@ -18,8 +18,8 @@ export type LogicAdd = 'ADD_RULE' | 'ABORT' | 'REAPPLY_WHEN'
 export type LogicRemove = 'REAPPLY_WHEN' | 'REMOVE_RULE' | 'REAPPLY_REMOVE' | 'ABORT'
 
 export type YieldAction<Logic,State> = (
-  condition?: (action:Action) => Promise<boolean>,
-  getState?: GetState<State>
+  condition: (cb?:(action:Action) => boolean) => Promise<void>,
+  getState: GetState<State>
 ) => Promise<Logic>
 
 export type Rule<S> = {
