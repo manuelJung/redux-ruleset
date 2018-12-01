@@ -5,10 +5,11 @@
   "main": "types.js",
   "dependencies": {},
   "devDependencies": {
-    "flow-bin": "^0.87.0"
+    "flow-bin": "^0.87.0",
+    "jest": "^23.6.0"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest"
   },
   "author": "",
   "license": "ISC"
