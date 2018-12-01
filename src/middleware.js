@@ -68,8 +68,12 @@ function applyRule(rule:Rule<any>,action:Action,store:Store<any>):boolean {
 
   const result = rule.consequence(store, action)
 
-  if(result && result.type){
-    store.dispatch(result)
+  if(typeof result === 'object' && result.type){
+    store.dispatch((result:any))
+  }
+
+  else if(typeof result === 'object' && result.then){
+    (result:any).then(action => action && action.type && store.dispatch(action)) 
   }
 
   // post execute logic

@@ -28,7 +28,7 @@ export type Rule<S> = {
   position?: Position,
   zIndex?: number,
   condition?: (action:Action, getState:GetState<S>) => boolean,
-  consequence: (store:Store<S>, action:Action) => Action | void,
+  consequence: (store:Store<S>, action:Action) => Action | Promise<Action> | Promise<void> | void,
   addOnce?: boolean,
   addWhen?: YieldAction<LogicAdd,S>,
   addUntil?: YieldAction<LogicRemove,S>,
