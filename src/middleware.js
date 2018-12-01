@@ -22,7 +22,7 @@ export default function middleware(store:Store<any>){
   pendingUntil = createYielder(store)
   backlog = null
 
-  return (action:Action) => (next:Function) => {
+  return (next:Function) => (action:Action) => {
     let instead = false
 
     listInstead.forEach(action.type, rule => {
