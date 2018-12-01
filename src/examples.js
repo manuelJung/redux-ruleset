@@ -14,9 +14,10 @@ addRule({
   id: 'MAGAZIN_HPP',
   target: 'LOCATION_CHANGE',
   position: INSERT_BEFORE,
+  addOnce: true,
   condition: () => isMagazinPage(window.location.pathname) && window.location.search.includes('hpp=')),
   consequence: () => removeSearchReducer(SEARCH_KEY)
-}, {addOnce: true})
+})
 
 // scroll to top after routing
 
@@ -38,6 +39,7 @@ addRule({
   id: 'PREVIEW_PAGE',
   target: 'LOCATION_CHANGE',
   position: INSERT_BEFORE,
+  addOnce: true,
   condition: action => {
     if(!isPagePage(action.payload.pathname)) return false
     if(!action.payload.search) return false
@@ -45,9 +47,11 @@ addRule({
   },
   consequence: (store, action) => {
     const objectId = getParameterByName('preview', action.payload.search)
-    addRule(id: 'PREVIEW_PAGE_REPLACE',
+    addRule({
+      id: 'PREVIEW_PAGE_REPLACE',
       target: 'FETCH_SEARCH_SUCCESS',
       position: INSERT_INSTEAD,
+      addOnce: true,
       condition: action => action.meta.searchKey === SEARCH_KEY,
       consequence: (store, action) => {
         fetchPreview().then(response => {
@@ -55,9 +59,10 @@ addRule({
           action.meta.skipRule = 'PREVIEW_PAGE_REPLACE'
           store.dispatch(action)
         })
-      }, {addOnce: true})
-    }
-}, {addOnce: true})
+      }
+    })
+  }
+})
 
 // add query string to url (search route)
 

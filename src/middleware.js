@@ -67,12 +67,12 @@ function applyRule(rule:Rule<any>,action:Action,store:Store<any>):boolean {
   return true
 }
 
-export const addRule:AddRule<any> = (rule, options={}) => {
+export const addRule:AddRule<any> = (rule) => {
   const add = ruleList => {
     ruleList.add(rule)
-    if(options.addUntil){
+    if(rule.addUntil){
       const addUntil = ruleList => {
-        pendingUntil.add(options.addUntil, removeLogic => {
+        pendingUntil.add(rule.addUntil, removeLogic => {
           if(removeLogic === 'REMOVE_RULE'){
             ruleList.remove(rule)
           }
@@ -92,7 +92,7 @@ export const addRule:AddRule<any> = (rule, options={}) => {
     }
   }
   const addWhen = ruleList => {
-    pendingWhen.add(options.addWhen, addLogic => {
+    pendingWhen.add(rule.addWhen, addLogic => {
       if(addLogic === 'ADD_RULE'){
         add(ruleList)
       }
@@ -104,15 +104,15 @@ export const addRule:AddRule<any> = (rule, options={}) => {
       }
     })
   }
-  if(options.addWhen){
+  if(rule.addWhen){
     switch(rule.position){
-      case INSERT_BEFORE: return pendingWhen.add(options.addWhen, () => add(listBefore))
-      case INSERT_INSTEAD: return pendingWhen.add(options.addWhen, () => add(listInstead))
-      case INSERT_AFTER: return pendingWhen.add(options.addWhen, () => add(listAfter))
+      case INSERT_BEFORE: return pendingWhen.add(rule.addWhen, () => add(listBefore))
+      case INSERT_INSTEAD: return pendingWhen.add(rule.addWhen, () => add(listInstead))
+      case INSERT_AFTER: return pendingWhen.add(rule.addWhen, () => add(listAfter))
       default: return
     }
   }
-  if(!options.addWhen){
+  if(!rule.addWhen){
     switch(rule.position){
       case INSERT_BEFORE: return add(listBefore)
       case INSERT_INSTEAD: return add(listInstead)

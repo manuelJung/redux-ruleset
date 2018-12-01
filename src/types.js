@@ -28,13 +28,9 @@ export type Rule<S> = {
   zIndex?: number,
   condition?: (action:Action,getState:GetState<S>) => boolean,
   consequence: (store:Store<S>,action:Action) => Action | void,
-}
-
-export type Options<S> = {
-  // allowConcurrent?: boolean,
   addOnce?: boolean,
-  addWhen: (next:NextAction,getState:GetState<S>) => Promise<LogicAdd>,
-  addUntil: (next:NextAction,getState:GetState<S>) => Promise<LogicRemove>
+  addWhen?: (next:NextAction,getState:GetState<S>) => Promise<LogicAdd>,
+  addUntil?: (next:NextAction,getState:GetState<S>) => Promise<LogicRemove>
 }
 
-export type AddRule<S> = (rule:Rule<S>,opt?:Options<S>) => void
+export type AddRule<S> = (rule:Rule<S>) => void
