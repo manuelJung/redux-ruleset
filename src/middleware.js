@@ -64,6 +64,11 @@ function applyRule(rule:Rule<any>,action:Action,store:Store<any>):boolean {
     store.dispatch(result)
   }
 
+  // post execute logic
+  if(rule.addOnce){
+    removeRule(rule)
+  }
+
   return true
 }
 
