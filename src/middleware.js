@@ -77,7 +77,7 @@ export const addRule:AddRule<any> = (rule) => {
     ruleList.add(rule)
     if(rule.addUntil){
       const addUntil = ruleList => {
-        pendingUntil.add(rule.addUntil, removeLogic => {
+        rule.addUntil && pendingUntil.add(rule.addUntil, removeLogic => {
           if(removeLogic === 'REMOVE_RULE'){
             ruleList.remove(rule)
           }
@@ -97,7 +97,7 @@ export const addRule:AddRule<any> = (rule) => {
     }
   }
   const addWhen = ruleList => {
-    pendingWhen.add(rule.addWhen, addLogic => {
+    rule.addWhen && pendingWhen.add(rule.addWhen, addLogic => {
       if(addLogic === 'ADD_RULE'){
         add(ruleList)
       }
