@@ -33,6 +33,10 @@ export default function middleware(store:Store<any>){
   return (next:Function) => (action:Action) => {
     let instead = false
 
+    if(process.env.NODE_ENV === 'development' && window.rulesetDevtools){
+      window.rulesetDevtools.addAction(action)
+    }
+
     rulesInstead.forEach(action.type, rule => {
       if(applyRule(rule, action, store)){
         instead = true
@@ -60,11 +64,27 @@ function applyRule(rule:Rule<any>,action:Action,store:Store<any>):boolean {
       ? action.meta.skipRule 
       : [action.meta.skipRule]
     if(skipRules[0] === '*' || skipRules.find(id => id === rule.id)){
+      if(process.env.NODE_ENV === 'development' && window.rulesetDevtools){
+        window.rulesetDevtools.denyRule(rule, 'SKIP_RULE')
+      }
       return false
     }
   }
   // skip if rule condition does not match
-  if(rule.condition && !rule.condition(action, store.getState)) return false
+  if(rule.condition && !rule.condition(action, store.getState)){
+    if(process.env.NODE_ENV === 'development' && window.rulesetDevtools){
+      window.rulesetDevtools.denyRule(rule, 'NO_CONDITION_MATCH')
+    }
+    return false
+  }
+
+  if(process.env.NODE_ENV === 'development' && window.rulesetDevtools){
+    window.rulesetDevtools.execRule(rule)
+    store = {...store, dispatch: action => {
+      window.rulesetDevtools.addAction(action, rule)
+      return store.dispatch(action)
+    }}
+  }
 
   const result = rule.consequence(store, action)
 
@@ -87,6 +107,9 @@ function applyRule(rule:Rule<any>,action:Action,store:Store<any>):boolean {
 }
 
 export const addRule:AddRule<any> = (rule) => {
+  if(process.env.NODE_ENV === 'development' && window.rulesetDevtools){
+    window.rulesetDevtools.addRule(rule)
+  }
   const add = ruleList => {
     ruleList.add(rule)
     if(rule.addUntil){
@@ -142,6 +165,9 @@ export const addRule:AddRule<any> = (rule) => {
 }
 
 export const removeRule = (rule:Rule<any>):void => {
+  if(process.env.NODE_ENV === 'development' && window.rulesetDevtools){
+    window.rulesetDevtools.removeRule(rule)
+  }
   switch(rule.position){
     case INSERT_BEFORE: return rulesBefore.remove(rule)
     case INSERT_INSTEAD: return rulesInstead.remove(rule)
