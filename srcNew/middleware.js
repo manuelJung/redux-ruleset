@@ -18,18 +18,35 @@ export default function middleware(store:Store){
 }
 
 export function addRule(rule:Rule){
-  if(rule.addWhen){
-    const fn = rule.addWhen
-    const createSaga = () => saga.createSaga(fn, result => {
-      switch(result){
-        case 'ADD_RULE': ruleDB.addRule(rule); break
-        case 'ABORT': break
-        case 'REAPPLY_WHEN': createSaga(); break
-      }
-      createSaga()
-    })
-  }
-  else {
+  const add = () => {
     ruleDB.addRule(rule)
+    if(rule.addUntil) addUntil()
   }
+  const remove = () => {
+    ruleDB.removeRule(rule)
+    return true
+  }
+  const addWhen = () => rule.addWhen && saga.createSaga(rule.addWhen, result => {
+      switch(result){
+        case 'ADD_RULE': add(); break
+        case 'ABORT': break
+        case 'REAPPLY_WHEN': addWhen(); break
+      }
+  })
+  const addUntil = () => rule.addUntil && saga.createSaga(rule.addUntil, result => {
+    switch(result){
+      case 'REAPPLY_WHEN': remove() && addWhen(); break
+      case 'REMOVE_RULE': remove(); break
+      case 'REAPPLY_REMOVE': addUntil(); break
+      case 'ABORT': break
+    }
+  })
+  if(rule.addWhen){ addWhen() }
+  else { add() }
+  return rule
+}
+
+export function removeRule(rule:Rule){
+  ruleDB.removeRule(rule)
+  return rule
 }
