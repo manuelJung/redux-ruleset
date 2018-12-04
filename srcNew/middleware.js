@@ -1,6 +1,7 @@
 // @flow
 import ruleDB from './ruleDB'
 import * as saga from './saga'
+import consequence from './consequence'
 
 import type {Rule, Store, Action} from './types'
 
@@ -8,10 +9,12 @@ export default function middleware(store:Store){
   saga.setStore(store)
   return (next:any) => (action:Action) => {
     let instead = false
-    ruleDB.forEachRule('INSERT_INSTEAD', action.type, rule => null)
-    !instead && ruleDB.forEachRule('INSERT_BEFORE', action.type, rule => null)
+    ruleDB.forEachRule('INSERT_INSTEAD', action.type, rule => {
+      if(!instead && consequence(rule, action, store)) instead = true
+    })
+    !instead && ruleDB.forEachRule('INSERT_BEFORE', action.type, rule => consequence(rule, action, store))
     const result = instead ? null : next(action)
-    !instead && ruleDB.forEachRule('INSERT_AFTER', action.type, rule => null)
+    !instead && ruleDB.forEachRule('INSERT_AFTER', action.type, rule => consequence(rule, action, store))
     saga.applyAction(action)
     return result
   }
