@@ -40,7 +40,10 @@ function addListener(target, cb){
 export function createSaga<Logic>(saga:Saga<Logic>, cb:(result:Logic) => mixed){
   if(!store) throw new Error('you likely forgot to add the redux-ruleset middleware to your store')
   const gen = (target, cb) => new Promise(resolve => {
-    const next = () => addListener(target, action => cb(action) ? resolve(action) : next())
+    const next = () => addListener(target, action => {
+      const result = cb(action)
+      result ? resolve(result) : next()
+    })
     next()
   })
   saga(gen, store.getState).then(cb)

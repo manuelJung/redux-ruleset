@@ -93,3 +93,20 @@ addRule({
     }
   }
 })
+
+// sequences
+
+addRule({
+  id: 'FETCH_FB_STRING',
+  target: 'LOCATION_CHANGE',
+  condition: () => isSomePage(),
+  consequenceConcurrency: 'FIRST',
+  consequence: store => {
+    api.on('value', payload => store.dispatch({type:'SET_STRING', payload}))
+    return () => api.of('value')
+  },
+  addUntil: action => {
+    await action('LOCATION_CHANGE', () => !isSomePage())
+    return 'RECREATE_RULE'
+  }
+})

@@ -38,7 +38,7 @@ export function addRule(rule:Rule){
   })
   const addUntil = () => rule.addUntil && saga.createSaga(rule.addUntil, result => {
     switch(result){
-      case 'REAPPLY_WHEN': remove() && addWhen(); break
+      case 'RECREATE_RULE': remove() && addRule(rule); break
       case 'REMOVE_RULE': remove(); break
       case 'REAPPLY_REMOVE': addUntil(); break
       case 'ABORT': break
@@ -53,3 +53,11 @@ export function removeRule(rule:Rule){
   ruleDB.removeRule(rule)
   return rule
 }
+
+/**
+ruleset: generate id
+action: generate id
+ruleExecution: actionId, ruleId, generate id
+ruleAction: generate id, ruleExecId
+action: throw
+ */
