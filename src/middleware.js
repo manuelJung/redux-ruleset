@@ -14,6 +14,8 @@ export const INSERT_BEFORE = 'INSERT_BEFORE'
 export const INSERT_INSTEAD = 'INSERT_INSTEAD'
 export const INSERT_AFTER = 'INSERT_AFTER'
 
+let id = 0
+
 export default function middleware(store:Store<any>){
   rulesBefore = createKeyedRuleSet()
   rulesInstead = createKeyedRuleSet()
@@ -32,22 +34,24 @@ export default function middleware(store:Store<any>){
 
   return (next:Function) => (action:Action) => {
     let instead = false
+    let actionId
 
     if(process.env.NODE_ENV === 'development' && window.rulesetDevtools){
-      window.rulesetDevtools.addAction(action)
+      actionId = id++
+      window.rulesetDevtools.addAction(action, null, actionId)
     }
 
     rulesInstead.forEach(action.type, rule => {
-      if(applyRule(rule, action, store)){
+      if(!instead && applyRule(rule, action, store, actionId)){
         instead = true
       }
     })
 
-    !instead && rulesBefore.forEach(action.type, rule => applyRule(rule, action, store))
+    !instead && rulesBefore.forEach(action.type, rule => applyRule(rule, action, store, actionId))
 
     const result = instead ? null : next(action)
 
-    !instead && rulesAfter.forEach(action.type, rule => applyRule(rule, action, store))
+    !instead && rulesAfter.forEach(action.type, rule => applyRule(rule, action, store, actionId))
 
     // apply 'when' and 'until' logic
     pendingRulesWhen.yieldAction(action)
@@ -57,7 +61,8 @@ export default function middleware(store:Store<any>){
   }
 }
 
-function applyRule(rule:Rule<any>,action:Action,store:Store<any>):boolean {
+function applyRule(rule:Rule<any>,action:Action,store:Store<any>, actionId:number):boolean {
+  let executionId = id++
   // skip if 'skipRule' condition matched
   if(action.meta && action.meta.skipRule){
     const skipRules = Array.isArray(action.meta.skipRule) 
@@ -65,7 +70,7 @@ function applyRule(rule:Rule<any>,action:Action,store:Store<any>):boolean {
       : [action.meta.skipRule]
     if(skipRules[0] === '*' || skipRules.find(id => id === rule.id)){
       if(process.env.NODE_ENV === 'development' && window.rulesetDevtools){
-        window.rulesetDevtools.denyRule(rule, 'SKIP_RULE')
+        window.rulesetDevtools.execRule(rule, executionId, 'SKIP_RULE', actionId)
       }
       return false
     }
@@ -73,15 +78,15 @@ function applyRule(rule:Rule<any>,action:Action,store:Store<any>):boolean {
   // skip if rule condition does not match
   if(rule.condition && !rule.condition(action, store.getState)){
     if(process.env.NODE_ENV === 'development' && window.rulesetDevtools){
-      window.rulesetDevtools.denyRule(rule, 'NO_CONDITION_MATCH')
+      window.rulesetDevtools.execRule(rule, executionId, 'NO_CONDITION_MATCH', actionId)
     }
     return false
   }
 
   if(process.env.NODE_ENV === 'development' && window.rulesetDevtools){
-    window.rulesetDevtools.execRule(rule)
+    window.rulesetDevtools.execRule(rule, executionId, 'CONDITION_MATCH')
     store = {...store, dispatch: action => {
-      window.rulesetDevtools.addAction(action, rule)
+      window.rulesetDevtools.addAction(action, executionId, id++, rule)
       return store.dispatch(action)
     }}
   }

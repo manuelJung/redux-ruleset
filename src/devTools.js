@@ -42,7 +42,7 @@ window.rulesetDevtools = {
     pubSub.push({
       type: 'ADD_RULE',
       meta: {
-        id: id++,
+        id: rule.id,
         timestamp: Date.now(),
       },
       payload: serializeRule(rule)
@@ -50,44 +50,34 @@ window.rulesetDevtools = {
   },
   removeRule(rule){
     pubSub.push({
-      type: 'ADD_RULE',
+      type: 'REMOVE_RULE',
       meta: {
-        id: id++,
         timestamp: Date.now(),
       },
-      payload: serializeRule(rule)
+      payload: rule.id
     })
   },
-  addAction(action,rule){
+  addAction(action, executionId=null, id=`ui-${id++}`, rule=null){
     pubSub.push({
-      type: 'ADD_ACTION',
+      type: 'ACTION',
       meta: {
-        id: id++,
+        id,
+        executionId,
         timestamp: Date.now(),
         ruleId: rule ? rule.id : null,
       },
       payload: action
     })
   },
-  denyRule(rule, reason){
-    pubSub.push({
-      type: 'DENY_RULE',
-      meta: {
-        id: id++,
-        timestamp: Date.now(),
-        ruleId: rule.id
-      },
-      payload: reason
-    })
-  },
-  execRule(rule){
+  execRule(rule, id, message){
     pubSub.push({
       type: 'EXEC_RULE',
       meta: {
-        id: id++,
+        id,
         timestamp: Date.now(),
         ruleId: rule.id
-      }
+      },
+      payload: message
     })
   }
 }
