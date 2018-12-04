@@ -46,5 +46,6 @@ export function createSaga<Logic>(saga:Saga<Logic>, cb:(result:Logic) => mixed){
     })
     next()
   })
+  gen.ofType = type => gen(type, action => action.type === type)
   saga(gen, store.getState).then(cb)
 }
