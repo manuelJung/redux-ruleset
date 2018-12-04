@@ -7,6 +7,8 @@ const store = {
   'INSERT_AFTER': {}
 }
 
+const unlisteners = new Map()
+
 const storeAdd = (key, rule) => {
   const position = rule.position || 'INSERT_AFTER'
   if(!store[position][key]) store[position][key] = []
@@ -50,6 +52,10 @@ function removeRule(rule:Rule):Rule{
       store[position][target] = store[position][target].filter(r => r !== rule)
     })
   }
+  const unlistenerList = unlisteners.get(rule)
+  if(unlistenerList){
+    unlistenerList.forEach(cb => cb())
+  }
   return rule
 }
 
@@ -60,5 +66,11 @@ function forEachRule(position:Position, actionType:string, cb:(rule:Rule)=>mixed
   boundRules && boundRules.forEach(rule => cb(rule))
 }
 
+function addUnlistenCallback(rule:Rule, cb:Function){
+  const list = unlisteners.get(rule) || []
+  list.push(cb)
+  unlisteners.set(rule, list)
+}
 
-export default {addRule, removeRule, forEachRule}
+
+export default {addRule, removeRule, forEachRule, addUnlistenCallback}

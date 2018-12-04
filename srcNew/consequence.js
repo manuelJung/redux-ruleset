@@ -31,6 +31,10 @@ export default function consequence (rule:Rule, action:Action, store:Store):bool
     promise.then(action => action && action.type && store.dispatch(action)) 
   }
 
+  else if(typeof result === 'function'){
+    ruleDB.addUnlistenCallback(rule, () => result(store.getState))
+  }
+
   if(rule.addOnce){
     ruleDB.removeRule(rule)
   }

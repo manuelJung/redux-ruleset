@@ -30,7 +30,7 @@ export type Rule = {
   position?: Position,
   zIndex?: number,
   condition?: (action:Action, getState:GetState) => boolean,
-  consequence: (store:Store, action:Action) => Action | Promise<Action> | Promise<void> | void,
+  consequence: (store:Store, action:Action) => Action | Promise<Action> | Promise<void> | void | (getState:GetState) => mixed,
   addOnce?: boolean,
   addWhen?: Saga<LogicAdd>,
   addUntil?: Saga<LogicRemove>,
