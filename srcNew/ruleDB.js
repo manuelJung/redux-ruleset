@@ -39,7 +39,17 @@ function addRule(rule:Rule):Rule{
 }
 
 function removeRule(rule:Rule):Rule{
-  // todo
+  const position = rule.position || 'INSERT_AFTER'
+  if(typeof rule.target === 'string'){
+    const target = rule.target
+    if(rule.target === '*') store[position].global = store[position].global.filter(r => r !== rule)
+    else store[position][target] = store[position][target].filter(r => r !== rule)
+  }
+  else {
+    rule.target.forEach(target => {
+      store[position][target] = store[position][target].filter(r => r !== rule)
+    })
+  }
   return rule
 }
 
