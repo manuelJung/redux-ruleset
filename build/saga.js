@@ -3,16 +3,10 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-
-var _promise = require('babel-runtime/core-js/promise');
-
-var _promise2 = _interopRequireDefault(_promise);
-
 exports.setStore = setStore;
 exports.applyAction = applyAction;
 exports.createSaga = createSaga;
 
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var store = null;
 
@@ -66,21 +60,27 @@ function createSaga(saga, cb) {
     });
     return;
   }
-  var gen = function gen(target, cb) {
-    return new _promise2.default(function (resolve) {
-      var next = function next() {
+  var run = function run(gen) {
+    var next = function next(iter, payload) {
+      var result = iter.next(payload);
+      if (result.done) cb(result.value);
+    };
+    var action = function action(target, cb) {
+      var _addListener = function _addListener() {
         return addListener(target, function (action) {
-          var result = cb && cb(action);
-          result ? resolve(result) : next();
+          var result = cb(action); // false or mixed
+          if (result) next(iter, result);else _addListener();
         });
       };
-      next();
-    });
+      _addListener();
+    };
+    action.ofType = function (type) {
+      return action(type, function (action) {
+        return action.type === type;
+      });
+    };
+    var iter = gen(action);
+    next(iter);
   };
-  gen.ofType = function (type) {
-    return gen(type, function (action) {
-      return action.type === type;
-    });
-  };
-  saga(gen, store.getState).then(cb);
+  run(saga);
 }

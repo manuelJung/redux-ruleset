@@ -47,13 +47,22 @@ export function createSaga<Logic>(saga:Saga<Logic>, cb:(result:Logic) => mixed){
     initialSagas.push(() => createSaga(saga,cb))
     return
   }
-  const gen = (target, cb) => new Promise(resolve => {
-    const next = () => addListener(target, action => {
-      const result = cb && cb(action)
-      result ? resolve(result) : next()
-    })
-    next()
-  })
-  gen.ofType = type => gen(type, action => action.type === type)
-  saga(gen, store.getState).then(cb)
+  const run = gen => {
+    const next = (iter, payload) => {
+      const result = iter.next(payload)
+      if(result.done) cb(result.value)
+    }
+    const action = (target, cb) => {
+      const _addListener = () => addListener(target, action => {
+        const result = cb(action) // false or mixed
+        if(result) next(iter, result)
+        else _addListener()
+      })
+      _addListener()
+    }
+    action.ofType = type => action(type, action => action.type === type)
+    const iter = gen(action)
+    next(iter)
+  }
+  run(saga)
 }
