@@ -60,7 +60,7 @@ export function createSaga<Logic>(saga:Saga<Logic>, cb:(result:Logic) => mixed){
       })
       _addListener()
     }
-    const iter = gen(action)
+    const iter = gen(action, store.getState)
     next(iter)
   }
   run(saga)

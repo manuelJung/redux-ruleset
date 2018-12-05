@@ -42,3 +42,16 @@ export type Rule = {
 }
 
 export type AddRule = (rule:Rule) => void
+
+
+// EVENTS
+
+export type AddRuleEvent = {}
+
+export type RemoveRuleEvent = {}
+
+export type ExecRuleEvent = {}
+
+export type ExecAction = {}
+
+export type ExecSagaAction = {}
