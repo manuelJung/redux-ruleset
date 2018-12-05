@@ -44,7 +44,7 @@ var storeAdd = function storeAdd(key, rule) {
 
 function addRule(rule) {
   if (typeof rule.target === 'string') {
-    if (rule.target === '*') storeAdd('global', rule);
+    if (rule.target === '*') storeAdd('global', rule);else storeAdd(rule.target, rule);
   } else {
     rule.target.forEach(function (target) {
       return storeAdd(target, rule);

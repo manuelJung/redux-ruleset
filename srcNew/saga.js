@@ -15,8 +15,8 @@ export function applyAction(action:Action){
   const boundCallbacks = listeners[action.type]
   listeners.global = []
   listeners[action.type] = []
-  globalCallbacks.forEach(cb => cb(action))
-  boundCallbacks.forEach(cb => cb(action))
+  globalCallbacks && globalCallbacks.forEach(cb => cb(action))
+  boundCallbacks && boundCallbacks.forEach(cb => cb(action))
 }
 
 function addListener(target, cb){

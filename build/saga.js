@@ -27,10 +27,10 @@ function applyAction(action) {
   var boundCallbacks = listeners[action.type];
   listeners.global = [];
   listeners[action.type] = [];
-  globalCallbacks.forEach(function (cb) {
+  globalCallbacks && globalCallbacks.forEach(function (cb) {
     return cb(action);
   });
-  boundCallbacks.forEach(function (cb) {
+  boundCallbacks && boundCallbacks.forEach(function (cb) {
     return cb(action);
   });
 }

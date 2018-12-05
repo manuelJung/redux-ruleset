@@ -33,6 +33,7 @@ const storeAdd = (key, rule) => {
 function addRule(rule:Rule):Rule{
   if(typeof rule.target === 'string'){
     if(rule.target === '*') storeAdd('global', rule)
+    else storeAdd(rule.target, rule)
   }
   else {
     rule.target.forEach(target => storeAdd(target, rule))
