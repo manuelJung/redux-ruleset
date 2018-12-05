@@ -20,7 +20,7 @@ export type LogicRemove = 'RECREATE_RULE' | 'REMOVE_RULE' | 'REAPPLY_REMOVE' | '
 // export type LogicConsequenceConcurrency = 'DEFAULT' | 'ORDERED' | 'FIRST' | 'LAST'
 
 export type Saga<Logic> = (
-  condition: (cb?:(action:Action) => boolean) => Promise<void>,
+  condition: (cb?:(action:Action) => mixed) => Promise<void>,
   getState: GetState
 ) => Promise<Logic>
 

@@ -30,7 +30,7 @@ function addListener(target, cb){
     listeners[target].push(cb)
   }
   else {
-    target.forEach(target => {
+    target && target.forEach(target => {
       if(!listeners[target]) listeners[target] = []
       listeners[target].push(cb)
     })
@@ -41,7 +41,7 @@ export function createSaga<Logic>(saga:Saga<Logic>, cb:(result:Logic) => mixed){
   if(!store) throw new Error('you likely forgot to add the redux-ruleset middleware to your store')
   const gen = (target, cb) => new Promise(resolve => {
     const next = () => addListener(target, action => {
-      const result = cb(action)
+      const result = cb && cb(action)
       result ? resolve(result) : next()
     })
     next()
