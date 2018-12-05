@@ -17,7 +17,7 @@ export type LogicAdd = 'ADD_RULE' | 'ABORT' | 'REAPPLY_WHEN' | 'ADD_RULE_BEFORE'
 
 export type LogicRemove = 'RECREATE_RULE' | 'REMOVE_RULE' | 'REAPPLY_REMOVE' | 'ABORT'
 
-// export type LogicConsequenceConcurrency = 'DEFAULT' | 'ORDERED' | 'FIRST' | 'LAST'
+export type LogicConcurrency = 'DEFAULT' | 'FIRST' | 'LAST' | 'DEBOUNCE' | 'THROTTLE'
 
 export type Saga<Logic> = (
   condition: (cb?:(action:Action) => mixed) => Promise<void>,
@@ -29,6 +29,11 @@ export type Rule = {
   target: '*' | string | string[],
   position?: Position,
   zIndex?: number,
+  meta?: {
+    throttle?: number,
+    debounce?: number
+  },
+  concurrency?: LogicConcurrency,
   condition?: (action:Action, getState:GetState) => boolean,
   consequence: (store:Store, action:Action) => Action | Promise<Action> | Promise<void> | void | (getState:GetState) => mixed,
   addOnce?: boolean,
