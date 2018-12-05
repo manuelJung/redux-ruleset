@@ -5,17 +5,23 @@ import consequence from './consequence'
 
 import type {Rule, Store, Action} from './types'
 
+let laterAddedRules = []
+
 export default function middleware(store:Store){
   saga.setStore(store)
   return (next:any) => (action:Action) => {
     let instead = false
+    saga.applyAction(action)
     ruleDB.forEachRule('INSERT_INSTEAD', action.type, rule => {
       if(!instead && consequence(rule, action, store)) instead = true
     })
     !instead && ruleDB.forEachRule('INSERT_BEFORE', action.type, rule => consequence(rule, action, store))
     const result = instead ? null : next(action)
     !instead && ruleDB.forEachRule('INSERT_AFTER', action.type, rule => consequence(rule, action, store))
-    saga.applyAction(action)
+    if(laterAddedRules.length){
+      laterAddedRules.forEach(cb => cb())
+      laterAddedRules = []
+    }
     return result
   }
 }
@@ -31,7 +37,8 @@ export function addRule(rule:Rule){
   }
   const addWhen = () => rule.addWhen && saga.createSaga(rule.addWhen, result => {
       switch(result){
-        case 'ADD_RULE': add(); break
+        case 'ADD_RULE': laterAddedRules.push(add); break
+        case 'ADD_RULE_BEFORE': add(); break
         case 'ABORT': break
         case 'REAPPLY_WHEN': addWhen(); break
       }
