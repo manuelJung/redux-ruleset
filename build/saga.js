@@ -16,10 +16,17 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 var store = null;
 
+var initialSagas = [];
 var listeners = {};
 
 function setStore(_store) {
   store = _store;
+  if (initialSagas.length) {
+    initialSagas.forEach(function (saga) {
+      return saga();
+    });
+    initialSagas = [];
+  }
 }
 
 function applyAction(action) {
@@ -53,7 +60,12 @@ function addListener(target, cb) {
 }
 
 function createSaga(saga, cb) {
-  if (!store) throw new Error('you likely forgot to add the redux-ruleset middleware to your store');
+  if (!store) {
+    initialSagas.push(function () {
+      return createSaga(saga, cb);
+    });
+    return;
+  }
   var gen = function gen(target, cb) {
     return new _promise2.default(function (resolve) {
       var next = function next() {

@@ -4,10 +4,15 @@ import type {Action, Saga} from './types'
 
 
 let store = null
+let initialSagas = []
 const listeners = {}
 
 export function setStore(_store:Object){
   store = _store
+  if(initialSagas.length){
+    initialSagas.forEach(saga => saga())
+    initialSagas = []
+  }
 }
 
 export function applyAction(action:Action){
@@ -38,7 +43,10 @@ function addListener(target, cb){
 }
 
 export function createSaga<Logic>(saga:Saga<Logic>, cb:(result:Logic) => mixed){
-  if(!store) throw new Error('you likely forgot to add the redux-ruleset middleware to your store')
+  if(!store) {
+    initialSagas.push(() => createSaga(saga,cb))
+    return
+  }
   const gen = (target, cb) => new Promise(resolve => {
     const next = () => addListener(target, action => {
       const result = cb && cb(action)
