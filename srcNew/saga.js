@@ -54,13 +54,12 @@ export function createSaga<Logic>(saga:Saga<Logic>, cb:(result:Logic) => mixed){
     }
     const action = (target, cb) => {
       const _addListener = () => addListener(target, action => {
-        const result = cb(action) // false or mixed
+        const result = cb ? cb(action) : action // false or mixed
         if(result) next(iter, result)
         else _addListener()
       })
       _addListener()
     }
-    action.ofType = type => action(type, action => action.type === type)
     const iter = gen(action)
     next(iter)
   }

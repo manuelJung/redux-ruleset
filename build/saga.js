@@ -68,16 +68,11 @@ function createSaga(saga, cb) {
     var action = function action(target, cb) {
       var _addListener = function _addListener() {
         return addListener(target, function (action) {
-          var result = cb(action); // false or mixed
+          var result = cb ? cb(action) : action; // false or mixed
           if (result) next(iter, result);else _addListener();
         });
       };
       _addListener();
-    };
-    action.ofType = function (type) {
-      return action(type, function (action) {
-        return action.type === type;
-      });
     };
     var iter = gen(action);
     next(iter);
