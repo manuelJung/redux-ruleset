@@ -2,7 +2,7 @@
   "name": "redux-interrupt",
   "version": "1.0.0",
   "description": "",
-  "main": "types.js",
+  "main": "build/index.js",
   "dependencies": {},
   "devDependencies": {
     "babel-core": "^6.26.3",
@@ -17,7 +17,8 @@
     "regenerator-runtime": "^0.13.1"
   },
   "scripts": {
-    "test": "jest --watch"
+    "test": "jest --watch",
+    "build": "rm -rf build && babel srcNew -d build --ignore __mocks__,__TEST__"
   },
   "author": "",
   "license": "ISC"
