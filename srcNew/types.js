@@ -46,12 +46,42 @@ export type AddRule = (rule:Rule) => void
 
 // EVENTS
 
-export type AddRuleEvent = {}
+export type AddRuleEvent = {
+  type: 'ADD_RULE',
+  timestamp: number,
+  rule: Rule,
+  parentRuleId: string | null
+}
 
-export type RemoveRuleEvent = {}
+export type RemoveRuleEvent = {
+  type: 'REMOVE_RULE',
+  timestamp: number,
+  ruleId: string,
+  removedByParent: boolean
+}
 
-export type ExecRuleEvent = {}
+export type ExecRuleEvent = {
+  type: 'EXEC_RULE',
+  timestamp: number,
+  id: string,
+  ruleId: string,
+  actionExecId: string,
+  result: 'CONDITION_MATCH' | 'CONDITION_NOT_MATCH' | 'SKIP'
+}
 
-export type ExecAction = {}
+export type ExecActionEvent = {
+  type: 'EXEC_ACTION',
+  timestamp: number,
+  id: string,
+  ruleExecId: string | null,
+  action: Action
+}
 
-export type ExecSagaAction = {}
+export type ExecSagaEvent = {
+  type: 'EXEC_SAGA',
+  timestamp: number,
+  id: string,
+  ... 
+}
+
+export type Event = AddRuleEvent | RemoveRuleEvent | ExecRuleEvent | ExecActionEvent | ExecSagaEvent
