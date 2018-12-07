@@ -32,14 +32,17 @@ export default function consequence (context:RuleContext, action:Action, store:S
     return false
   }
 
-  let cancelCB = () => null;
+  let cancelCB = () => false;
   let canceled = false
 
   if(rule.concurrency === 'LAST'){
     if(context.running){
       context.cancelRule('consequence')
     }
-    cancelCB = () => (canceled = true)
+    cancelCB = () => {
+      canceled = true
+      return true
+    }
     context.addCancelListener(cancelCB)
     store = Object.assign({}, store, {
       dispatch: action => {

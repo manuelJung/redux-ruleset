@@ -48,8 +48,8 @@ export type RuleContext = {
   pendingWhen: boolean,
   pendingUntil: boolean,
   cancelRule: (key?:string) => mixed,
-  addCancelListener: (cb:(key:string)=>mixed, key?:string) => mixed,
-  removeCancelListener: (cb:(key:string)=>mixed) => mixed
+  addCancelListener: (cb:(key:string)=>boolean, key?:string) => mixed,
+  removeCancelListener: (cb:(key:string)=>boolean) => mixed
 }
 
 export type AddRule = (rule:Rule) => Rule | false

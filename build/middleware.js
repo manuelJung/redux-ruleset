@@ -68,8 +68,9 @@ function addRule(rule) {
       });
     },
     cancelRule: function cancelRule() {
-      return listeners.forEach(function (cb) {
-        return cb();
+      var key = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'global';
+      return listeners.forEach(function (cb, i) {
+        return cb(key) && listeners.splice(i, i + 1);
       });
     }
   };

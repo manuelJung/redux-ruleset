@@ -20,12 +20,12 @@ var _ruleDB2 = _interopRequireDefault(_ruleDB);
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var store = null;
-function consequence(context, action, store, _addRule, _removeRule) {
-  _addRule = function addRule(rule) {
-    context.childRules.push(rule);return _addRule(rule);
+function consequence(context, action, store, _addRule2, _removeRule2) {
+  _addRule2 = function addRule(rule) {
+    context.childRules.push(rule);return _addRule2(rule);
   };
-  _removeRule = function removeRule(rule) {
-    context.childRules.forEach(_removeRule);return _removeRule(rule);
+  _removeRule2 = function removeRule(rule) {
+    context.childRules.forEach(_removeRule2);return _removeRule2(rule);
   };
   var rule = context.rule;
   // skip when concurrency matches
@@ -53,13 +53,17 @@ function consequence(context, action, store, _addRule, _removeRule) {
   }
 
   var cancelCB = function cancelCB() {
-    return null;
+    return false;
   };
   var canceled = false;
 
   if (rule.concurrency === 'LAST') {
+    if (context.running) {
+      context.cancelRule('consequence');
+    }
     cancelCB = function cancelCB() {
-      return canceled = true;
+      canceled = true;
+      return true;
     };
     context.addCancelListener(cancelCB);
     store = (0, _assign2.default)({}, store, {
@@ -68,10 +72,16 @@ function consequence(context, action, store, _addRule, _removeRule) {
         return store.dispatch(action);
       }
     });
+    _addRule2 = function _addRule(rule) {
+      return !canceled && _addRule2(rule);
+    };
+    _removeRule2 = function _removeRule(rule) {
+      return !canceled && _removeRule2(rule);
+    };
   }
 
   context.running++;
-  var result = rule.consequence(store, action, { addRule: _addRule, removeRule: _removeRule });
+  var result = rule.consequence(store, action, { addRule: _addRule2, removeRule: _removeRule2 });
 
   if ((typeof result === 'undefined' ? 'undefined' : (0, _typeof3.default)(result)) === 'object' && result.type) {
     var _action = result;

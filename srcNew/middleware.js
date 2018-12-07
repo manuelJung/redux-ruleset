@@ -36,7 +36,7 @@ export function addRule(rule:Rule){
     pendingUntil: false,
     addCancelListener: cb => listeners.push(cb),
     removeCancelListener: cb => listeners = listeners.filter(l => cb !== l),
-    cancelRule: (key='global') => listeners.forEach(cb => cb(key))
+    cancelRule: (key='global') => listeners.forEach((cb, i) => cb(key) && listeners.splice(i,i+1))
   }
   const add = () => {
     ruleDB.addRule(context)
