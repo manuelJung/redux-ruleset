@@ -41,7 +41,9 @@ export type Rule = {
   addUntil?: Saga<LogicRemove>,
 }
 
-export type AddRule = (rule:Rule) => void
+export type AddRule = (rule:Rule) => Rule
+
+export type RemoveRule = (rule:Rule) => Rule
 
 
 // EVENTS

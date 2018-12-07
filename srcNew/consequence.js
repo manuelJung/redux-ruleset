@@ -4,7 +4,7 @@ import type {Rule,Action,Store} from './types'
 
 let store = null
 
-export default function consequence (rule:Rule, action:Action, store:Store):boolean{
+export default function consequence (rule:Rule, action:Action, store:Store, addRule:Function, removeRule:Function):boolean{
   // skip if 'skipRule' condition matched
   if(action.meta && action.meta.skipRule){
     const skipRules = Array.isArray(action.meta.skipRule) 
@@ -19,7 +19,7 @@ export default function consequence (rule:Rule, action:Action, store:Store):bool
     return false
   }
 
-  const result = rule.consequence(store, action)
+  const result = rule.consequence(store, action, {addRule, removeRule})
 
   if(typeof result === 'object' && result.type){
     const action:any = result

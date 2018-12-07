@@ -13,11 +13,11 @@ export default function middleware(store:Store){
     let instead = false
     saga.applyAction(action)
     ruleDB.forEachRule('INSERT_INSTEAD', action.type, rule => {
-      if(!instead && consequence(rule, action, store)) instead = true
+      if(!instead && consequence(rule, action, store, addRule, removeRule)) instead = true
     })
-    !instead && ruleDB.forEachRule('INSERT_BEFORE', action.type, rule => consequence(rule, action, store))
+    !instead && ruleDB.forEachRule('INSERT_BEFORE', action.type, rule => consequence(rule, action, store, addRule, removeRule))
     const result = instead ? null : next(action)
-    !instead && ruleDB.forEachRule('INSERT_AFTER', action.type, rule => consequence(rule, action, store))
+    !instead && ruleDB.forEachRule('INSERT_AFTER', action.type, rule => consequence(rule, action, store, addRule, removeRule))
     if(laterAddedRules.length){
       laterAddedRules.forEach(cb => cb())
       laterAddedRules = []
