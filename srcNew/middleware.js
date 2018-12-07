@@ -27,12 +27,16 @@ export default function middleware(store:Store){
 }
 
 export function addRule(rule:Rule){
+  let listeners = []
   const context:RuleContext = {
     rule,
     childRules: [],
     running: 0,
     pendingWhen: false,
-    pendingUntil: false
+    pendingUntil: false,
+    addCancelListener: cb => listeners.push(cb),
+    removeCancelListener: cb => listeners = listeners.filter(l => cb !== l),
+    cancelRule: () => listeners.forEach(cb => cb())
   }
   const add = () => {
     ruleDB.addRule(context)

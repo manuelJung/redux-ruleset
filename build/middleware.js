@@ -52,12 +52,26 @@ function middleware(store) {
 }
 
 function addRule(rule) {
+  var listeners = [];
   var context = {
     rule: rule,
     childRules: [],
     running: 0,
     pendingWhen: false,
-    pendingUntil: false
+    pendingUntil: false,
+    addCancelListener: function addCancelListener(cb) {
+      return listeners.push(cb);
+    },
+    removeCancelListener: function removeCancelListener(cb) {
+      return listeners = listeners.filter(function (l) {
+        return cb !== l;
+      });
+    },
+    cancelRule: function cancelRule() {
+      return listeners.forEach(function (cb) {
+        return cb();
+      });
+    }
   };
   var add = function add() {
     _ruleDB2.default.addRule(context);

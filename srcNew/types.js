@@ -34,8 +34,8 @@ export type Rule = {
     debounce?: number
   },
   concurrency?: LogicConcurrency,
-  condition?: (action:Action, getState:GetState, {addRule:AddRule,removeRule:RemoveRule}) => boolean,
-  consequence: (store:Store, action:Action) => Action | Promise<Action> | Promise<void> | void | (getState:GetState) => mixed,
+  condition?: (action:Action, getState:GetState) => boolean,
+  consequence: (store:Store, action:Action, {addRule:AddRule,removeRule:RemoveRule}) => Action | Promise<Action> | Promise<void> | void | (getState:GetState) => mixed,
   addOnce?: boolean,
   addWhen?: Saga<LogicAdd>,
   addUntil?: Saga<LogicRemove>,
@@ -46,7 +46,10 @@ export type RuleContext = {
   childRules: Rule[],
   running: number,
   pendingWhen: boolean,
-  pendingUntil: boolean
+  pendingUntil: boolean,
+  cancelRule: () => mixed,
+  addCancelListener: (cb:()=>mixed) => mixed,
+  removeCancelListener: (cb:()=>mixed) => mixed
 }
 
 export type AddRule = (rule:Rule) => Rule

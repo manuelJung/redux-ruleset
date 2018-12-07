@@ -28,18 +28,33 @@ export default function consequence (context:RuleContext, action:Action, store:S
     }
   }
   // skip if rule condition does not match
-  if(rule.condition && !rule.condition(action, store.getState, {addRule, removeRule})){
+  if(rule.condition && !rule.condition(action, store.getState)){
     return false
   }
 
+  let cancelCB = () => null;
+  let canceled = false
+
+  if(rule.concurrency === 'LAST'){
+    cancelCB = () => (canceled = true)
+    context.addCancelListener(cancelCB)
+    store = Object.assign({}, store, {
+      dispatch: action => {
+        if(canceled) return action
+        return store.dispatch(action)
+      }
+    })
+  }
+
   context.running++
-  const result = rule.consequence(store, action)
+  const result = rule.consequence(store, action, {addRule, removeRule})
 
   if(typeof result === 'object' && result.type){
     const action:any = result
     store.dispatch(action)
     rule.concurrency !== 'ONCE' && context.running--
     rule.addOnce && ruleDB.removeRule(rule)
+    rule.concurrency === 'LAST' && context.removeCancelListener(cancelCB)
   }
 
   else if(typeof result === 'object' && result.then){
@@ -48,6 +63,7 @@ export default function consequence (context:RuleContext, action:Action, store:S
       action && action.type && store.dispatch(action)
       rule.concurrency !== 'ONCE' && context.running--
       rule.addOnce && ruleDB.removeRule(rule)
+      rule.concurrency === 'LAST' && context.removeCancelListener(cancelCB)
     }) 
   }
 
@@ -55,6 +71,7 @@ export default function consequence (context:RuleContext, action:Action, store:S
     ruleDB.addUnlistenCallback(rule, () => result(store.getState))
     rule.concurrency !== 'ONCE' && context.running--
     rule.addOnce && ruleDB.removeRule(rule)
+    rule.concurrency === 'LAST' && context.removeCancelListener(cancelCB)
   }
 
   return true
