@@ -34,7 +34,7 @@ export type Rule = {
     debounce?: number
   },
   concurrency?: LogicConcurrency,
-  condition?: (action:Action, getState:GetState) => boolean,
+  condition?: (action:Action, getState:GetState, {addRule:AddRule,removeRule:RemoveRule}) => boolean,
   consequence: (store:Store, action:Action) => Action | Promise<Action> | Promise<void> | void | (getState:GetState) => mixed,
   addOnce?: boolean,
   addWhen?: Saga<LogicAdd>,
