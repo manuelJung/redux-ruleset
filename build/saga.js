@@ -74,7 +74,7 @@ function createSaga(saga, cb) {
       };
       _addListener();
     };
-    var iter = gen(action);
+    var iter = gen(action, store.getState);
     next(iter);
   };
   run(saga);

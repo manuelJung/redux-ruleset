@@ -17,7 +17,18 @@ var _ruleDB2 = _interopRequireDefault(_ruleDB);
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var store = null;
-function consequence(rule, action, store) {
+function consequence(context, action, store, addRule, removeRule) {
+  var rule = context.rule;
+  // skip when concurrency matches
+  if (rule.concurrency === 'ONCE' && context.running) {
+    return false;
+  }
+  if (rule.concurrency === 'FIRST' && context.running) {
+    return false;
+  }
+  if (rule.addOnce && context.running) {
+    return false;
+  }
   // skip if 'skipRule' condition matched
   if (action.meta && action.meta.skipRule) {
     var skipRules = Array.isArray(action.meta.skipRule) ? action.meta.skipRule : [action.meta.skipRule];
@@ -32,24 +43,27 @@ function consequence(rule, action, store) {
     return false;
   }
 
+  context.running++;
   var result = rule.consequence(store, action);
 
   if ((typeof result === 'undefined' ? 'undefined' : (0, _typeof3.default)(result)) === 'object' && result.type) {
     var _action = result;
     store.dispatch(_action);
+    rule.concurrency !== 'ONCE' && context.running--;
+    rule.addOnce && _ruleDB2.default.removeRule(rule);
   } else if ((typeof result === 'undefined' ? 'undefined' : (0, _typeof3.default)(result)) === 'object' && result.then) {
     var promise = result;
     promise.then(function (action) {
-      return action && action.type && store.dispatch(action);
+      action && action.type && store.dispatch(action);
+      rule.concurrency !== 'ONCE' && context.running--;
+      rule.addOnce && _ruleDB2.default.removeRule(rule);
     });
   } else if (typeof result === 'function') {
     _ruleDB2.default.addUnlistenCallback(rule, function () {
       return result(store.getState);
     });
-  }
-
-  if (rule.addOnce) {
-    _ruleDB2.default.removeRule(rule);
+    rule.concurrency !== 'ONCE' && context.running--;
+    rule.addOnce && _ruleDB2.default.removeRule(rule);
   }
 
   return true;

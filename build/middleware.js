@@ -30,15 +30,15 @@ function middleware(store) {
     return function (action) {
       var instead = false;
       saga.applyAction(action);
-      _ruleDB2.default.forEachRule('INSERT_INSTEAD', action.type, function (rule) {
-        if (!instead && (0, _consequence2.default)(rule, action, store)) instead = true;
+      _ruleDB2.default.forEachRuleContext('INSERT_INSTEAD', action.type, function (context) {
+        if (!instead && (0, _consequence2.default)(context, action, store, addRule, removeRule)) instead = true;
       });
-      !instead && _ruleDB2.default.forEachRule('INSERT_BEFORE', action.type, function (rule) {
-        return (0, _consequence2.default)(rule, action, store);
+      !instead && _ruleDB2.default.forEachRuleContext('INSERT_BEFORE', action.type, function (context) {
+        return (0, _consequence2.default)(context, action, store, addRule, removeRule);
       });
       var result = instead ? null : next(action);
-      !instead && _ruleDB2.default.forEachRule('INSERT_AFTER', action.type, function (rule) {
-        return (0, _consequence2.default)(rule, action, store);
+      !instead && _ruleDB2.default.forEachRuleContext('INSERT_AFTER', action.type, function (context) {
+        return (0, _consequence2.default)(context, action, store, addRule, removeRule);
       });
       if (laterAddedRules.length) {
         laterAddedRules.forEach(function (cb) {
@@ -52,8 +52,15 @@ function middleware(store) {
 }
 
 function addRule(rule) {
+  var context = {
+    rule: rule,
+    childRules: [],
+    running: 0,
+    pendingWhen: false,
+    pendingUntil: false
+  };
   var add = function add() {
-    _ruleDB2.default.addRule(rule);
+    _ruleDB2.default.addRule(context);
     if (rule.addUntil) addUntil();
   };
   var remove = function remove() {

@@ -17,7 +17,7 @@ export type LogicAdd = 'ADD_RULE' | 'ABORT' | 'REAPPLY_WHEN' | 'ADD_RULE_BEFORE'
 
 export type LogicRemove = 'RECREATE_RULE' | 'REMOVE_RULE' | 'REAPPLY_REMOVE' | 'ABORT'
 
-export type LogicConcurrency = 'DEFAULT' | 'FIRST' | 'LAST' | 'DEBOUNCE' | 'THROTTLE'
+export type LogicConcurrency = 'DEFAULT' | 'FIRST' | 'LAST' | 'DEBOUNCE' | 'THROTTLE' | 'ONCE'
 
 export type Saga<Logic> = (
   condition: (cb?:(action:Action) => mixed) => Promise<void>,
@@ -39,6 +39,14 @@ export type Rule = {
   addOnce?: boolean,
   addWhen?: Saga<LogicAdd>,
   addUntil?: Saga<LogicRemove>,
+}
+
+export type RuleContext = {
+  rule: Rule,
+  childRules: Rule[],
+  running: number,
+  pendingWhen: boolean,
+  pendingUntil: boolean
 }
 
 export type AddRule = (rule:Rule) => Rule
@@ -68,7 +76,7 @@ export type ExecRuleEvent = {
   id: string,
   ruleId: string,
   actionExecId: string,
-  result: 'CONDITION_MATCH' | 'CONDITION_NOT_MATCH' | 'SKIP'
+  result: 'CONDITION_MATCH' | 'CONDITION_NOT_MATCH' | 'SKIP' | 'CONCURRENCY_REJECTION'
 }
 
 export type ExecActionEvent = {
@@ -82,8 +90,7 @@ export type ExecActionEvent = {
 export type ExecSagaEvent = {
   type: 'EXEC_SAGA',
   timestamp: number,
-  id: string,
-  ... 
+  id: string
 }
 
 export type Event = AddRuleEvent | RemoveRuleEvent | ExecRuleEvent | ExecActionEvent | ExecSagaEvent

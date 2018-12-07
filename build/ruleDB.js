@@ -23,49 +23,49 @@ var store = {
 
 var unlisteners = new _map2.default();
 
-var storeAdd = function storeAdd(key, rule) {
-  var position = rule.position || 'INSERT_AFTER';
+var storeAdd = function storeAdd(key, context) {
+  var position = context.rule.position || 'INSERT_AFTER';
   if (!store[position][key]) store[position][key] = [];
   var list = store[position][key];
-  if (typeof rule.zIndex === 'number') {
+  if (typeof context.rule.zIndex === 'number') {
     var index = list.reduce(function (p, n, i) {
-      if (typeof n.zIndex !== 'number') {
+      if (typeof n.rule.zIndex !== 'number') {
         console.warn('if multiple rules are attached to a action you have to specify the order (zIndex)', n);
         return p;
       }
-      if (typeof rule.zIndex !== 'number') return p;
-      if (rule.zIndex < n.zIndex) return i;else return p;
+      if (typeof context.rule.zIndex !== 'number') return p;
+      if (context.rule.zIndex < n.rule.zIndex) return i;else return p;
     }, 0);
-    store[position][key] = [].concat((0, _toConsumableArray3.default)(list.slice(0, index)), [rule], (0, _toConsumableArray3.default)(list.slice(index)));
+    store[position][key] = [].concat((0, _toConsumableArray3.default)(list.slice(0, index)), [context], (0, _toConsumableArray3.default)(list.slice(index)));
   } else {
-    list.push(rule);
+    list.push(context);
   }
 };
 
-function addRule(rule) {
-  if (typeof rule.target === 'string') {
-    if (rule.target === '*') storeAdd('global', rule);else storeAdd(rule.target, rule);
+function addRule(context) {
+  if (typeof context.rule.target === 'string') {
+    if (context.rule.target === '*') storeAdd('global', context);else storeAdd(context.rule.target, context);
   } else {
-    rule.target.forEach(function (target) {
-      return storeAdd(target, rule);
+    context.rule.target.forEach(function (target) {
+      return storeAdd(target, context);
     });
   }
-  return rule;
+  return context.rule;
 }
 
 function removeRule(rule) {
   var position = rule.position || 'INSERT_AFTER';
   if (typeof rule.target === 'string') {
     var target = rule.target;
-    if (rule.target === '*') store[position].global = store[position].global.filter(function (r) {
-      return r !== rule;
-    });else store[position][target] = store[position][target].filter(function (r) {
-      return r !== rule;
+    if (rule.target === '*') store[position].global = store[position].global.filter(function (c) {
+      return c.rule !== rule;
+    });else store[position][target] = store[position][target].filter(function (c) {
+      return c.rule !== rule;
     });
   } else {
     rule.target.forEach(function (target) {
-      store[position][target] = store[position][target].filter(function (r) {
-        return r !== rule;
+      store[position][target] = store[position][target].filter(function (c) {
+        return c.rule !== rule;
       });
     });
   }
@@ -78,15 +78,11 @@ function removeRule(rule) {
   return rule;
 }
 
-function forEachRule(position, actionType, cb) {
+function forEachRuleContext(position, actionType, cb) {
   var globalRules = store[position].global;
   var boundRules = store[position][actionType];
-  globalRules && globalRules.forEach(function (rule) {
-    return cb(rule);
-  });
-  boundRules && boundRules.forEach(function (rule) {
-    return cb(rule);
-  });
+  globalRules && globalRules.forEach(cb);
+  boundRules && boundRules.forEach(cb);
 }
 
 function addUnlistenCallback(rule, cb) {
@@ -95,4 +91,4 @@ function addUnlistenCallback(rule, cb) {
   unlisteners.set(rule, list);
 }
 
-exports.default = { addRule: addRule, removeRule: removeRule, forEachRule: forEachRule, addUnlistenCallback: addUnlistenCallback };
+exports.default = { addRule: addRule, removeRule: removeRule, forEachRuleContext: forEachRuleContext, addUnlistenCallback: addUnlistenCallback };

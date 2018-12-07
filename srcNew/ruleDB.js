@@ -1,5 +1,5 @@
 // @flow
-import type {Rule, Position} from './types'
+import type {Rule, Position, RuleContext} from './types'
 
 const store = {
   'INSERT_BEFORE': {},
@@ -9,48 +9,48 @@ const store = {
 
 const unlisteners = new Map()
 
-const storeAdd = (key, rule) => {
-  const position = rule.position || 'INSERT_AFTER'
+const storeAdd = (key, context) => {
+  const position = context.rule.position || 'INSERT_AFTER'
   if(!store[position][key]) store[position][key] = []
   const list = store[position][key]
-  if(typeof rule.zIndex === 'number'){
+  if(typeof context.rule.zIndex === 'number'){
     const index = list.reduce((p,n,i) => {
-      if(typeof n.zIndex !== 'number'){
+      if(typeof n.rule.zIndex !== 'number'){
         console.warn('if multiple rules are attached to a action you have to specify the order (zIndex)', n)
         return p
       }
-      if(typeof rule.zIndex !== 'number') return p
-      if(rule.zIndex < n.zIndex) return i
+      if(typeof context.rule.zIndex !== 'number') return p
+      if(context.rule.zIndex < n.rule.zIndex) return i
       else return p
     }, 0)
-    store[position][key] = [...list.slice(0,index), rule, ...list.slice(index)]
+    store[position][key] = [...list.slice(0,index), context, ...list.slice(index)]
   }
   else{
-    list.push(rule)
+    list.push(context)
   }
 }
 
-function addRule(rule:Rule):Rule{
-  if(typeof rule.target === 'string'){
-    if(rule.target === '*') storeAdd('global', rule)
-    else storeAdd(rule.target, rule)
+function addRule(context:RuleContext):Rule{
+  if(typeof context.rule.target === 'string'){
+    if(context.rule.target === '*') storeAdd('global', context)
+    else storeAdd(context.rule.target, context)
   }
   else {
-    rule.target.forEach(target => storeAdd(target, rule))
+    context.rule.target.forEach(target => storeAdd(target, context))
   }
-  return rule
+  return context.rule
 }
 
 function removeRule(rule:Rule):Rule{
   const position = rule.position || 'INSERT_AFTER'
   if(typeof rule.target === 'string'){
     const target = rule.target
-    if(rule.target === '*') store[position].global = store[position].global.filter(r => r !== rule)
-    else store[position][target] = store[position][target].filter(r => r !== rule)
+    if(rule.target === '*') store[position].global = store[position].global.filter(c => c.rule !== rule)
+    else store[position][target] = store[position][target].filter(c => c.rule !== rule)
   }
   else {
     rule.target.forEach(target => {
-      store[position][target] = store[position][target].filter(r => r !== rule)
+      store[position][target] = store[position][target].filter(c => c.rule !== rule)
     })
   }
   const unlistenerList = unlisteners.get(rule)
@@ -60,11 +60,11 @@ function removeRule(rule:Rule):Rule{
   return rule
 }
 
-function forEachRule(position:Position, actionType:string, cb:(rule:Rule)=>mixed){
+function forEachRuleContext(position:Position, actionType:string, cb:(context:RuleContext)=>mixed){
   const globalRules = store[position].global
   const boundRules = store[position][actionType]
-  globalRules && globalRules.forEach(rule => cb(rule))
-  boundRules && boundRules.forEach(rule => cb(rule))
+  globalRules && globalRules.forEach(cb)
+  boundRules && boundRules.forEach(cb)
 }
 
 function addUnlistenCallback(rule:Rule, cb:Function){
@@ -74,4 +74,4 @@ function addUnlistenCallback(rule:Rule, cb:Function){
 }
 
 
-export default {addRule, removeRule, forEachRule, addUnlistenCallback}
+export default {addRule, removeRule, forEachRuleContext, addUnlistenCallback}

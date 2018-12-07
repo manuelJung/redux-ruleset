@@ -4,8 +4,7 @@ addRule({
   id: 'SETUP_SEARCH_PAGE',
   target: 'LOCATION_CHANGE',
   consequence: () => setupSearchReducer({
-    searchKey: 'search-page',
-    ...
+    searchKey: 'search-page'
   }),
   addWhen: function*(action){
     yield action('LOCATION_CHANGE', action => isSearchPage(action.location.pathname))
