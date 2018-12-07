@@ -52,9 +52,9 @@ export type RuleContext = {
   removeCancelListener: (cb:()=>mixed) => mixed
 }
 
-export type AddRule = (rule:Rule) => Rule
+export type AddRule = (rule:Rule) => Rule | false
 
-export type RemoveRule = (rule:Rule) => Rule
+export type RemoveRule = (rule:Rule) => Rule | false
 
 
 // EVENTS

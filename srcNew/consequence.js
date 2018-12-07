@@ -44,6 +44,8 @@ export default function consequence (context:RuleContext, action:Action, store:S
         return store.dispatch(action)
       }
     })
+    addRule = rule => !canceled && addRule(rule)
+    removeRule = rule => !canceled && removeRule(rule)
   }
 
   context.running++
