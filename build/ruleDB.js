@@ -53,6 +53,7 @@ function addRule(context) {
   return context.rule;
 }
 
+// TODO: better performance for removing child rules
 function removeRule(rule) {
   var context = void 0;
   var position = rule.position || 'INSERT_AFTER';

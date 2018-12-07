@@ -41,6 +41,7 @@ function addRule(context:RuleContext):Rule{
   return context.rule
 }
 
+// TODO: better performance for removing child rules
 function removeRule(rule:Rule):Rule{
   let context;
   const position = rule.position || 'INSERT_AFTER'
