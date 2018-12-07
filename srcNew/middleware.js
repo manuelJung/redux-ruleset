@@ -46,7 +46,7 @@ export function addRule(rule:Rule){
     ruleDB.removeRule(rule)
     return true
   }
-  const addWhen = () => rule.addWhen && saga.createSaga(rule.addWhen, result => {
+  const addWhen = () => rule.addWhen && saga.createSaga(context, rule.addWhen, result => {
       switch(result){
         case 'ADD_RULE': laterAddedRules.push(add); break
         case 'ADD_RULE_BEFORE': add(); break
@@ -54,7 +54,7 @@ export function addRule(rule:Rule){
         case 'REAPPLY_WHEN': addWhen(); break
       }
   })
-  const addUntil = () => rule.addUntil && saga.createSaga(rule.addUntil, result => {
+  const addUntil = () => rule.addUntil && saga.createSaga(context, rule.addUntil, result => {
     switch(result){
       case 'RECREATE_RULE': remove() && addRule(rule); break
       case 'REMOVE_RULE': remove(); break

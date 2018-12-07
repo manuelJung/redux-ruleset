@@ -1,5 +1,5 @@
 // @flow
-import type {Action, Saga} from './types'
+import type {Action, Saga, RuleContext} from './types'
 
 
 
@@ -42,11 +42,17 @@ function addListener(target, cb){
   }
 }
 
-export function createSaga<Logic>(saga:Saga<Logic>, cb:(result:Logic) => mixed){
+export function createSaga<Logic>(context:RuleContext, saga:Saga<Logic>, cb:(result:Logic) => mixed){
   if(!store) {
     initialSagas.push(() => createSaga(saga,cb))
     return
   }
+  let cancel = () => null
+  context.addCancelListener(key => {
+    if(key !== 'global') return false
+    cancel()
+    return true
+  })
   const run = gen => {
     const next = (iter, payload) => {
       const result = iter.next(payload)
@@ -62,6 +68,7 @@ export function createSaga<Logic>(saga:Saga<Logic>, cb:(result:Logic) => mixed){
     }
     const iter = gen(action, store.getState)
     next(iter)
+    cancel = () => iter.return('CANCELED')
   }
   run(saga)
 }

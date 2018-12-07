@@ -83,7 +83,7 @@ function addRule(rule) {
     return true;
   };
   var addWhen = function addWhen() {
-    return rule.addWhen && saga.createSaga(rule.addWhen, function (result) {
+    return rule.addWhen && saga.createSaga(context, rule.addWhen, function (result) {
       switch (result) {
         case 'ADD_RULE':
           laterAddedRules.push(add);break;
@@ -97,7 +97,7 @@ function addRule(rule) {
     });
   };
   var addUntil = function addUntil() {
-    return rule.addUntil && saga.createSaga(rule.addUntil, function (result) {
+    return rule.addUntil && saga.createSaga(context, rule.addUntil, function (result) {
       switch (result) {
         case 'RECREATE_RULE':
           remove() && addRule(rule);break;

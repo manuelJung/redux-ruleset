@@ -53,13 +53,21 @@ function addListener(target, cb) {
   }
 }
 
-function createSaga(saga, cb) {
+function createSaga(context, saga, cb) {
   if (!store) {
     initialSagas.push(function () {
       return createSaga(saga, cb);
     });
     return;
   }
+  var cancel = function cancel() {
+    return null;
+  };
+  context.addCancelListener(function (key) {
+    if (key !== 'global') return false;
+    cancel();
+    return true;
+  });
   var run = function run(gen) {
     var next = function next(iter, payload) {
       var result = iter.next(payload);
@@ -76,6 +84,9 @@ function createSaga(saga, cb) {
     };
     var iter = gen(action, store.getState);
     next(iter);
+    cancel = function cancel() {
+      return iter.return('CANCELED');
+    };
   };
   run(saga);
 }
