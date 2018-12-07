@@ -42,13 +42,16 @@ function addRule(context:RuleContext):Rule{
 }
 
 function removeRule(rule:Rule):Rule{
+  let context;
   const position = rule.position || 'INSERT_AFTER'
   if(typeof rule.target === 'string'){
+    context = store[position][(rule.target === '*' ? 'global' : rule.target)].find(c => c.rule === rule)
     const target = rule.target
     if(rule.target === '*') store[position].global = store[position].global.filter(c => c.rule !== rule)
     else store[position][target] = store[position][target].filter(c => c.rule !== rule)
   }
   else {
+    context = store[position][rule.target[0]].find(c => c.rule === rule)
     rule.target.forEach(target => {
       store[position][target] = store[position][target].filter(c => c.rule !== rule)
     })
@@ -57,6 +60,8 @@ function removeRule(rule:Rule):Rule{
   if(unlistenerList){
     unlistenerList.forEach(cb => cb())
   }
+  context && context.cancelRule()
+  context && context.childRules.forEach(removeRule)
   return rule
 }
 

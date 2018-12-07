@@ -5,8 +5,10 @@ import type {Rule,Action,Store,RuleContext} from './types'
 let store = null
 
 export default function consequence (context:RuleContext, action:Action, store:Store, addRule:Function, removeRule:Function):boolean{
-  addRule = rule => {context.childRules.push(rule); return addRule(rule)}
-  removeRule = rule => {context.childRules.forEach(removeRule); return removeRule(rule)}
+  const _addRule = addRule
+  const _removeRule = removeRule
+  addRule = rule => {context.childRules.push(rule); return _addRule(rule)}
+  removeRule = rule => {context.childRules.forEach(_removeRule); return _removeRule(rule)}
   const rule = context.rule
   // skip when concurrency matches
   if(rule.concurrency === 'ONCE' && context.running){
@@ -44,14 +46,17 @@ export default function consequence (context:RuleContext, action:Action, store:S
       return true
     }
     context.addCancelListener(cancelCB)
+    const _store = store
     store = Object.assign({}, store, {
       dispatch: action => {
         if(canceled) return action
-        return store.dispatch(action)
+        return _store.dispatch(action)
       }
     })
-    addRule = rule => !canceled && addRule(rule)
-    removeRule = rule => !canceled && removeRule(rule)
+    const _addRule = addRule
+    const _removeRule = removeRule
+    addRule = rule => !canceled && _addRule(rule)
+    removeRule = rule => !canceled && _removeRule(rule)
   }
 
   context.running++

@@ -56,7 +56,7 @@ function addListener(target, cb) {
 function createSaga(context, saga, cb) {
   if (!store) {
     initialSagas.push(function () {
-      return createSaga(saga, cb);
+      return createSaga(context, saga, cb);
     });
     return;
   }

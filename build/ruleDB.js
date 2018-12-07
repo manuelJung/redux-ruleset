@@ -54,8 +54,12 @@ function addRule(context) {
 }
 
 function removeRule(rule) {
+  var context = void 0;
   var position = rule.position || 'INSERT_AFTER';
   if (typeof rule.target === 'string') {
+    context = store[position][rule.target === '*' ? 'global' : rule.target].find(function (c) {
+      return c.rule === rule;
+    });
     var target = rule.target;
     if (rule.target === '*') store[position].global = store[position].global.filter(function (c) {
       return c.rule !== rule;
@@ -63,6 +67,9 @@ function removeRule(rule) {
       return c.rule !== rule;
     });
   } else {
+    context = store[position][rule.target[0]].find(function (c) {
+      return c.rule === rule;
+    });
     rule.target.forEach(function (target) {
       store[position][target] = store[position][target].filter(function (c) {
         return c.rule !== rule;
@@ -75,6 +82,8 @@ function removeRule(rule) {
       return cb();
     });
   }
+  context && context.cancelRule();
+  context && context.childRules.forEach(removeRule);
   return rule;
 }
 

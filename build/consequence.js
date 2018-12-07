@@ -3,7 +3,6 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.default = undefined;
 
 var _typeof2 = require('babel-runtime/helpers/typeof');
 
@@ -13,6 +12,8 @@ var _assign = require('babel-runtime/core-js/object/assign');
 
 var _assign2 = _interopRequireDefault(_assign);
 
+exports.default = consequence;
+
 var _ruleDB = require('./ruleDB');
 
 var _ruleDB2 = _interopRequireDefault(_ruleDB);
@@ -20,12 +21,14 @@ var _ruleDB2 = _interopRequireDefault(_ruleDB);
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var store = null;
-function consequence(context, action, store, _addRule2, _removeRule2) {
-  _addRule2 = function addRule(rule) {
-    context.childRules.push(rule);return _addRule2(rule);
+function consequence(context, action, store, addRule, removeRule) {
+  var _addRule = addRule;
+  var _removeRule = removeRule;
+  addRule = function addRule(rule) {
+    context.childRules.push(rule);return _addRule(rule);
   };
-  _removeRule2 = function removeRule(rule) {
-    context.childRules.forEach(_removeRule2);return _removeRule2(rule);
+  removeRule = function removeRule(rule) {
+    context.childRules.forEach(_removeRule);return _removeRule(rule);
   };
   var rule = context.rule;
   // skip when concurrency matches
@@ -66,22 +69,25 @@ function consequence(context, action, store, _addRule2, _removeRule2) {
       return true;
     };
     context.addCancelListener(cancelCB);
+    var _store = store;
     store = (0, _assign2.default)({}, store, {
       dispatch: function dispatch(action) {
         if (canceled) return action;
-        return store.dispatch(action);
+        return _store.dispatch(action);
       }
     });
-    _addRule2 = function _addRule(rule) {
+    var _addRule2 = addRule;
+    var _removeRule2 = removeRule;
+    addRule = function addRule(rule) {
       return !canceled && _addRule2(rule);
     };
-    _removeRule2 = function _removeRule(rule) {
+    removeRule = function removeRule(rule) {
       return !canceled && _removeRule2(rule);
     };
   }
 
   context.running++;
-  var result = rule.consequence(store, action, { addRule: _addRule2, removeRule: _removeRule2 });
+  var result = rule.consequence(store, action, { addRule: addRule, removeRule: removeRule });
 
   if ((typeof result === 'undefined' ? 'undefined' : (0, _typeof3.default)(result)) === 'object' && result.type) {
     var _action = result;
@@ -108,4 +114,3 @@ function consequence(context, action, store, _addRule2, _removeRule2) {
 
   return true;
 }
-exports.default = consequence;
