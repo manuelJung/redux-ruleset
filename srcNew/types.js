@@ -25,7 +25,7 @@ export type Saga<Logic> = (
 ) => Promise<Logic>
 
 export type Rule = {
-  id?: string,
+  id: string,
   target: '*' | string | string[],
   position?: Position,
   zIndex?: number,
@@ -76,24 +76,25 @@ export type RemoveRuleEvent = {
 export type ExecRuleEvent = {
   type: 'EXEC_RULE',
   timestamp: number,
-  id: string,
+  id: number,
   ruleId: string,
-  actionExecId: string,
+  actionExecId: number,
   result: 'CONDITION_MATCH' | 'CONDITION_NOT_MATCH' | 'SKIP' | 'CONCURRENCY_REJECTION'
 }
 
 export type ExecActionEvent = {
   type: 'EXEC_ACTION',
   timestamp: number,
-  id: string,
-  ruleExecId: string | null,
+  id: number,
+  ruleExecId: number | null,
   action: Action
 }
 
 export type ExecSagaEvent = {
   type: 'EXEC_SAGA',
   timestamp: number,
-  id: string
+  id: number,
+  result: 'PENDING' | 'CANCELED' | LogicAdd | LogicRemove
 }
 
 export type Event = AddRuleEvent | RemoveRuleEvent | ExecRuleEvent | ExecActionEvent | ExecSagaEvent
