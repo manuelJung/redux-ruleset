@@ -28,11 +28,11 @@ export function removeRule(context:RuleContext, removedByParent:boolean=false){
   events.push(event)
 }
 
-export function executeRule(context:RuleContext, actionExecId:number, result:string){
+export function executeRule(id:number, context:RuleContext, actionExecId:number, result:string){
   const event:ExecRuleEvent = {
     type: 'EXEC_RULE',
     timestamp: Date.now(),
-    id: ruleExecId++,
+    id,
     ruleId: context.rule.id,
     actionExecId,
     result
@@ -41,14 +41,22 @@ export function executeRule(context:RuleContext, actionExecId:number, result:str
   return ruleExecId
 }
 
-export function executeAction(action:Action){
+export function executeAction(id:number, action:Action){
   const event:ExecActionEvent = {
     type: 'EXEC_ACTION',
     timestamp: Date.now(),
-    id: actionExecId++,
+    id,
     ruleExecId: null,
     action: action
   }
   events.push(event)
   return actionExecId
+}
+
+export function createRuleExecutionId(){
+  return ruleExecId++
+}
+
+export function createActionExecutionId(){
+  return actionExecId++
 }

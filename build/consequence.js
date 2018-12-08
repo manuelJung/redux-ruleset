@@ -29,6 +29,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 var store = null;
 
 function consequence(context, action, store, addRule, removeRule, actionId) {
+  var execId = devtools.createRuleExecutionId();
   var _addRule = addRule;
   var _removeRule = removeRule;
   addRule = function addRule(rule) {
@@ -40,15 +41,15 @@ function consequence(context, action, store, addRule, removeRule, actionId) {
   var rule = context.rule;
   // skip when concurrency matches
   if (rule.concurrency === 'ONCE' && context.running) {
-    devtools.executeRule(context, actionId, 'CONCURRENCY');
+    devtools.executeRule(execId, context, actionId, 'CONCURRENCY');
     return false;
   }
   if (rule.concurrency === 'FIRST' && context.running) {
-    devtools.executeRule(context, actionId, 'CONCURRENCY');
+    devtools.executeRule(execId, context, actionId, 'CONCURRENCY');
     return false;
   }
   if (rule.addOnce && context.running) {
-    devtools.executeRule(context, actionId, 'ADD_ONCE');
+    devtools.executeRule(execId, context, actionId, 'ADD_ONCE');
     return false;
   }
   // skip if 'skipRule' condition matched
@@ -57,13 +58,13 @@ function consequence(context, action, store, addRule, removeRule, actionId) {
     if (skipRules[0] === '*' || skipRules.find(function (id) {
       return id === rule.id;
     })) {
-      devtools.executeRule(context, actionId, 'SKIP');
+      devtools.executeRule(execId, context, actionId, 'SKIP');
       return false;
     }
   }
   // skip if rule condition does not match
   if (rule.condition && !rule.condition(action, store.getState)) {
-    devtools.executeRule(context, actionId, 'NO_CONDITION_MATCH');
+    devtools.executeRule(execId, context, actionId, 'NO_CONDITION_MATCH');
     return false;
   }
 
@@ -98,6 +99,16 @@ function consequence(context, action, store, addRule, removeRule, actionId) {
     };
   }
 
+  if (devtools) {
+    var _store2 = store;
+    store = (0, _assign2.default)({}, store, {
+      dispatch: function dispatch(action) {
+        devtools.executeAction(action, context.rule.id);
+        return _store2.dispatch(action);
+      }
+    });
+  }
+
   context.running++;
   var result = rule.consequence(store, action, { addRule: addRule, removeRule: removeRule });
 
@@ -124,7 +135,7 @@ function consequence(context, action, store, addRule, removeRule, actionId) {
     rule.concurrency === 'LAST' && context.removeCancelListener(cancelCB);
   }
 
-  devtools.executeRule(context, actionId, 'CONDITION_MATCH');
+  devtools.executeRule(execId, context, actionId, 'CONDITION_MATCH');
 
   return true;
 }

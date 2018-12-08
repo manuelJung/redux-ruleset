@@ -7,6 +7,8 @@ exports.addRule = addRule;
 exports.removeRule = removeRule;
 exports.executeRule = executeRule;
 exports.executeAction = executeAction;
+exports.createRuleExecutionId = createRuleExecutionId;
+exports.createActionExecutionId = createActionExecutionId;
 
 
 var events = [];
@@ -41,11 +43,11 @@ function removeRule(context) {
   events.push(event);
 }
 
-function executeRule(context, actionExecId, result) {
+function executeRule(id, context, actionExecId, result) {
   var event = {
     type: 'EXEC_RULE',
     timestamp: Date.now(),
-    id: ruleExecId++,
+    id: id,
     ruleId: context.rule.id,
     actionExecId: actionExecId,
     result: result
@@ -54,14 +56,22 @@ function executeRule(context, actionExecId, result) {
   return ruleExecId;
 }
 
-function executeAction(action) {
+function executeAction(id, action) {
   var event = {
     type: 'EXEC_ACTION',
     timestamp: Date.now(),
-    id: actionExecId++,
+    id: id,
     ruleExecId: null,
     action: action
   };
   events.push(event);
   return actionExecId;
+}
+
+function createRuleExecutionId() {
+  return ruleExecId++;
+}
+
+function createActionExecutionId() {
+  return actionExecId++;
 }
