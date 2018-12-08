@@ -32,7 +32,7 @@ function consequence(context, action, store, addRule, removeRule, actionId) {
   var _addRule = addRule;
   var _removeRule = removeRule;
   addRule = function addRule(rule) {
-    context.childRules.push(rule);return _addRule(rule);
+    context.childRules.push(rule);return _addRule(rule, context.rule.id);
   };
   removeRule = function removeRule(rule) {
     context.childRules.forEach(_removeRule);return _removeRule(rule);

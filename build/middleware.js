@@ -58,6 +58,8 @@ function middleware(store) {
 }
 
 function addRule(rule) {
+  var parentRuleId = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+
   var listeners = [];
   var context = {
     rule: rule,
@@ -80,8 +82,8 @@ function addRule(rule) {
       });
     }
   };
-  devtools.addRule(context);
   var add = function add() {
+    devtools.addRule(context, parentRuleId);
     _ruleDB2.default.addRule(context);
     if (rule.addUntil) addUntil();
   };

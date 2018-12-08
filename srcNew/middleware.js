@@ -28,7 +28,7 @@ export default function middleware(store:Store){
   }
 }
 
-export function addRule(rule:Rule){
+export function addRule(rule:Rule, parentRuleId:string|null=null){
   let listeners = []
   const context:RuleContext = {
     rule,
@@ -40,8 +40,8 @@ export function addRule(rule:Rule){
     removeCancelListener: cb => listeners = listeners.filter(l => cb !== l),
     cancelRule: (key='global') => listeners.forEach((cb, i) => cb(key) && listeners.splice(i,i+1))
   }
-  devtools.addRule(context)
   const add = () => {
+    devtools.addRule(context, parentRuleId)
     ruleDB.addRule(context)
     if(rule.addUntil) addUntil()
   }

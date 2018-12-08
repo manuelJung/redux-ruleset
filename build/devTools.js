@@ -19,12 +19,12 @@ window.getEvents = function () {
 var actionExecId = 1;
 var ruleExecId = 1;
 
-function addRule(context) {
+function addRule(context, parentRuleId) {
   var event = {
     type: 'ADD_RULE',
     timestamp: Date.now(),
     rule: context.rule,
-    parentRuleId: null
+    parentRuleId: parentRuleId
   };
   events.push(event);
 }

@@ -8,12 +8,12 @@ window.getEvents = () => events
 let actionExecId = 1
 let ruleExecId = 1
 
-export function addRule(context:RuleContext){
+export function addRule(context:RuleContext, parentRuleId:string|null){
   const event:AddRuleEvent = {
     type: 'ADD_RULE',
     timestamp: Date.now(),
     rule: context.rule,
-    parentRuleId: null
+    parentRuleId
   }
   events.push(event)
 }

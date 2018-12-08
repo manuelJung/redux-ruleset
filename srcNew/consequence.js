@@ -8,7 +8,7 @@ let store = null
 export default function consequence (context:RuleContext, action:Action, store:Store, addRule:Function, removeRule:Function, actionId:number):boolean{
   const _addRule = addRule
   const _removeRule = removeRule
-  addRule = rule => {context.childRules.push(rule); return _addRule(rule)}
+  addRule = rule => {context.childRules.push(rule); return _addRule(rule, context.rule.id)}
   removeRule = rule => {context.childRules.forEach(_removeRule); return _removeRule(rule)}
   const rule = context.rule
   // skip when concurrency matches
