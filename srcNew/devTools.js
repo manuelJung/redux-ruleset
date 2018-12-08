@@ -38,19 +38,23 @@ export function executeRule(id:number, context:RuleContext, actionExecId:number,
     result
   }
   events.push(event)
-  return ruleExecId
 }
 
-export function executeAction(id:number, action:Action){
+let pendingRuleExecId = null
+export function executeAction(id:number|null, action:Action, ruleExecId?:number){
+  if(id===null){
+    pendingRuleExecId = ruleExecId || null
+    return
+  }
   const event:ExecActionEvent = {
     type: 'EXEC_ACTION',
     timestamp: Date.now(),
     id,
-    ruleExecId: null,
+    ruleExecId: pendingRuleExecId,
     action: action
   }
+  pendingRuleExecId = null
   events.push(event)
-  return actionExecId
 }
 
 export function createRuleExecutionId(){
