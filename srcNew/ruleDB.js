@@ -1,4 +1,5 @@
 // @flow
+import * as devtools from './devTools'
 import type {Rule, Position, RuleContext} from './types'
 
 const store = {
@@ -42,7 +43,7 @@ function addRule(context:RuleContext):Rule{
 }
 
 // TODO: better performance for removing child rules
-function removeRule(rule:Rule):Rule{
+function removeRule(rule:Rule, removedByParent?:boolean=false):Rule{
   let context;
   const position = rule.position || 'INSERT_AFTER'
   if(typeof rule.target === 'string'){
@@ -62,7 +63,8 @@ function removeRule(rule:Rule):Rule{
     unlistenerList.forEach(cb => cb())
   }
   context && context.cancelRule()
-  context && context.childRules.forEach(removeRule)
+  context && context.childRules.forEach(rule => removeRule(rule, true))
+  context && devtools.removeRule(context, removedByParent)
   return rule
 }
 

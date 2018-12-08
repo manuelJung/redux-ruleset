@@ -3,6 +3,8 @@ import type {Action, RuleContext, AddRuleEvent, RemoveRuleEvent, ExecRuleEvent, 
 
 const events = []
 
+window.getEvents = () => events
+
 let actionExecId = 1
 let ruleExecId = 1
 
@@ -16,12 +18,12 @@ export function addRule(context:RuleContext){
   events.push(event)
 }
 
-export function removeRule(context:RuleContext){
+export function removeRule(context:RuleContext, removedByParent:boolean=false){
   const event:RemoveRuleEvent = {
     type: 'REMOVE_RULE',
     timestamp: Date.now(),
     ruleId: context.rule.id,
-    removedByParent: false
+    removedByParent
   }
   events.push(event)
 }
@@ -36,6 +38,7 @@ export function executeRule(context:RuleContext, actionExecId:number, result:str
     result
   }
   events.push(event)
+  return ruleExecId
 }
 
 export function executeAction(action:Action){
@@ -47,4 +50,5 @@ export function executeAction(action:Action){
     action: action
   }
   events.push(event)
+  return actionExecId
 }

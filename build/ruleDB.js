@@ -12,6 +12,12 @@ var _map = require('babel-runtime/core-js/map');
 
 var _map2 = _interopRequireDefault(_map);
 
+var _devTools = require('./devTools');
+
+var devtools = _interopRequireWildcard(_devTools);
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var store = {
@@ -55,6 +61,8 @@ function addRule(context) {
 
 // TODO: better performance for removing child rules
 function removeRule(rule) {
+  var removedByParent = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+
   var context = void 0;
   var position = rule.position || 'INSERT_AFTER';
   if (typeof rule.target === 'string') {
@@ -84,7 +92,10 @@ function removeRule(rule) {
     });
   }
   context && context.cancelRule();
-  context && context.childRules.forEach(removeRule);
+  context && context.childRules.forEach(function (rule) {
+    return removeRule(rule, true);
+  });
+  context && devtools.removeRule(context, removedByParent);
   return rule;
 }
 

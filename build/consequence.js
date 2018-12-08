@@ -18,10 +18,17 @@ var _ruleDB = require('./ruleDB');
 
 var _ruleDB2 = _interopRequireDefault(_ruleDB);
 
+var _devTools = require('./devTools');
+
+var devtools = _interopRequireWildcard(_devTools);
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var store = null;
-function consequence(context, action, store, addRule, removeRule) {
+
+function consequence(context, action, store, addRule, removeRule, actionId) {
   var _addRule = addRule;
   var _removeRule = removeRule;
   addRule = function addRule(rule) {
@@ -33,12 +40,15 @@ function consequence(context, action, store, addRule, removeRule) {
   var rule = context.rule;
   // skip when concurrency matches
   if (rule.concurrency === 'ONCE' && context.running) {
+    devtools.executeRule(context, actionId, 'CONCURRENCY');
     return false;
   }
   if (rule.concurrency === 'FIRST' && context.running) {
+    devtools.executeRule(context, actionId, 'CONCURRENCY');
     return false;
   }
   if (rule.addOnce && context.running) {
+    devtools.executeRule(context, actionId, 'ADD_ONCE');
     return false;
   }
   // skip if 'skipRule' condition matched
@@ -47,11 +57,13 @@ function consequence(context, action, store, addRule, removeRule) {
     if (skipRules[0] === '*' || skipRules.find(function (id) {
       return id === rule.id;
     })) {
+      devtools.executeRule(context, actionId, 'SKIP');
       return false;
     }
   }
   // skip if rule condition does not match
   if (rule.condition && !rule.condition(action, store.getState)) {
+    devtools.executeRule(context, actionId, 'NO_CONDITION_MATCH');
     return false;
   }
 
@@ -111,6 +123,8 @@ function consequence(context, action, store, addRule, removeRule) {
     rule.addOnce && _ruleDB2.default.removeRule(rule);
     rule.concurrency === 'LAST' && context.removeCancelListener(cancelCB);
   }
+
+  devtools.executeRule(context, actionId, 'CONDITION_MATCH');
 
   return true;
 }

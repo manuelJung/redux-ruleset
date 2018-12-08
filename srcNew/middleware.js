@@ -2,6 +2,7 @@
 import ruleDB from './ruleDB'
 import * as saga from './saga'
 import consequence from './consequence'
+import * as devtools from './devTools'
 
 import type {Rule, Store, Action, RuleContext} from './types'
 
@@ -10,14 +11,15 @@ let laterAddedRules = []
 export default function middleware(store:Store){
   saga.setStore(store)
   return (next:any) => (action:Action) => {
+    let actionId = devtools.executeAction(action)
     let instead = false
     saga.applyAction(action)
     ruleDB.forEachRuleContext('INSERT_INSTEAD', action.type, context => {
-      if(!instead && consequence(context, action, store, addRule, removeRule)) instead = true
+      if(!instead && consequence(context, action, store, addRule, removeRule, actionId)) instead = true
     })
-    !instead && ruleDB.forEachRuleContext('INSERT_BEFORE', action.type, context => consequence(context, action, store, addRule, removeRule))
+    !instead && ruleDB.forEachRuleContext('INSERT_BEFORE', action.type, context => consequence(context, action, store, addRule, removeRule, actionId))
     const result = instead ? null : next(action)
-    !instead && ruleDB.forEachRuleContext('INSERT_AFTER', action.type, context => consequence(context, action, store, addRule, removeRule))
+    !instead && ruleDB.forEachRuleContext('INSERT_AFTER', action.type, context => consequence(context, action, store, addRule, removeRule, actionId))
     if(laterAddedRules.length){
       laterAddedRules.forEach(cb => cb())
       laterAddedRules = []
@@ -38,6 +40,7 @@ export function addRule(rule:Rule){
     removeCancelListener: cb => listeners = listeners.filter(l => cb !== l),
     cancelRule: (key='global') => listeners.forEach((cb, i) => cb(key) && listeners.splice(i,i+1))
   }
+  devtools.addRule(context)
   const add = () => {
     ruleDB.addRule(context)
     if(rule.addUntil) addUntil()

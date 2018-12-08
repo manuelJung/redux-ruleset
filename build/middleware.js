@@ -19,26 +19,32 @@ var _consequence = require('./consequence');
 
 var _consequence2 = _interopRequireDefault(_consequence);
 
+var _devTools = require('./devTools');
+
+var devtools = _interopRequireWildcard(_devTools);
+
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var laterAddedRules = [];
+
 function middleware(store) {
   saga.setStore(store);
   return function (next) {
     return function (action) {
+      var actionId = devtools.executeAction(action);
       var instead = false;
       saga.applyAction(action);
       _ruleDB2.default.forEachRuleContext('INSERT_INSTEAD', action.type, function (context) {
-        if (!instead && (0, _consequence2.default)(context, action, store, addRule, removeRule)) instead = true;
+        if (!instead && (0, _consequence2.default)(context, action, store, addRule, removeRule, actionId)) instead = true;
       });
       !instead && _ruleDB2.default.forEachRuleContext('INSERT_BEFORE', action.type, function (context) {
-        return (0, _consequence2.default)(context, action, store, addRule, removeRule);
+        return (0, _consequence2.default)(context, action, store, addRule, removeRule, actionId);
       });
       var result = instead ? null : next(action);
       !instead && _ruleDB2.default.forEachRuleContext('INSERT_AFTER', action.type, function (context) {
-        return (0, _consequence2.default)(context, action, store, addRule, removeRule);
+        return (0, _consequence2.default)(context, action, store, addRule, removeRule, actionId);
       });
       if (laterAddedRules.length) {
         laterAddedRules.forEach(function (cb) {
@@ -74,6 +80,7 @@ function addRule(rule) {
       });
     }
   };
+  devtools.addRule(context);
   var add = function add() {
     _ruleDB2.default.addRule(context);
     if (rule.addUntil) addUntil();
