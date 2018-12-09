@@ -56,19 +56,23 @@ function executeRule(id, context, actionExecId, result) {
 }
 
 var pendingRuleExecId = null;
-function executeAction(id, action, ruleExecId) {
+var pendingRuleId = null;
+function executeAction(id, action, ruleExecId, ruleId) {
   if (id === null) {
     pendingRuleExecId = ruleExecId || null;
+    pendingRuleId = ruleId || null;
     return;
   }
   var event = {
     type: 'EXEC_ACTION',
     timestamp: Date.now(),
     id: id,
+    ruleId: pendingRuleId,
     ruleExecId: pendingRuleExecId,
     action: action
   };
   pendingRuleExecId = null;
+  pendingRuleId = null;
   events.push(event);
 }
 

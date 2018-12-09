@@ -86,6 +86,7 @@ export type ExecActionEvent = {
   type: 'EXEC_ACTION',
   timestamp: number,
   id: number,
+  ruleId: string | null,
   ruleExecId: number | null,
   action: Action
 }

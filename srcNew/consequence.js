@@ -70,7 +70,7 @@ export default function consequence (context:RuleContext, action:Action, store:S
     const _store = store
     store = Object.assign({}, store, {
       dispatch: action => {
-        devtools.executeAction(null, action, execId)
+        devtools.executeAction(null, action, execId, rule.id)
         return _store.dispatch(action)
       }
     })
