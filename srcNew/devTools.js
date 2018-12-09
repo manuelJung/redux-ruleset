@@ -42,12 +42,19 @@ export function executeRule(id:number, context:RuleContext, actionExecId:number,
 
 let pendingRuleExecId = null
 let pendingRuleId = null
-export function executeAction(id:number|null, action:Action, ruleExecId?:number, ruleId?:string){
-  if(id===null){
-    pendingRuleExecId = ruleExecId || null
-    pendingRuleId = ruleId || null
-    return
+export function extendNextAction(ruleExecId:number, ruleId:string){
+  pendingRuleExecId = ruleExecId
+  pendingRuleId = ruleId
+}
+
+export function getRuleInfoForAction(){
+  return {
+    ruleExecId: pendingRuleExecId,
+    ruleId: pendingRuleId
   }
+}
+
+export function executeAction(id:number, action:Action, ruleExecId:number|null, ruleId:string|null){
   const event:ExecActionEvent = {
     type: 'EXEC_ACTION',
     timestamp: Date.now(),

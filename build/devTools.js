@@ -6,6 +6,8 @@ Object.defineProperty(exports, "__esModule", {
 exports.addRule = addRule;
 exports.removeRule = removeRule;
 exports.executeRule = executeRule;
+exports.extendNextAction = extendNextAction;
+exports.getRuleInfoForAction = getRuleInfoForAction;
 exports.executeAction = executeAction;
 exports.createRuleExecutionId = createRuleExecutionId;
 exports.createActionExecutionId = createActionExecutionId;
@@ -57,12 +59,19 @@ function executeRule(id, context, actionExecId, result) {
 
 var pendingRuleExecId = null;
 var pendingRuleId = null;
+function extendNextAction(ruleExecId, ruleId) {
+  pendingRuleExecId = ruleExecId;
+  pendingRuleId = ruleId;
+}
+
+function getRuleInfoForAction() {
+  return {
+    ruleExecId: pendingRuleExecId,
+    ruleId: pendingRuleId
+  };
+}
+
 function executeAction(id, action, ruleExecId, ruleId) {
-  if (id === null) {
-    pendingRuleExecId = ruleExecId || null;
-    pendingRuleId = ruleId || null;
-    return;
-  }
   var event = {
     type: 'EXEC_ACTION',
     timestamp: Date.now(),

@@ -103,7 +103,7 @@ function consequence(context, action, store, addRule, removeRule, actionId) {
     var _store2 = store;
     store = (0, _assign2.default)({}, store, {
       dispatch: function dispatch(action) {
-        devtools.executeAction(null, action, execId, rule.id);
+        devtools.extendNextAction(execId, rule.id);
         return _store2.dispatch(action);
       }
     });

@@ -33,8 +33,12 @@ function middleware(store) {
   saga.setStore(store);
   return function (next) {
     return function (action) {
+      var _devtools$getRuleInfo = devtools.getRuleInfoForAction(),
+          ruleExecId = _devtools$getRuleInfo.ruleExecId,
+          ruleId = _devtools$getRuleInfo.ruleId;
+
       var execId = devtools.createActionExecutionId();
-      devtools.executeAction(execId, action);
+      devtools.executeAction(execId, action, ruleExecId, ruleId);
       var instead = false;
       saga.applyAction(action);
       _ruleDB2.default.forEachRuleContext('INSERT_INSTEAD', action.type, function (context) {

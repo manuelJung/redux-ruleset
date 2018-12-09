@@ -11,8 +11,9 @@ let laterAddedRules = []
 export default function middleware(store:Store){
   saga.setStore(store)
   return (next:any) => (action:Action) => {
+    const {ruleExecId, ruleId} = devtools.getRuleInfoForAction()
     const execId = devtools.createActionExecutionId()
-    devtools.executeAction(execId, action)
+    devtools.executeAction(execId, action, ruleExecId, ruleId)
     let instead = false
     saga.applyAction(action)
     ruleDB.forEachRuleContext('INSERT_INSTEAD', action.type, context => {
