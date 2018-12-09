@@ -20,6 +20,7 @@ export default function middleware(store:Store){
       if(!instead && consequence(context, action, store, addRule, removeRule, execId)) instead = true
     })
     !instead && ruleDB.forEachRuleContext('INSERT_BEFORE', action.type, context => consequence(context, action, store, addRule, removeRule, execId))
+    !instead  && devtools.dispatchAction(execId)
     const result = instead ? null : next(action)
     !instead && ruleDB.forEachRuleContext('INSERT_AFTER', action.type, context => consequence(context, action, store, addRule, removeRule, execId))
     if(laterAddedRules.length){

@@ -5,7 +5,7 @@ import * as devtools from './devTools'
 
 let store = null
 
-export default function consequence (context:RuleContext, action:Action, store:Store, addRule:Function, removeRule:Function, actionId:number):boolean{
+export default function consequence (context:RuleContext, action:Action, store:Store, addRule:Function, removeRule:Function, actionExecId:number):boolean{
   let execId = devtools.createRuleExecutionId()
   const _addRule = addRule
   const _removeRule = removeRule
@@ -14,15 +14,15 @@ export default function consequence (context:RuleContext, action:Action, store:S
   const rule = context.rule
   // skip when concurrency matches
   if(rule.concurrency === 'ONCE' && context.running){
-    devtools.executeRule(execId, context, actionId, 'CONCURRENCY')
+    devtools.executeRule(execId, context, actionExecId, 'CONCURRENCY')
     return false
   }
   if(rule.concurrency === 'FIRST' && context.running){
-    devtools.executeRule(execId, context, actionId, 'CONCURRENCY')
+    devtools.executeRule(execId, context, actionExecId, 'CONCURRENCY')
     return false
   }
   if(rule.addOnce && context.running){
-    devtools.executeRule(execId, context, actionId, 'ADD_ONCE')
+    devtools.executeRule(execId, context, actionExecId, 'ADD_ONCE')
     return false
   }
   // skip if 'skipRule' condition matched
@@ -31,13 +31,13 @@ export default function consequence (context:RuleContext, action:Action, store:S
       ? action.meta.skipRule 
       : [action.meta.skipRule]
     if(skipRules[0] === '*' || skipRules.find(id => id === rule.id)){
-      devtools.executeRule(execId, context, actionId, 'SKIP')
+      devtools.executeRule(execId, context, actionExecId, 'SKIP')
       return false
     }
   }
   // skip if rule condition does not match
   if(rule.condition && !rule.condition(action, store.getState)){
-    devtools.executeRule(execId, context, actionId, 'NO_CONDITION_MATCH')
+    devtools.executeRule(execId, context, actionExecId, 'NO_CONDITION_MATCH')
     return false
   }
 
@@ -76,6 +76,10 @@ export default function consequence (context:RuleContext, action:Action, store:S
     })
   }
 
+  if(rule.position === 'INSERT_INSTEAD'){
+    devtools.dispatchAction(actionExecId, true)
+  }
+
   context.running++
   const result = rule.consequence(store, action, {addRule, removeRule})
 
@@ -104,7 +108,7 @@ export default function consequence (context:RuleContext, action:Action, store:S
     rule.concurrency === 'LAST' && context.removeCancelListener(cancelCB)
   }
 
-  devtools.executeRule(execId, context, actionId, 'CONDITION_MATCH')
+  devtools.executeRule(execId, context, actionExecId, 'CONDITION_MATCH')
 
   return true
 }

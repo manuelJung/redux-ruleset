@@ -98,4 +98,10 @@ export type ExecSagaEvent = {
   result: 'PENDING' | 'CANCELED' | LogicAdd | LogicRemove
 }
 
-export type Event = AddRuleEvent | RemoveRuleEvent | ExecRuleEvent | ExecActionEvent | ExecSagaEvent
+export type DispatchActionEvent = {
+  type: 'DISPATCH_ACTION',
+  actionExecId: number,
+  removed: boolean
+}
+
+export type Event = AddRuleEvent | RemoveRuleEvent | ExecRuleEvent | ExecActionEvent | ExecSagaEvent | DispatchActionEvent

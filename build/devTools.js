@@ -8,6 +8,7 @@ exports.removeRule = removeRule;
 exports.executeRule = executeRule;
 exports.extendNextAction = extendNextAction;
 exports.getRuleInfoForAction = getRuleInfoForAction;
+exports.dispatchAction = dispatchAction;
 exports.executeAction = executeAction;
 exports.createRuleExecutionId = createRuleExecutionId;
 exports.createActionExecutionId = createActionExecutionId;
@@ -69,6 +70,17 @@ function getRuleInfoForAction() {
     ruleExecId: pendingRuleExecId,
     ruleId: pendingRuleId
   };
+}
+
+function dispatchAction(actionExecId) {
+  var removed = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+
+  var event = {
+    type: 'DISPATCH_ACTION',
+    actionExecId: actionExecId,
+    removed: removed
+  };
+  events.push(event);
 }
 
 function executeAction(id, action, ruleExecId, ruleId) {

@@ -1,5 +1,5 @@
 // @flow
-import type {Action, RuleContext, AddRuleEvent, RemoveRuleEvent, ExecRuleEvent, ExecActionEvent} from './types'
+import type {Action, RuleContext, AddRuleEvent, RemoveRuleEvent, ExecRuleEvent, ExecActionEvent, DispatchActionEvent} from './types'
 
 const events = []
 
@@ -52,6 +52,15 @@ export function getRuleInfoForAction(){
     ruleExecId: pendingRuleExecId,
     ruleId: pendingRuleId
   }
+}
+
+export function dispatchAction(actionExecId:number, removed:boolean=false){
+  const event:DispatchActionEvent = {
+    type: 'DISPATCH_ACTION',
+    actionExecId,
+    removed
+  }
+  events.push(event)
 }
 
 export function executeAction(id:number, action:Action, ruleExecId:number|null, ruleId:string|null){

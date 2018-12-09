@@ -47,6 +47,7 @@ function middleware(store) {
       !instead && _ruleDB2.default.forEachRuleContext('INSERT_BEFORE', action.type, function (context) {
         return (0, _consequence2.default)(context, action, store, addRule, removeRule, execId);
       });
+      !instead && devtools.dispatchAction(execId);
       var result = instead ? null : next(action);
       !instead && _ruleDB2.default.forEachRuleContext('INSERT_AFTER', action.type, function (context) {
         return (0, _consequence2.default)(context, action, store, addRule, removeRule, execId);
