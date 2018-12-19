@@ -23,21 +23,6 @@ export default function consequence (context:RuleContext, action:Action, store:S
     return false
   }
 
-  let canceled = false
-  const cancel = () => {canceled = true}
-
-  if(rule.concurrency === 'LAST'){
-    if(context.running) context.trigger('CANCEL_CONSEQUENCE')
-    context.on('CANCEL_CONSEQUENCE', cancel)
-    // patch
-    const _store = store
-    const _addRule = addRule
-    const _removeRule = removeRule
-    store = Object.assign({}, store, { dispatch: action => canceled ? action : _store.dispatch(action) })
-    addRule = rule => !canceled && _addRule(rule)
-    removeRule = rule => !canceled && _removeRule(rule)
-  }
-
   {
     const _addRule = addRule
     const _removeRule = removeRule
@@ -47,6 +32,24 @@ export default function consequence (context:RuleContext, action:Action, store:S
     }
     removeRule = rule => {context.childRules.forEach(_removeRule); return _removeRule(rule)}
   }
+
+  let canceled = false
+  const cancel = () => {canceled = true}
+
+  if(rule.concurrency === 'LAST' || rule.concurrency === 'SWITCH'){
+    const _store = store
+    const _addRule = addRule
+    const _removeRule = removeRule
+    store = Object.assign({}, store, { dispatch: action => canceled ? action : _store.dispatch(action) })
+    addRule = rule => !canceled && _addRule(rule)
+    removeRule = rule => !canceled && _removeRule(rule)
+  }
+
+  if(rule.concurrency === 'LAST'){
+    if(context.running) context.trigger('CANCEL_CONSEQUENCE')
+    context.on('CANCEL_CONSEQUENCE', cancel)
+  }
+
   const effect = fn => !canceled && fn()
 
   context.running++
@@ -65,6 +68,7 @@ export default function consequence (context:RuleContext, action:Action, store:S
     promise.then(action => {
       action && action.type && store.dispatch(action)
       rule.concurrency !== 'ONCE' && context.running--
+      rule.concurrency === 'SWITCH' && context.running && context.trigger('CANCEL_CONSEQUENCE')
       rule.addOnce && ruleDB.removeRule(rule)
       rule.concurrency === 'LAST' && context.off('CANCEL_CONSEQUENCE', cancel)
     }) 
