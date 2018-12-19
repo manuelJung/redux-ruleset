@@ -19,7 +19,7 @@ export type LogicRemove = 'RECREATE_RULE' | 'REMOVE_RULE' | 'REAPPLY_REMOVE' | '
 
 export type LogicConcurrency = 'DEFAULT' | 'FIRST' | 'LAST' | 'ONCE'
 
-export type ContextEvent = 'REMOVE_RULE' | 'ADD_RULE'
+export type ContextEvent = 'REMOVE_RULE' | 'ADD_RULE' | 'CANCEL_CONSEQUENCE'
 
 export type Saga<Logic> = (
   action: (cb?:(action:Action) => mixed) => mixed,
@@ -33,7 +33,7 @@ export type Rule = {
   zIndex?: number,
   concurrency?: LogicConcurrency,
   condition?: (action:Action, getState:GetState) => boolean,
-  consequence: (store:Store, action:Action, {addRule:AddRule,removeRule:RemoveRule}) => Action | Promise<Action> | Promise<void> | void | (getState:GetState) => mixed,
+  consequence: ({store:Store, action:Action, addRule:AddRule,removeRule:RemoveRule}) => Action | Promise<Action> | Promise<void> | void | (getState:GetState) => mixed,
   addOnce?: boolean,
   addWhen?: Saga<LogicAdd>,
   addUntil?: Saga<LogicRemove>,
