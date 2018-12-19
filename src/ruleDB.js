@@ -17,6 +17,8 @@ const activeRules:ActiveRules = {
 
 let laterAddedRules:(()=>void)[] = []
 
+let i
+
 const ruleContextList:{[ruleId:string]: RuleContext} = {}
 
 export function addRule(rule:Rule, parentRuleId?:string):Rule{
