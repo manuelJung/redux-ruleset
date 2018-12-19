@@ -47,9 +47,10 @@ export default function consequence (context:RuleContext, action:Action, store:S
     }
     removeRule = rule => {context.childRules.forEach(_removeRule); return _removeRule(rule)}
   }
+  const effect = fn => !canceled && fn()
 
   context.running++
-  const result = rule.consequence({store, action, addRule, removeRule})
+  const result = rule.consequence({store, action, addRule, removeRule, effect})
 
   if(typeof result === 'object' && result.type){
     const action:any = result
