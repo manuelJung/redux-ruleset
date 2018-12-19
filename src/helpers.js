@@ -39,3 +39,15 @@ export function forEachTarget(target:'*' | string | string[], cb:(target:string)
     for(i=0;i<target.length;i++){ cb(target[i]) }
   }
 }
+
+export function pushByZIndex(list:Rule[], rule:Rule):void{
+  const index = list.reduce((p,n,i) => {
+    if(typeof n.zIndex !== 'number' || typeof rule.zIndex !== 'number'){
+      console.warn('if multiple rules are attached to a action you have to specify the order (zIndex)', n)
+      return p
+    }
+    if(rule.zIndex < n.zIndex) return i
+    else return p
+  }, 0)
+  list.splice(index,0,rule)
+}

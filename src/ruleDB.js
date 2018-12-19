@@ -1,5 +1,5 @@
 // @flow
-import {createContext, forEachTarget} from './helpers'
+import {createContext, forEachTarget, pushByZIndex} from './helpers'
 import * as saga from './saga'
 import type {Rule, RuleContext, Position} from './types'
 
@@ -17,8 +17,6 @@ const activeRules:ActiveRules = {
 
 let laterAddedRules:(()=>void)[] = []
 
-let i
-
 const ruleContextList:{[ruleId:string]: RuleContext} = {}
 
 export function addRule(rule:Rule, parentRuleId?:string):Rule{
@@ -35,7 +33,9 @@ export function addRule(rule:Rule, parentRuleId?:string):Rule{
     ruleContextList[rule.id] = context
     forEachTarget(rule.target, target => {
       if(!activeRules[position][target]) activeRules[position][target] = []
-      activeRules[position][target].push(rule)
+      const list = activeRules[position][target]
+      if(list.length > 0) pushByZIndex(list, rule)
+      else list.push(rule)
     })
     context.trigger('ADD_RULE')
   }
@@ -90,4 +90,8 @@ export function addLaterAddedRules(){
   if(!laterAddedRules.length) return
   for (i=0;i<laterAddedRules.length;i++){ laterAddedRules[i]() }
   laterAddedRules = []
+}
+
+export function getRuleContext(rule:Rule):RuleContext {
+  return ruleContextList[rule.id]
 }
