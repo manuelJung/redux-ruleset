@@ -42,7 +42,7 @@ function addListener(target, cb){
   }
 }
 
-export function createSaga<Logic>(context:RuleContext, saga:Saga<Logic>, cb:(result:Logic) => mixed){
+export function createSaga<Logic>(context:RuleContext, saga:Saga<Logic>, cb:(result:Logic|void) => mixed){
   if(!store) {
     initialSagas.push(() => createSaga(context,saga,cb))
     return

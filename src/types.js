@@ -22,9 +22,9 @@ export type LogicConcurrency = 'DEFAULT' | 'FIRST' | 'LAST' | 'ONCE'
 export type ContextEvent = 'REMOVE_RULE' | 'ADD_RULE'
 
 export type Saga<Logic> = (
-  condition: (cb?:(action:Action) => mixed) => Promise<void>,
+  action: (cb?:(action:Action) => mixed) => mixed,
   getState: GetState
-) => Promise<Logic>
+) => Generator<any,Logic,mixed>
 
 export type Rule = {
   id: string,
