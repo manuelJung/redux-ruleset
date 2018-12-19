@@ -81,6 +81,11 @@ export default function consequence (context:RuleContext, action:Action, store:S
     rule.addOnce && ruleDB.removeRule(rule)
     rule.concurrency === 'LAST' && context.off('CANCEL_CONSEQUENCE', cancel)
   }
+  else {
+    rule.concurrency !== 'ONCE' && context.running--
+    rule.addOnce && ruleDB.removeRule(rule)
+    rule.concurrency === 'LAST' && context.off('CANCEL_CONSEQUENCE', cancel)
+  }
 
   return true
 }
