@@ -47,13 +47,17 @@ export function createSaga<Logic>(context:RuleContext, saga:Saga<Logic>, cb:(res
     initialSagas.push(() => createSaga(context,saga,cb))
     return
   }
+  context.pendingSaga = true
+  context.sagaStep = -1
   const boundStore = store
   let cancel = () => {}
 
   const run = gen => {
     const next = (iter, payload) => {
+      context.sagaStep++
       const result = iter.next(payload)
       if(result.done) {
+        context.pendingSaga = false
         context.off('REMOVE_RULE', cancel)
         cb(result.value)
       }
@@ -68,8 +72,8 @@ export function createSaga<Logic>(context:RuleContext, saga:Saga<Logic>, cb:(res
     }
     const iter = gen(action, boundStore.getState)
     cancel = () => {
-      context.off('REMOVE_RULE', cancel)
       iter.return('CANCELED')
+      next(iter)
     }
     context.on('REMOVE_RULE', cancel)
     next(iter)
