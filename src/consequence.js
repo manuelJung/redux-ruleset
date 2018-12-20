@@ -27,23 +27,27 @@ export default function consequence (context:RuleContext, action:Action, store:S
   {
     const _addRule = addRule
     const _removeRule = removeRule
-    addRule = (rule, hasParent) => {
+    addRule = (rule, parentRuleId) => {
       context.childRules.push(rule);
-      return hasParent ? _addRule(rule) : _addRule(rule, context.rule.id) 
+      return parentRuleId ? _addRule(rule) : _addRule(rule, context.rule.id) 
     }
     removeRule = rule => {context.childRules.forEach(_removeRule); return _removeRule(rule)}
   }
 
   let canceled = false
   const cancel = () => {canceled = true}
+  const effect = fn => !canceled && fn()
 
   if(rule.concurrency === 'LAST' || rule.concurrency === 'SWITCH'){
     const _store = store
     const _addRule = addRule
     const _removeRule = removeRule
     store = Object.assign({}, store, { dispatch: action => canceled ? action : _store.dispatch(action) })
-    addRule = rule => !canceled && _addRule(rule)
-    removeRule = rule => !canceled && _removeRule(rule)
+    addRule = (rule, parentRuleId) => {
+      if(!canceled) return _addRule(rule, parentRuleId)
+      else return rule
+    }
+    removeRule = rule => {!canceled && _removeRule(rule)}
   }
 
   if(rule.concurrency === 'LAST'){
@@ -52,8 +56,6 @@ export default function consequence (context:RuleContext, action:Action, store:S
   }
 
   context.on('REMOVE_RULE', cancel)
-
-  const effect = fn => !canceled && fn()
 
   context.running++
   const result = rule.consequence({store, action, addRule, removeRule, effect})
