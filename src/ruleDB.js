@@ -20,9 +20,16 @@ let i
 
 const ruleContextList:{[ruleId:string]: RuleContext} = {}
 
+const contextListeners = []
+
 export function addRule(rule:Rule, parentRuleId?:string):Rule{
   const context = createContext(rule)
   const position = rule.position || 'INSERT_AFTER'
+  if(contextListeners.length && !getRuleContext(rule)) {
+    for(i=0;i<contextListeners.length;i++){
+      contextListeners[i](context)
+    }
+  }
 
   if(parentRuleId){
     const parentContext = ruleContextList[parentRuleId]
@@ -93,8 +100,12 @@ export function addLaterAddedRules(){
   laterAddedRules = []
 }
 
-export function getRuleContext(rule:Rule):RuleContext {
+export function getRuleContext(rule:Rule):RuleContext|void {
   return ruleContextList[rule.id]
+}
+
+export function registerContextListener(cb:(context:RuleContext)=>void){
+  contextListeners.push(cb)
 }
 
 // HELPERS
@@ -106,8 +117,7 @@ function createContext(rule:Rule):RuleContext{
     childRules: [],
     running: 0,
     active: false,
-    pendingWhen: false,
-    pendingUntil: false,
+    pendingSaga: false,
     sagaStep: 0,
     on: (e, cb) => {
       if(!listeners[e]) listeners[e] = []
