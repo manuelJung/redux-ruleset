@@ -9,19 +9,26 @@ export default function consequence (context:RuleContext, action:Action, store:S
   let execId = executionId++
   const rule = context.rule
 
+  const stop = () => {
+    context.trigger('CONSEQUENCE_END', execId)
+    return false
+  }
+
+  context.trigger('CONSEQUENCE_START', execId)
+
   // skip when concurrency matches
   if(context.running){
-    if(rule.concurrency === 'ONCE') return false
-    if(rule.concurrency === 'FIRST') return false
-    if(rule.addOnce) return false
+    if(rule.concurrency === 'ONCE') return stop()
+    if(rule.concurrency === 'FIRST') return stop()
+    if(rule.addOnce) return stop()
   }
   // skip if 'skipRule' condition matched
   if(action.meta && action.meta.skipRule && matchGlob(rule.id, action.meta.skipRule)){
-    return false
+    return stop()
   }
   // skip if rule condition does not match
   if(rule.condition && !rule.condition(action, store.getState)){
-    return false
+    return stop()
   }
 
   {
@@ -63,37 +70,25 @@ export default function consequence (context:RuleContext, action:Action, store:S
   if(typeof result === 'object' && result.type){
     const action:any = result
     store.dispatch(action)
-    rule.concurrency !== 'ONCE' && context.running--
-    rule.addOnce && ruleDB.removeRule(rule)
-    rule.concurrency === 'LAST' && context.off('CANCEL_CONSEQUENCE', cancel)
-    context.off('REMOVE_RULE', cancel)
+    unlisten(context, execId, cancel)
   }
 
   else if(typeof result === 'object' && result.then){
     const promise:any = result
     promise.then(action => {
       action && action.type && store.dispatch(action)
-      rule.concurrency !== 'ONCE' && context.running--
       rule.concurrency === 'SWITCH' && context.running && context.trigger('CANCEL_CONSEQUENCE')
-      rule.addOnce && ruleDB.removeRule(rule)
-      rule.concurrency === 'LAST' && context.off('CANCEL_CONSEQUENCE', cancel)
-      context.off('REMOVE_RULE', cancel)
+      unlisten(context, execId, cancel)
     }) 
   }
 
   else if(typeof result === 'function'){
     const cb:any = result
     context.on('REMOVE_RULE', () => cb(store.getState))
-    rule.concurrency !== 'ONCE' && context.running--
-    rule.addOnce && ruleDB.removeRule(rule)
-    rule.concurrency === 'LAST' && context.off('CANCEL_CONSEQUENCE', cancel)
-    context.off('REMOVE_RULE', cancel)
+    unlisten(context, execId, cancel)
   }
   else {
-    rule.concurrency !== 'ONCE' && context.running--
-    rule.addOnce && ruleDB.removeRule(rule)
-    rule.concurrency === 'LAST' && context.off('CANCEL_CONSEQUENCE', cancel)
-    context.off('REMOVE_RULE', cancel)
+    unlisten(context, execId, cancel)
   }
 
   return true
@@ -101,6 +96,14 @@ export default function consequence (context:RuleContext, action:Action, store:S
 
 
 // HELPERS
+
+function unlisten(context:RuleContext, execId:number, cancelFn:Function){
+  context.rule.concurrency !== 'ONCE' && context.running--
+  context.rule.addOnce && ruleDB.removeRule(context.rule)
+  context.rule.concurrency === 'LAST' && context.off('CANCEL_CONSEQUENCE', cancelFn)
+  context.off('REMOVE_RULE', cancelFn)
+  context.trigger('CONSEQUENCE_END', execId)
+}
 
 function matchGlob(id:string, glob:'*' | string | string[]):boolean{
   if(glob === '*') return true
