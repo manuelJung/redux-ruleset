@@ -51,6 +51,8 @@ export default function consequence (context:RuleContext, action:Action, store:S
     context.on('CANCEL_CONSEQUENCE', cancel)
   }
 
+  context.on('REMOVE_RULE', cancel)
+
   const effect = fn => !canceled && fn()
 
   context.running++
@@ -62,6 +64,7 @@ export default function consequence (context:RuleContext, action:Action, store:S
     rule.concurrency !== 'ONCE' && context.running--
     rule.addOnce && ruleDB.removeRule(rule)
     rule.concurrency === 'LAST' && context.off('CANCEL_CONSEQUENCE', cancel)
+    context.off('REMOVE_RULE', cancel)
   }
 
   else if(typeof result === 'object' && result.then){
@@ -72,6 +75,7 @@ export default function consequence (context:RuleContext, action:Action, store:S
       rule.concurrency === 'SWITCH' && context.running && context.trigger('CANCEL_CONSEQUENCE')
       rule.addOnce && ruleDB.removeRule(rule)
       rule.concurrency === 'LAST' && context.off('CANCEL_CONSEQUENCE', cancel)
+      context.off('REMOVE_RULE', cancel)
     }) 
   }
 
@@ -81,11 +85,13 @@ export default function consequence (context:RuleContext, action:Action, store:S
     rule.concurrency !== 'ONCE' && context.running--
     rule.addOnce && ruleDB.removeRule(rule)
     rule.concurrency === 'LAST' && context.off('CANCEL_CONSEQUENCE', cancel)
+    context.off('REMOVE_RULE', cancel)
   }
   else {
     rule.concurrency !== 'ONCE' && context.running--
     rule.addOnce && ruleDB.removeRule(rule)
     rule.concurrency === 'LAST' && context.off('CANCEL_CONSEQUENCE', cancel)
+    context.off('REMOVE_RULE', cancel)
   }
 
   return true
