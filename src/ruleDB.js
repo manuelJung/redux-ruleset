@@ -22,7 +22,7 @@ const ruleContextList:{[ruleId:string]: RuleContext} = {}
 
 const contextListeners = []
 
-export function addRule(rule:Rule, parentRuleId?:string):Rule{
+export function addRule(rule:Rule, parentRuleId?:string, forceAdd?:boolean):Rule{
   const context = createContext(rule)
   const position = rule.position || 'INSERT_AFTER'
   if(contextListeners.length && !getRuleContext(rule)) {
@@ -56,13 +56,14 @@ export function addRule(rule:Rule, parentRuleId?:string):Rule{
   })
   const addUntil = () => rule.addUntil && saga.createSaga(context, rule.addUntil, logic => {
     switch(logic){
-      case 'RECREATE_RULE': removeRule(rule) && addRule(rule); break
+      case 'RECREATE_RULE': removeRule(rule); addRule(rule, parentRuleId); break
       case 'REMOVE_RULE': removeRule(rule); break
       case 'REAPPLY_REMOVE': addUntil(); break
+      case 'READD_RULE': removeRule(rule); addRule(rule, parentRuleId, true); break
     }
   })
 
-  if(rule.addWhen) addWhen()
+  if(rule.addWhen && !forceAdd) addWhen()
   else add()
   return rule
 }
