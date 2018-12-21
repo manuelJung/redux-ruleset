@@ -2,7 +2,7 @@
 import * as ruleDB from './ruleDB'
 import type {Rule,Action,Store,RuleContext} from './types'
 
-let executionId = 0
+let executionId = 1
 let {addRule, removeRule} = ruleDB
 
 export default function consequence (context:RuleContext, action:Action, store:Store, actionExecId:number):boolean{
