@@ -5,6 +5,13 @@ import type {Rule,Action,Store,RuleContext} from './types'
 let executionId = 1
 let {addRule, removeRule} = ruleDB
 
+let nextExecutionId:number|null = null
+export function getRuleExecutionId(){
+  const id = nextExecutionId
+  nextExecutionId = null
+  return id
+}
+
 export default function consequence (context:RuleContext, action:Action, store:Store, actionExecId:number):boolean{
   let execId = executionId++
   const rule = context.rule
@@ -63,6 +70,12 @@ export default function consequence (context:RuleContext, action:Action, store:S
   }
 
   context.on('REMOVE_RULE', cancel)
+
+  // we want to attach the executionId id to the action
+  {
+    const _store = store
+    store = {...store, dispatch: action => {nextExecutionId = execId; return _store.dispatch(action)}}
+  }
 
   context.running++
   const result = rule.consequence({store, action, addRule, removeRule, effect})
