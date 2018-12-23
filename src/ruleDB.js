@@ -22,7 +22,9 @@ const ruleContextList:{[ruleId:string]: RuleContext} = {}
 
 const contextListeners = []
 
-export function addRule(rule:Rule, parentRuleId?:string, forceAdd?:boolean):Rule{
+export const getPrivatesForTesting = (key:string) => ({activeRules, laterAddedRules, ruleContextList, contextListeners})[key]
+
+export function addRule(rule:Rule, parentRuleId?:string|null, forceAdd?:boolean):Rule{
   const context = createContext(rule)
   const position = rule.position || 'INSERT_AFTER'
   if(contextListeners.length && !getRuleContext(rule)) {
@@ -150,10 +152,9 @@ function forEachTarget(target:'*' | string | string[], cb:(target:string)=>mixed
 function pushByZIndex(list:Rule[], rule:Rule):void{
   const index = list.reduce((p,n,i) => {
     if(typeof n.zIndex !== 'number' || typeof rule.zIndex !== 'number'){
-      console.warn('if multiple rules are attached to a action you have to specify the order (zIndex)', n)
       return p
     }
-    if(rule.zIndex < n.zIndex) return i
+    if(rule.zIndex > n.zIndex) return i+1
     else return p
   }, 0)
   list.splice(index,0,rule)
