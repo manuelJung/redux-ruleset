@@ -47,6 +47,7 @@ export function addRule(rule:Rule, parentRuleId?:string|null, forceAdd?:boolean)
       if(list.length > 0) pushByZIndex(list, rule)
       else list.push(rule)
     })
+    addUntil()
     context.trigger('ADD_RULE')
   }
   const addWhen = () => rule.addWhen && saga.createSaga(context, rule.addWhen, logic => {
