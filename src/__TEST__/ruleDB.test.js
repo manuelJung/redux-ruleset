@@ -9,6 +9,7 @@ declare var expect: any
 declare var jest: any
 
 let ruleDB
+let saga
 
 const createRule = (id:string, target:string|string[], alter?:Object):Rule => ({
   id,
@@ -111,6 +112,44 @@ describe('forEachRuleContext', () => {
   })
 })
 
-// describe addWhen
+describe('addWhen', () => {
+  beforeEach(() => {
+    jest.resetModules()
+    ruleDB = require('../ruleDB')
+    saga = require('../saga')
+  })
+  test('if saga yields "ADD_RULE_BEFORE", the rule should be added to active rules', () => {
+    jest.spyOn(saga, 'createSaga').mockImplementation((context, saga, cb) => {cb('ADD_RULE_BEFORE')})
+    const rule = ruleDB.addRule(createRule('add-rule-before', 'ANY_TYPE', { addWhen: function*(){} }))
+    const activeRules = ruleDB.getPrivatesForTesting('activeRules')
+    expect(activeRules.INSERT_AFTER.ANY_TYPE).toContain(rule)
+  })
+  test('if saga yields "ADD_RULE", the rule should be added to the later added rules', () => {
+    jest.spyOn(saga, 'createSaga').mockImplementation((context, saga, cb) => {cb('ADD_RULE')})
+    const rule = ruleDB.addRule(createRule('add-rule', 'ANY_TYPE', { addWhen: function*(){} }))
+    const laterAddedRules = ruleDB.getPrivatesForTesting('laterAddedRules')
+    const activeRules = ruleDB.getPrivatesForTesting('activeRules')
+    expect(activeRules.INSERT_AFTER.ANY_TYPE).toBeUndefined()
+    expect(laterAddedRules).toHaveLength(1)
+    ruleDB.addLaterAddedRules()
+    expect(activeRules.INSERT_AFTER.ANY_TYPE).toContain(rule)
+    const laterAddedRulesNew = ruleDB.getPrivatesForTesting('laterAddedRules')
+    expect(laterAddedRulesNew).toHaveLength(0)
+  })
+  test('if saga yields "ABORT", no rule should be added', () => {
+    jest.spyOn(saga, 'createSaga').mockImplementation((context, saga, cb) => {cb('ABORT')})
+    const rule = ruleDB.addRule(createRule('abort', 'ANY_TYPE', { addWhen: function*(){} }))
+    const activeRules = ruleDB.getPrivatesForTesting('activeRules')
+    expect(activeRules.INSERT_AFTER.ANY_TYPE).toBeUndefined()
+  })
+  test('if saga yields "REAPPLY_WHEN", the addWhen saga should be reinvoked', () => {
+    jest.spyOn(saga, 'createSaga')
+      .mockImplementationOnce((context, saga, cb) => {cb('REAPPLY_WHEN')})
+      .mockImplementationOnce((context, saga, cb) => {cb('ABORT')})
+    const rule = ruleDB.addRule(createRule('reapply-when', 'ANY_TYPE', { addWhen: function*(){} }))
+    expect(saga.createSaga).toBeCalledTimes(2)
+  })
+})
+
 // describe addUntil
 // describe context
