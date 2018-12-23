@@ -1,5 +1,5 @@
 // @flow
-import * as ruleDB from '../ruleDB'
+// import * as ruleDB from '../ruleDB'
 import type {Rule} from '../types'
 
 declare var describe: any
@@ -7,6 +7,8 @@ declare var beforeEach: any
 declare var test: any
 declare var expect: any
 declare var jest: any
+
+let ruleDB
 
 const createRule = (id:string, target:string|string[], alter?:Object):Rule => ({
   id,
@@ -16,6 +18,10 @@ const createRule = (id:string, target:string|string[], alter?:Object):Rule => ({
 })
 
 describe('add rules', () => {
+  beforeEach(() => {
+    jest.resetModules()
+    ruleDB = require('../ruleDB')
+  })
   test('if rule has no position, it should be added at position INSERT_AFTER', () => {
     const rule = ruleDB.addRule(createRule('default-position', 'ANY_TYPE'))
     const activeRules = ruleDB.getPrivatesForTesting('activeRules')
@@ -60,7 +66,7 @@ describe('add rules', () => {
   test('if rule contains "addWhen" cb, then rule should not be added (yet)', () => {
     const rule = ruleDB.addRule(createRule('addWhen', 'ANY_TYPE', {addWhen: function*(){}}))
     const activeRules = ruleDB.getPrivatesForTesting('activeRules')
-    expect(activeRules.INSERT_AFTER.ANY_TYPE).not.toContain(rule)
+    expect(activeRules.INSERT_AFTER.ANY_TYPE).toBeUndefined()
   })
   test('if rule contains "addWhen" cb, but was invoked with "forceAdd", it should be added', () => {
     const rule = ruleDB.addRule(createRule('force-add', 'ANY_TYPE', {addWhen: function*(){}}), null, true)
@@ -83,6 +89,25 @@ describe('remove rules', () => {
     ruleDB.removeRule(parent)
     const activeRules = ruleDB.getPrivatesForTesting('activeRules')
     expect(activeRules.INSERT_AFTER.ANY_TYPE).not.toContain(child)
+  })
+})
+
+describe('forEachRuleContext', () => {
+  beforeEach(() => {
+    jest.resetModules()
+    ruleDB = require('../ruleDB')
+  })
+  test('it should call cb for each bound and global rule with rule context', () => {
+    const globalRule = ruleDB.addRule(createRule('global-rule', '*'))
+    const boundRule1 = ruleDB.addRule(createRule('bound-rule1', 'BOUND_TYPE'))
+    const boundRule2 = ruleDB.addRule(createRule('bound-rule2', 'OTHER_TYPE'))
+    const globalRuleContext = ruleDB.getRuleContext(globalRule)
+    const boundRule1Context = ruleDB.getRuleContext(boundRule1)
+    const cb = jest.fn()
+    ruleDB.forEachRuleContext('INSERT_AFTER', 'BOUND_TYPE', cb)
+    expect(cb).toBeCalledTimes(2)
+    expect(cb).toBeCalledWith(globalRuleContext)
+    expect(cb).toBeCalledWith(boundRule1Context)
   })
 })
 

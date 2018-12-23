@@ -86,14 +86,14 @@ export function removeRule(rule:Rule){
   context.trigger('REMOVE_RULE')
 }
 
-export function forEachRuleContext(position:Position, actionType:string, cb:Function){
+export function forEachRuleContext(position:Position, actionType:string, cb:(context:RuleContext)=>mixed){
   const globalRules = activeRules[position].global
   const boundRules = activeRules[position][actionType]
   if(globalRules){
-    for(i=0;i<globalRules.length;i++){cb(globalRules[i])}
+    for(i=0;i<globalRules.length;i++){cb(ruleContextList[globalRules[i].id])}
   }
   if(boundRules){
-    for(i=0;i<boundRules.length;i++){cb(boundRules[i])}
+    for(i=0;i<boundRules.length;i++){cb(ruleContextList[boundRules[i].id])}
   }
 }
 
