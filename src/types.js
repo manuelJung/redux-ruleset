@@ -57,9 +57,9 @@ export type RuleContext = {
   trigger: (e:ContextEvent, payload?:mixed) => void,
 }
 
-export type AddRule = (rule:Rule) => Rule | false
+export type AddRule = (rule:Rule) => Rule
 
-export type RemoveRule = (rule:Rule) => Rule | false
+export type RemoveRule = (rule:Rule) => void
 
 
 // EVENTS
