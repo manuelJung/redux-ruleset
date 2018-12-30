@@ -33,7 +33,13 @@ export type Rule = {
   zIndex?: number,
   concurrency?: LogicConcurrency,
   condition?: (action:Action, getState:GetState) => boolean,
-  consequence: ({store:Store, action:Action, addRule:AddRule,removeRule:RemoveRule}) => Action | Promise<Action> | Promise<void> | void | (getState:GetState) => mixed,
+  consequence: ({
+    store:Store, 
+    action:Action, 
+    addRule:AddRule,
+    removeRule:RemoveRule, 
+    effect: (()=>mixed)=>mixed|false
+  }) => Action | Promise<Action> | Promise<void> | void | (getState:GetState) => mixed,
   addOnce?: boolean,
   addWhen?: Saga<LogicAdd>,
   addUntil?: Saga<LogicRemove>,

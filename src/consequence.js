@@ -52,11 +52,15 @@ export default function consequence (context:RuleContext, action:Action, store:S
   const cancel = () => {canceled = true}
   const effect = fn => !canceled && fn()
 
-  if(rule.concurrency === 'LAST' || rule.concurrency === 'SWITCH'){
+  {
     const _store = store
     const _addRule = addRule
     const _removeRule = removeRule
-    store = Object.assign({}, store, { dispatch: action => canceled ? action : _store.dispatch(action) })
+    store = Object.assign({}, store, { dispatch: action => {
+      if(canceled) return action
+      nextExecutionId = execId
+      return _store.dispatch(action) 
+    }})
     addRule = (rule, parentRuleId) => {
       if(!canceled) return _addRule(rule, parentRuleId)
       else return rule
@@ -70,12 +74,6 @@ export default function consequence (context:RuleContext, action:Action, store:S
   }
 
   context.on('REMOVE_RULE', cancel)
-
-  // we want to attach the executionId id to the action
-  {
-    const _store = store
-    store = {...store, dispatch: action => {nextExecutionId = execId; return _store.dispatch(action)}}
-  }
 
   context.running++
   const result = rule.consequence({store, action, addRule, removeRule, effect})
