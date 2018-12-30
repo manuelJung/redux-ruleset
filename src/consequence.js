@@ -17,6 +17,10 @@ export default function consequence (context:RuleContext, action:Action, store:S
   const rule = context.rule
   context.trigger('CONSEQUENCE_START', execId)
 
+  /**
+   * Check concurrency and conditions
+   */
+
   // trigger when consequence should not be invoked (e.g condition does not match)
   const skipConsequence = () => {
     context.trigger('CONSEQUENCE_END', execId)
@@ -39,6 +43,10 @@ export default function consequence (context:RuleContext, action:Action, store:S
   if(rule.condition && !rule.condition(action, store.getState)){
     return skipConsequence()
   }
+
+  /**
+   * Prepare Execution
+   */
 
   let canceled = false
   const cancel = () => {canceled = true}
@@ -64,8 +72,16 @@ export default function consequence (context:RuleContext, action:Action, store:S
     }
   }
 
+  /**
+   * Setup Cancel Listeners
+   */
+
   context.on('CANCEL_CONSEQUENCE', cancel)
   context.on('REMOVE_RULE', cancel)
+
+  /**
+   * Execute consequence
+   */
 
   context.running++
   let result
@@ -80,7 +96,10 @@ export default function consequence (context:RuleContext, action:Action, store:S
   else {
     result = rule.consequence({store, action, addRule, removeRule, effect})
   }
-  
+
+  /**
+   * Handle return types
+   */
 
   // dispatch returned action
   if(typeof result === 'object' && result.type){
