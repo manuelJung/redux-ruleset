@@ -59,6 +59,7 @@ export default function consequence (context:RuleContext, action:Action, store:S
     store = Object.assign({}, store, { dispatch: action => {
       if(canceled) return action
       nextExecutionId = execId
+      rule.concurrency === 'SWITCH' && context.trigger('CANCEL_CONSEQUENCE')
       return _store.dispatch(action) 
     }})
     addRule = (rule, parentRuleId) => {
@@ -113,7 +114,6 @@ export default function consequence (context:RuleContext, action:Action, store:S
     const promise:any = result
     promise.then(action => {
       action && action.type && store.dispatch(action)
-      rule.concurrency === 'SWITCH' && context.running && context.trigger('CANCEL_CONSEQUENCE')
       unlisten(context, execId, cancel)
     }) 
   }
@@ -138,10 +138,10 @@ export default function consequence (context:RuleContext, action:Action, store:S
 
 function unlisten(context:RuleContext, execId:number, cancelFn:Function){
   context.rule.concurrency !== 'ONCE' && context.running--
+  context.trigger('CONSEQUENCE_END', execId)
   context.rule.addOnce && ruleDB.removeRule(context.rule)
   context.off('CANCEL_CONSEQUENCE', cancelFn)
   context.off('REMOVE_RULE', cancelFn)
-  context.trigger('CONSEQUENCE_END', execId)
 }
 
 function matchGlob(id:string, glob:'*' | string | string[]):boolean{
