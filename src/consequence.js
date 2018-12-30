@@ -15,28 +15,28 @@ export function getRuleExecutionId(){
 export default function consequence (context:RuleContext, action:Action, store:Store, actionExecId:number):boolean{
   let execId = executionId++
   const rule = context.rule
+  context.trigger('CONSEQUENCE_START', execId)
 
-  const stop = () => {
+  // trigger when consequence should not be invoked (e.g condition does not match)
+  const skipConsequence = () => {
     context.trigger('CONSEQUENCE_END', execId)
     return false
   }
 
-  context.trigger('CONSEQUENCE_START', execId)
-
   // skip when concurrency matches
   if(context.running){
-    if(rule.concurrency === 'ONCE') return stop()
-    if(rule.concurrency === 'FIRST') return stop()
-    if(rule.addOnce) return stop()
+    if(rule.concurrency === 'ONCE') return skipConsequence()
+    if(rule.concurrency === 'FIRST') return skipConsequence()
+    if(rule.addOnce) return skipConsequence()
     if(rule.concurrency === 'LAST') context.trigger('CANCEL_CONSEQUENCE')
   }
   // skip if 'skipRule' condition matched
   if(action.meta && action.meta.skipRule && matchGlob(rule.id, action.meta.skipRule)){
-    return stop()
+    return skipConsequence()
   }
   // skip if rule condition does not match
   if(rule.condition && !rule.condition(action, store.getState)){
-    return stop()
+    return skipConsequence()
   }
 
   let canceled = false
@@ -69,12 +69,14 @@ export default function consequence (context:RuleContext, action:Action, store:S
   context.running++
   const result = rule.consequence({store, action, addRule, removeRule, effect})
 
+  // dispatch returned action
   if(typeof result === 'object' && result.type){
     const action:any = result
     store.dispatch(action)
     unlisten(context, execId, cancel)
   }
 
+  // dispatch returned (promise-wrapped) action
   else if(typeof result === 'object' && result.then){
     const promise:any = result
     promise.then(action => {
@@ -84,11 +86,14 @@ export default function consequence (context:RuleContext, action:Action, store:S
     }) 
   }
 
+  // register remove callback
   else if(typeof result === 'function'){
     const cb:Function = result
     context.on('REMOVE_RULE', cb)
     unlisten(context, execId, cancel)
   }
+
+  // unlisten for void return
   else {
     unlisten(context, execId, cancel)
   }
