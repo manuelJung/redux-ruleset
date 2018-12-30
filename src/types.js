@@ -40,7 +40,7 @@ export type Rule = {
     action:Action, 
     addRule:AddRule,
     removeRule:RemoveRule, 
-    effect: (()=>mixed)=>mixed|false
+    effect: (()=>mixed)=>void
   }) => Action | Promise<Action> | Promise<void> | void | () => void,
   addOnce?: boolean,
   addWhen?: Saga<LogicAdd>,
