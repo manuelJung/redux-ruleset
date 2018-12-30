@@ -28,6 +28,7 @@ export default function consequence (context:RuleContext, action:Action, store:S
     if(rule.concurrency === 'ONCE') return stop()
     if(rule.concurrency === 'FIRST') return stop()
     if(rule.addOnce) return stop()
+    if(rule.concurrency === 'LAST') context.trigger('CANCEL_CONSEQUENCE')
   }
   // skip if 'skipRule' condition matched
   if(action.meta && action.meta.skipRule && matchGlob(rule.id, action.meta.skipRule)){
@@ -38,21 +39,11 @@ export default function consequence (context:RuleContext, action:Action, store:S
     return stop()
   }
 
-  {
-    const _addRule = addRule
-    const _removeRule = removeRule
-    addRule = (rule, parentRuleId) => {
-      context.childRules.push(rule);
-      return parentRuleId ? _addRule(rule) : _addRule(rule, context.rule.id) 
-    }
-    removeRule = rule => {context.childRules.forEach(_removeRule); return _removeRule(rule)}
-  }
-
   let canceled = false
   const cancel = () => {canceled = true}
-  const effect = fn => !canceled && fn()
+  const effect = fn => {!canceled && fn()}
 
-  {
+  { // monkeypatch store and ruleDB
     const _store = store
     const _addRule = addRule
     const _removeRule = removeRule
@@ -62,17 +53,17 @@ export default function consequence (context:RuleContext, action:Action, store:S
       return _store.dispatch(action) 
     }})
     addRule = (rule, parentRuleId) => {
-      if(!canceled) return _addRule(rule, parentRuleId)
-      else return rule
+      if(canceled) return rule
+      context.childRules.push(rule)
+      return parentRuleId ? _addRule(rule) : _addRule(rule, context.rule.id) 
     }
-    removeRule = rule => {!canceled && _removeRule(rule)}
+    removeRule = rule => {
+      if(canceled) return
+      else _removeRule(rule)
+    }
   }
 
-  if(rule.concurrency === 'LAST'){
-    if(context.running) context.trigger('CANCEL_CONSEQUENCE')
-    context.on('CANCEL_CONSEQUENCE', cancel)
-  }
-
+  context.on('CANCEL_CONSEQUENCE', cancel)
   context.on('REMOVE_RULE', cancel)
 
   context.running++
