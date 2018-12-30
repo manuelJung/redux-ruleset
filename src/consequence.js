@@ -85,8 +85,8 @@ export default function consequence (context:RuleContext, action:Action, store:S
   }
 
   else if(typeof result === 'function'){
-    const cb:any = result
-    context.on('REMOVE_RULE', () => cb(store.getState))
+    const cb:Function = result
+    context.on('REMOVE_RULE', cb)
     unlisten(context, execId, cancel)
   }
   else {
@@ -102,7 +102,7 @@ export default function consequence (context:RuleContext, action:Action, store:S
 function unlisten(context:RuleContext, execId:number, cancelFn:Function){
   context.rule.concurrency !== 'ONCE' && context.running--
   context.rule.addOnce && ruleDB.removeRule(context.rule)
-  context.rule.concurrency === 'LAST' && context.off('CANCEL_CONSEQUENCE', cancelFn)
+  context.off('CANCEL_CONSEQUENCE', cancelFn)
   context.off('REMOVE_RULE', cancelFn)
   context.trigger('CONSEQUENCE_END', execId)
 }

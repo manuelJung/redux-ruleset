@@ -39,7 +39,7 @@ export type Rule = {
     addRule:AddRule,
     removeRule:RemoveRule, 
     effect: (()=>mixed)=>mixed|false
-  }) => Action | Promise<Action> | Promise<void> | void | (getState:GetState) => mixed,
+  }) => Action | Promise<Action> | Promise<void> | void | () => void,
   addOnce?: boolean,
   addWhen?: Saga<LogicAdd>,
   addUntil?: Saga<LogicRemove>,
