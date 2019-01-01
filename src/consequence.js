@@ -49,12 +49,15 @@ export default function consequence (context:RuleContext, action:Action, store:S
 
   let canceled = false
   const cancel = () => {canceled = true}
-  const effect = fn => !canceled && fn()
+  const effect = fn => {
+    if(canceled) return
+    rule.concurrency === 'SWITCH' && context.trigger('CANCEL_CONSEQUENCE')
+    fn()
+  }
   const getState = store.getState
   const dispatch = action => {effect(() => {
     nextExecutionId = execId
-    rule.concurrency === 'SWITCH' && context.trigger('CANCEL_CONSEQUENCE')
-    return store.dispatch(action) 
+    return store.dispatch(action)
   }); return action}
   const addRule = (rule, parentRuleId) => {effect(() => {
     context.childRules.push(rule)
