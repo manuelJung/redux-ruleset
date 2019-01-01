@@ -32,7 +32,7 @@ export default function consequence (context:RuleContext, action:Action, store:S
     if(rule.concurrency === 'FIRST') return skipConsequence()
     if(rule.addOnce) return skipConsequence()
     if(rule.concurrency === 'LAST') context.trigger('CANCEL_CONSEQUENCE')
-    if(rule.concurrency === 'DEBOUNCE') context.trigger('CANCEL_CONSEQUENCE')
+    if(rule.debounce) context.trigger('CANCEL_CONSEQUENCE')
   }
   // skip if 'skipRule' condition matched
   if(action.meta && action.meta.skipRule && matchGlob(rule.id, action.meta.skipRule)){
@@ -79,7 +79,7 @@ export default function consequence (context:RuleContext, action:Action, store:S
   context.running++
   let result
 
-  if(rule.concurrency === 'THROTTLE' || rule.concurrency === 'DEBOUNCE'){
+  if(rule.debounce || rule.throttle){
     result = new Promise(resolve => setTimeout(() => {
       if(canceled) return resolve()
       const result = rule.consequence({dispatch, getState, action, addRule, removeRule, effect})
