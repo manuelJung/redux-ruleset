@@ -109,7 +109,8 @@ describe('consequence injection', () => {
   test('a store, action, addRule, removeRule and efect fn should be injected', () => {
     consequence(context, action, store, 1)
     const args = context.rule.consequence.mock.calls[0][0]
-    expect(args).toHaveProperty('store')
+    expect(args).toHaveProperty('dispatch')
+    expect(args).toHaveProperty('getState')
     expect(args).toHaveProperty('action')
     expect(args).toHaveProperty('addRule')
     expect(args).toHaveProperty('removeRule')
@@ -129,10 +130,10 @@ describe('abort consequence', () => {
     let effectVal = 'no_val'
     const parentStore = store
     jest.spyOn(parentStore, 'dispatch')
-    context.rule.consequence = ({store, effect}) => {
+    context.rule.consequence = ({dispatch, effect}) => {
       return Promise.resolve().then(() => {
         effect(() => {effectVal = 'val'}) 
-        store.dispatch({type: 'SOME_ACTION'})
+        dispatch({type: 'SOME_ACTION'})
         expect(effectVal).toBe('no_val')
         expect(parentStore.dispatch).not.toHaveBeenCalled()
         done()

@@ -3,7 +3,6 @@ import * as ruleDB from './ruleDB'
 import type {Rule,Action,Store,RuleContext} from './types'
 
 let executionId = 1
-let {addRule, removeRule} = ruleDB
 
 let nextExecutionId:number|null = null
 export function getRuleExecutionId(){
@@ -50,28 +49,18 @@ export default function consequence (context:RuleContext, action:Action, store:S
 
   let canceled = false
   const cancel = () => {canceled = true}
-  const effect = fn => {!canceled && fn()}
-
-  { // monkeypatch store and ruleDB
-    const _store = store
-    const _addRule = addRule
-    const _removeRule = removeRule
-    store = Object.assign({}, store, { dispatch: action => {
-      if(canceled) return action
-      nextExecutionId = execId
-      rule.concurrency === 'SWITCH' && context.trigger('CANCEL_CONSEQUENCE')
-      return _store.dispatch(action) 
-    }})
-    addRule = (rule, parentRuleId) => {
-      if(canceled) return rule
-      context.childRules.push(rule)
-      return parentRuleId ? _addRule(rule) : _addRule(rule, context.rule.id) 
-    }
-    removeRule = rule => {
-      if(canceled) return
-      else _removeRule(rule)
-    }
-  }
+  const effect = fn => !canceled && fn()
+  const getState = store.getState
+  const dispatch = action => {effect(() => {
+    nextExecutionId = execId
+    rule.concurrency === 'SWITCH' && context.trigger('CANCEL_CONSEQUENCE')
+    return store.dispatch(action) 
+  }); return action}
+  const addRule = (rule, parentRuleId) => {effect(() => {
+    context.childRules.push(rule)
+    return parentRuleId ? ruleDB.addRule(rule) : ruleDB.addRule(rule, context.rule.id) 
+  }); return rule}
+  const removeRule = rule => {effect(() => ruleDB.removeRule(rule))}
 
   /**
    * Setup Cancel Listeners
@@ -90,12 +79,12 @@ export default function consequence (context:RuleContext, action:Action, store:S
   if(rule.concurrency === 'THROTTLE' || rule.concurrency === 'DEBOUNCE'){
     result = new Promise(resolve => setTimeout(() => {
       if(canceled) return resolve()
-      const result = rule.consequence({store, action, addRule, removeRule, effect})
+      const result = rule.consequence({dispatch, getState, action, addRule, removeRule, effect})
       resolve(result)
     }, rule.throttle || rule.debounce))
   }
   else {
-    result = rule.consequence({store, action, addRule, removeRule, effect})
+    result = rule.consequence({dispatch, getState, action, addRule, removeRule, effect})
   }
 
   /**

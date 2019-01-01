@@ -36,11 +36,12 @@ export type Rule = {
   throttle?: number,
   condition?: (action:Action, getState:GetState) => boolean,
   consequence: ({
-    store:Store, 
+    dispatch:Dispatch,
+    getState:GetState, 
     action:Action, 
     addRule:AddRule,
     removeRule:RemoveRule, 
-    effect: (()=>mixed)=>void
+    effect: (()=>mixed)=>false|mixed
   }) => Action | Promise<Action> | Promise<void> | void | () => void,
   addOnce?: boolean,
   addWhen?: Saga<LogicAdd>,
