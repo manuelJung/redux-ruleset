@@ -178,18 +178,21 @@ function registerExecution(context:RuleContext, execId:number){
   }
   const store = db[id]
 
+  const clearStore = () => {
+    context.off('CONSEQUENCE_END', updateActive)
+    context.off('CANCEL_CONSEQUENCE', clearStore)
+    delete db[context.rule.id]
+  }
+
   const updateActive = () => {
     let nextId = store.buffer.splice(0,1)[0]
-    if(!nextId) {
-      context.off('CONSEQUENCE_END', updateActive)
-      delete db[context.rule.id]
-      return
-    }
+    if(!nextId) return clearStore()
     store.active = nextId
     const effects = store.effects[nextId]
     effects.forEach(fn => fn())
   }
 
   context.on('CONSEQUENCE_END', updateActive)
+  context.on('CANCEL_CONSEQUENCE', clearStore) // important when debouncing
   return store
 }
