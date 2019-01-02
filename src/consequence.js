@@ -3,6 +3,7 @@ import * as ruleDB from './ruleDB'
 import type {Rule,Action,Store,RuleContext} from './types'
 
 let executionId = 1
+let i
 
 let nextExecutionId:number|null = null
 export function getRuleExecutionId(){
@@ -10,6 +11,8 @@ export function getRuleExecutionId(){
   nextExecutionId = null
   return id
 }
+
+const orderedListeners = {}
 
 export default function consequence (context:RuleContext, action:Action, store:Store, actionExecId:number):boolean{
   let execId = executionId++
@@ -48,9 +51,14 @@ export default function consequence (context:RuleContext, action:Action, store:S
    */
 
   let canceled = false
+  let execution = null
   const cancel = () => {canceled = true}
   const effect = fn => {
     if(canceled) return
+    if(rule.concurrency === 'ORDERED' && execution && execution.active !== execId){
+      execution.effects[execId].push(() => effect(fn))
+      return
+    }
     rule.concurrency === 'SWITCH' && context.trigger('CANCEL_CONSEQUENCE')
     fn()
   }
@@ -68,6 +76,9 @@ export default function consequence (context:RuleContext, action:Action, store:S
   /**
    * Setup Cancel Listeners
    */
+  if(rule.concurrency === 'ORDERED'){
+    execution = registerExecution(context, execId)
+  }
 
   context.on('CANCEL_CONSEQUENCE', cancel)
   context.on('REMOVE_RULE', cancel)
@@ -140,4 +151,37 @@ function matchGlob(id:string, glob:'*' | string | string[]):boolean{
   if(glob === '*') return true
   if(typeof glob === 'string') return glob === id
   else return glob.includes(id)
+}
+
+type DB = {[ruleId:string]: {
+  active: number,
+  buffer: number[],
+  effects: {[execId:number]:(()=>void)[]}
+}}
+const db:DB = {}
+function registerExecution(context:RuleContext, execId:number){
+  const {id} = context.rule
+  if(db[id]){
+    db[id].buffer.push(execId)
+    db[id].effects[execId] = []
+    return db[id]
+  }
+  db[id] = {
+    active: execId,
+    buffer: [],
+    effects: {[execId]: []}
+  }
+  const store = db[id]
+
+  const next = execId => context.on('CONSEQUENCE_END', id => {
+    if(execId !== id) return
+    const nextId = store.buffer.splice(0,1)[0]
+    if(!nextId) {delete db[context.rule.id]; return}
+    store.active = nextId
+    const effects = store.effects[nextId]
+    for(i=0;i<effects.length;i++){effects[i]()}
+    next(nextId)
+  })
+  next(execId)
+  return store
 }
