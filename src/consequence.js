@@ -122,11 +122,15 @@ export default function consequence (context:RuleContext, action:Action, store:S
     })
   }
 
-  // register remove callback
+  // register unlisten callback
   else if(typeof result === 'function'){
     const cb:Function = result
+    const applyCb = () => {
+      unlisten(context, execId, cancel)
+      cb()
+    }
     context.on('REMOVE_RULE', cb)
-    unlisten(context, execId, cancel)
+    context.on('CANCEL_CONSEQUENCE', cb)
   }
 
   // unlisten for void return
