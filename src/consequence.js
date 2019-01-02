@@ -108,7 +108,7 @@ export default function consequence (context:RuleContext, action:Action, store:S
   // dispatch returned action
   if(typeof result === 'object' && result.type){
     const action:any = result
-    store.dispatch(action)
+    dispatch(action)
     unlisten(context, execId, cancel)
   }
 
@@ -116,9 +116,10 @@ export default function consequence (context:RuleContext, action:Action, store:S
   else if(typeof result === 'object' && result.then){
     const promise:any = result
     promise.then(action => {
-      action && action.type && store.dispatch(action)
-      unlisten(context, execId, cancel)
-    }) 
+      action && action.type && dispatch(action)
+      if(rule.concurrency === 'ORDERED') effect(() => unlisten(context, execId, cancel))
+      else unlisten(context, execId, cancel)
+    })
   }
 
   // register remove callback
@@ -173,15 +174,18 @@ function registerExecution(context:RuleContext, execId:number){
   }
   const store = db[id]
 
-  const next = execId => context.on('CONSEQUENCE_END', id => {
-    if(execId !== id) return
-    const nextId = store.buffer.splice(0,1)[0]
-    if(!nextId) {delete db[context.rule.id]; return}
+  const updateActive = () => {
+    let nextId = store.buffer.splice(0,1)[0]
+    if(!nextId) {
+      context.off('CONSEQUENCE_END', updateActive)
+      delete db[context.rule.id]
+      return
+    }
     store.active = nextId
     const effects = store.effects[nextId]
-    for(i=0;i<effects.length;i++){effects[i]()}
-    next(nextId)
-  })
-  next(execId)
+    effects.forEach(fn => fn())
+  }
+
+  context.on('CONSEQUENCE_END', updateActive)
   return store
 }

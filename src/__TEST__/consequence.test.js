@@ -143,3 +143,39 @@ describe('abort consequence', () => {
     context.trigger('REMOVE_RULE')
   })
 })
+
+describe('ORDERED concurrency', () => {
+  const wait = ms => new Promise(resolve => setTimeout(() => resolve(),ms))
+  beforeEach(() => {
+    jest.resetModules()
+    store = createStore()
+    context = createContext()
+    ruleDB = require('../ruleDB')
+    jest.spyOn(store, 'dispatch')
+    context.rule.concurrency = 'ORDERED'
+  })
+  test('consequence should be executed in order', done => {
+    context.rule.consequence = () => wait(1).then(() => ({type: 'ONE'}))
+    consequence(context, action, store, 1)
+    context.rule.consequence = () => wait(20).then(() => ({type: 'TWO'}))
+    consequence(context, action, store, 1)
+    context.rule.consequence = ({dispatch}) => wait(10).then(() => {
+      dispatch({type:'THREE'})
+      dispatch({type:'FOUR'})
+    })
+    consequence(context, action, store, 1)
+    context.rule.consequence = ({dispatch, effect}) => wait(1).then(() => {
+      dispatch({type: 'FIVE'})
+      effect(() => {
+        expect(store.dispatch.mock.calls[0][0]).toEqual({type:'ONE'})
+        expect(store.dispatch.mock.calls[1][0]).toEqual({type:'TWO'})
+        expect(store.dispatch.mock.calls[2][0]).toEqual({type:'THREE'})
+        expect(store.dispatch.mock.calls[3][0]).toEqual({type:'FOUR'})
+        expect(store.dispatch.mock.calls[4][0]).toEqual({type:'FIVE'})
+        expect(store.dispatch).toBeCalledTimes(5)
+        done()
+      })
+    })
+    consequence(context, action, store, 1)
+  })
+})
