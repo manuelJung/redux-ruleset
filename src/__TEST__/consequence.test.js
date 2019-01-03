@@ -224,9 +224,9 @@ describe('debounce and throttle consequence', () => {
   })
 })
 
-describe('ORDERED concurrency', () => {
+describe('concurrency', () => {
   beforeEach(initTest)
-  test('consequence should be executed in order', done => {
+  test('ORDERED: consequence should be executed in order', done => {
     jest.spyOn(store, 'dispatch')
     context.rule.concurrency = 'ORDERED'
     context.rule.consequence = () => wait(1).then(() => ({type: 'ONE'}))
@@ -252,11 +252,7 @@ describe('ORDERED concurrency', () => {
     })
     consequence(context, action, store, 1)
   })
-})
-
-describe('SWITCH concurrency', () => {
-  beforeEach(initTest)
-  test('when the first effect was executed, the previous consequences should be canceled', async () => {
+  test('SWITCH: when the first effect was executed, the previous consequences should be canceled', async () => {
     context.rule.concurrency = 'SWITCH'
     jest.spyOn(store, 'dispatch')
     context.rule.consequence = async ({dispatch}):Promise<*> => {
@@ -271,6 +267,48 @@ describe('SWITCH concurrency', () => {
     await wait(20)
     expect(store.dispatch).toBeCalledWith({type:'ONE'})
     expect(store.dispatch).toBeCalledWith({type:'FOUR'})
+    expect(store.dispatch).toBeCalledTimes(2)
+  })
+  test('ONCE: after the first call, no other concurrency should be ever called', async () => {
+    context.rule.concurrency = 'ONCE'
+    consequence(context, action, store, 1)
+    consequence(context, action, store, 1)
+    await wait(5)
+    consequence(context, action, store, 1)
+    expect(context.rule.consequence).toBeCalledTimes(1)
+  })
+  test('LAST: as soon, as a consequence will be executed, all previous ones should be canceled', async () => {
+    jest.spyOn(store, 'dispatch')
+    context.rule.concurrency = 'LAST'
+    context.rule.consequence = () => wait(5).then(() => ({type:'ONE'}))
+    consequence(context, action, store, 1)
+    context.rule.consequence = () => wait(10).then(() => ({type:'TWO'}))
+    consequence(context, action, store, 1)
+    await wait(20)
+    context.rule.consequence = () => wait(10).then(() => ({type:'THREE'}))
+    consequence(context, action, store, 1)
+    context.rule.consequence = () => wait(5).then(() => ({type:'FOUR'}))
+    consequence(context, action, store, 1)
+    await wait(20)
+    expect(store.dispatch).toBeCalledWith({type:'TWO'})
+    expect(store.dispatch).toBeCalledWith({type:'FOUR'})
+    expect(store.dispatch).toBeCalledTimes(2)
+  })
+  test('FIRST: as long as the previous consequence did not resolve, no other consequences should be invoked', async () => {
+    jest.spyOn(store, 'dispatch')
+    context.rule.concurrency = 'FIRST'
+    context.rule.consequence = () => wait(5).then(() => ({type:'ONE'}))
+    consequence(context, action, store, 1)
+    context.rule.consequence = () => wait(10).then(() => ({type:'TWO'}))
+    consequence(context, action, store, 1)
+    await wait(20)
+    context.rule.consequence = () => wait(10).then(() => ({type:'THREE'}))
+    consequence(context, action, store, 1)
+    context.rule.consequence = () => wait(5).then(() => ({type:'FOUR'}))
+    consequence(context, action, store, 1)
+    await wait(20)
+    expect(store.dispatch).toBeCalledWith({type:'ONE'})
+    expect(store.dispatch).toBeCalledWith({type:'THREE'})
     expect(store.dispatch).toBeCalledTimes(2)
   })
 })
