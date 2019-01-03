@@ -190,6 +190,39 @@ describe('return types', () => {
   })
 })
 
+describe('debounce and throttle consequence', () => {
+  const wait = ms => new Promise(resolve => setTimeout(() => resolve(),ms))
+  beforeEach(initTest)
+  test('debounce should work correctly', async () => {
+    context.rule.debounce = 10
+    const cb = jest.fn()
+    context.rule.consequence = () => cb('ONE')
+    consequence(context, action, store, 1)
+    context.rule.consequence = () => cb('TWO')
+    consequence(context, action, store, 1)
+    expect(cb).not.toBeCalled()
+    await wait(5)
+    context.rule.consequence = () => cb('THREE')
+    consequence(context, action, store, 1)
+    await wait(15)
+    context.rule.consequence = () => cb('FOUR')
+    consequence(context, action, store, 1)
+    context.rule.consequence = () => cb('FIVE')
+    consequence(context, action, store, 1)
+    await wait(15)
+    expect(cb).toBeCalledWith('THREE')
+    expect(cb).toBeCalledWith('FIVE')
+    expect(cb).toBeCalledTimes(2)
+  })
+  test('throttle should work correctly', async () => {
+    context.rule.throttle = 5
+    consequence(context, action, store, 1)
+    expect(context.rule.consequence).not.toBeCalled()
+    await wait(10)
+    expect(context.rule.consequence).toBeCalled()
+  })
+})
+
 describe('ORDERED concurrency', () => {
   const wait = ms => new Promise(resolve => setTimeout(() => resolve(),ms))
   beforeEach(initTest)
