@@ -1,6 +1,6 @@
 // @flow
 import createStoreCreator from 'redux-mock-store'
-import consequence from '../consequence'
+import consequence, {getRuleExecutionId} from '../consequence'
 import type {RuleContext} from '../types'
 
 const createStore = createStoreCreator()
@@ -310,5 +310,20 @@ describe('concurrency', () => {
     expect(store.dispatch).toBeCalledWith({type:'ONE'})
     expect(store.dispatch).toBeCalledWith({type:'THREE'})
     expect(store.dispatch).toBeCalledTimes(2)
+  })
+})
+
+describe('getRuleExecutionId()', () => {
+  test('it should return the rule execution id of a dispatched action while dispatching', () => {
+    let execId = getRuleExecutionId()
+    const store = createStoreCreator([() => next => action => {
+      execId = getRuleExecutionId()
+      return next(action)
+    }])()
+    context.rule.consequence = () => ({type:'ACTION'})
+    expect(execId).toBe(null)
+    consequence(context, action, store, 1)
+    expect(typeof execId).toBe('number')
+    expect(getRuleExecutionId()).toBe(null)
   })
 })

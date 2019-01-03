@@ -8,7 +8,6 @@ let i
 let nextExecutionId:number|null = null
 export function getRuleExecutionId(){
   const id = nextExecutionId
-  nextExecutionId = null
   return id
 }
 
@@ -65,7 +64,9 @@ export default function consequence (context:RuleContext, action:Action, store:S
   const getState = store.getState
   const dispatch = action => {effect(() => {
     nextExecutionId = execId
-    return store.dispatch(action)
+    const result = store.dispatch(action)
+    nextExecutionId = null
+    return result
   }); return action}
   const addRule = (rule, parentRuleId) => {effect(() => {
     context.childRules.push(rule)
