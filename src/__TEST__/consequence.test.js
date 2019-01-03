@@ -48,6 +48,8 @@ let context
 let action = {type:'ANY_TYPE'}
 let ruleDB
 
+const wait = ms => new Promise(resolve => setTimeout(() => resolve(),ms))
+
 const initTest = () => {
   jest.resetModules()
   store = createStore()
@@ -191,7 +193,6 @@ describe('return types', () => {
 })
 
 describe('debounce and throttle consequence', () => {
-  const wait = ms => new Promise(resolve => setTimeout(() => resolve(),ms))
   beforeEach(initTest)
   test('debounce should work correctly', async () => {
     context.rule.debounce = 10
@@ -224,7 +225,6 @@ describe('debounce and throttle consequence', () => {
 })
 
 describe('ORDERED concurrency', () => {
-  const wait = ms => new Promise(resolve => setTimeout(() => resolve(),ms))
   beforeEach(initTest)
   test('consequence should be executed in order', done => {
     jest.spyOn(store, 'dispatch')
