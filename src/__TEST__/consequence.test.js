@@ -142,6 +142,22 @@ describe('abort consequence', () => {
     consequence(context, action, store, 1)
     context.trigger('REMOVE_RULE')
   })
+  test('abort when consequence was canceled', done => {
+    let effectVal = 'no_val'
+    const parentStore = store
+    jest.spyOn(parentStore, 'dispatch')
+    context.rule.consequence = ({dispatch, effect}) => {
+      return Promise.resolve().then(() => {
+        effect(() => {effectVal = 'val'}) 
+        dispatch({type: 'SOME_ACTION'})
+        expect(effectVal).toBe('no_val')
+        expect(parentStore.dispatch).not.toHaveBeenCalled()
+        done()
+      })
+    }
+    consequence(context, action, store, 1)
+    context.trigger('CANCEL_CONSEQUENCE')
+  })
 })
 
 describe('ORDERED concurrency', () => {
