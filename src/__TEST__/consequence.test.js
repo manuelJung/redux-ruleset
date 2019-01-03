@@ -44,18 +44,21 @@ const createContext = (alterContext?:Object, alterRule?:Object):RuleContext => {
   }
 }
 
+
 let store
 let context
 let action = {type:'ANY_TYPE'}
 let ruleDB
 
+const initTest = () => {
+  jest.resetModules()
+  store = createStore()
+  context = createContext()
+  ruleDB = require('../ruleDB')
+}
+
 describe('skip rule', () => {
-  beforeEach(() => {
-    jest.resetModules()
-    store = createStore()
-    context = createContext()
-    ruleDB = require('../ruleDB')
-  })
+  beforeEach(initTest)
   test('skip rule when condition does not match', () => {
     context.rule.condition = () => false
     const result = consequence(context, action, store, 1)
@@ -100,12 +103,7 @@ describe('skip rule', () => {
 })
 
 describe('consequence injection', () => {
-  beforeEach(() => {
-    jest.resetModules()
-    store = createStore()
-    context = createContext()
-    ruleDB = require('../ruleDB')
-  })
+  beforeEach(initTest)
   test('a store, action, addRule, removeRule and efect fn should be injected', () => {
     consequence(context, action, store, 1)
     const args = context.rule.consequence.mock.calls[0][0]
@@ -120,12 +118,7 @@ describe('consequence injection', () => {
 
 describe('abort consequence', () => {
   let resolve
-  beforeEach(() => {
-    jest.resetModules()
-    store = createStore()
-    context = createContext()
-    ruleDB = require('../ruleDB')
-  })
+  beforeEach(initTest)
   test('abort when rule has been removed', done => {
     let effectVal = 'no_val'
     const parentStore = store
@@ -160,17 +153,16 @@ describe('abort consequence', () => {
   })
 })
 
+describe('return types', () => {
+  beforeEach(initTest)
+})
+
 describe('ORDERED concurrency', () => {
   const wait = ms => new Promise(resolve => setTimeout(() => resolve(),ms))
-  beforeEach(() => {
-    jest.resetModules()
-    store = createStore()
-    context = createContext()
-    ruleDB = require('../ruleDB')
+  beforeEach(initTest)
+  test('consequence should be executed in order', done => {
     jest.spyOn(store, 'dispatch')
     context.rule.concurrency = 'ORDERED'
-  })
-  test('consequence should be executed in order', done => {
     context.rule.consequence = () => wait(1).then(() => ({type: 'ONE'}))
     consequence(context, action, store, 1)
     context.rule.consequence = () => wait(20).then(() => ({type: 'TWO'}))
