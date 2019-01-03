@@ -253,3 +253,24 @@ describe('ORDERED concurrency', () => {
     consequence(context, action, store, 1)
   })
 })
+
+describe('SWITCH concurrency', () => {
+  beforeEach(initTest)
+  test('when the first effect was executed, the previous consequences should be canceled', async () => {
+    context.rule.concurrency = 'SWITCH'
+    jest.spyOn(store, 'dispatch')
+    context.rule.consequence = async ({dispatch}):Promise<*> => {
+      dispatch({type:'ONE'})
+      await wait(10)
+      dispatch({type:'TWO'})
+      return {type:'THREE'}
+    }
+    consequence(context, action, store, 1)
+    context.rule.consequence = () => wait(2).then(() => ({type:'FOUR'}))
+    consequence(context, action, store, 1)
+    await wait(20)
+    expect(store.dispatch).toBeCalledWith({type:'ONE'})
+    expect(store.dispatch).toBeCalledWith({type:'FOUR'})
+    expect(store.dispatch).toBeCalledTimes(2)
+  })
+})
