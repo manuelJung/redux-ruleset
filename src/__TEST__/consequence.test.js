@@ -11,13 +11,12 @@ declare var test: any
 declare var expect: any
 declare var jest: any
 
-const createContext = (alterContext?:Object, alterRule?:Object):RuleContext => {
+const createContext = ():RuleContext => {
   const listeners = {}
   const rule = {
     id: 'consequence-test',
     target: 'ANY_TYPE',
-    consequence: jest.fn(),
-    ...alterRule
+    consequence: jest.fn()
   }
   return {
     rule: rule,
@@ -39,8 +38,7 @@ const createContext = (alterContext?:Object, alterRule?:Object):RuleContext => {
         const cb = listeners[e][i]
         cb(payload)
       }
-    }),
-    ...alterContext
+    })
   }
 }
 
@@ -104,7 +102,7 @@ describe('skip rule', () => {
 
 describe('consequence injection', () => {
   beforeEach(initTest)
-  test('a store, action, addRule, removeRule and efect fn should be injected', () => {
+  test('a dispatch, getState, action, addRule, removeRule and efect fn should be injected', () => {
     consequence(context, action, store, 1)
     const args = context.rule.consequence.mock.calls[0][0]
     expect(args).toHaveProperty('dispatch')
@@ -155,6 +153,41 @@ describe('abort consequence', () => {
 
 describe('return types', () => {
   beforeEach(initTest)
+  test('when a action was returned it should be dispatched', () => {
+    jest.spyOn(store, 'dispatch')
+    context.rule.consequence = () => ({type:'ACTION_RETURN'})
+    consequence(context, action, store, 1)
+    expect(store.dispatch).toBeCalledTimes(1)
+    expect(store.dispatch).toBeCalledWith({type:'ACTION_RETURN'})
+  })
+  test('when a promise wrapped action was returned it should be dispatched', done => {
+    jest.spyOn(store, 'dispatch')
+    context.rule.consequence = () => Promise.resolve({type:'ACTION_RETURN'})
+    consequence(context, action, store, 1)
+    setTimeout(() => {
+      expect(store.dispatch).toBeCalledTimes(1)
+      expect(store.dispatch).toBeCalledWith({type:'ACTION_RETURN'})
+      done()
+    }, 1)
+  })
+  test('when function was returned it should be called, after the rule was removed', () => {
+    jest.spyOn(store, 'dispatch')
+    const cb = jest.fn()
+    context.rule.consequence = () => cb
+    consequence(context, action, store, 1)
+    expect(cb).not.toBeCalled()
+    context.trigger('REMOVE_RULE')
+    expect(cb).toBeCalledTimes(1)
+  })
+  test('when function was returned it should be called, after the consequence was canceled', () => {
+    jest.spyOn(store, 'dispatch')
+    const cb = jest.fn()
+    context.rule.consequence = () => cb
+    consequence(context, action, store, 1)
+    expect(cb).not.toBeCalled()
+    context.trigger('CANCEL_CONSEQUENCE')
+    expect(cb).toBeCalledTimes(1)
+  })
 })
 
 describe('ORDERED concurrency', () => {
