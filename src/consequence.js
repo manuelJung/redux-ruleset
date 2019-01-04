@@ -13,7 +13,7 @@ export function getRuleExecutionId(){
 
 const orderedListeners = {}
 
-export default function consequence (context:RuleContext, action:Action, store:Store, actionExecId:number):boolean{
+export default function consequence (context:RuleContext, action?:Action, store:Store, actionExecId:number):boolean{
   let execId = executionId++
   const rule = context.rule
   context.trigger('CONSEQUENCE_START', execId)
@@ -37,7 +37,7 @@ export default function consequence (context:RuleContext, action:Action, store:S
     if(rule.debounce) context.trigger('CANCEL_CONSEQUENCE')
   }
   // skip if 'skipRule' condition matched
-  if(action.meta && action.meta.skipRule && matchGlob(rule.id, action.meta.skipRule)){
+  if(action && action.meta && action.meta.skipRule && matchGlob(rule.id, action.meta.skipRule)){
     return skipConsequence()
   }
   // skip if rule condition does not match

@@ -1,19 +1,9 @@
 // @flow
-import type {Action, Saga, RuleContext} from './types'
+import type {Action, Saga, RuleContext, Store} from './types'
 
+import {applyLazyStore} from './lazyStore'
 
-
-let store = null
-let initialSagas = []
 const listeners = {}
-
-export function setStore(_store:Object){
-  store = _store
-  if(initialSagas.length){
-    initialSagas.forEach(saga => saga())
-    initialSagas = []
-  }
-}
 
 export function applyAction(action:Action){
   const globalCallbacks = listeners.global
@@ -42,9 +32,9 @@ function addListener(target, cb){
   }
 }
 
-export function createSaga<Logic>(context:RuleContext, saga:Saga<Logic>, cb:(result:Logic|void) => mixed){
+export function createSaga<Logic>(context:RuleContext, saga:Saga<Logic>, cb:(result:Logic|void) => mixed,store?:Store){
   if(!store) {
-    initialSagas.push(() => createSaga(context,saga,cb))
+    applyLazyStore(store => createSaga(context,saga,cb,store))
     return
   }
   context.pendingSaga = true

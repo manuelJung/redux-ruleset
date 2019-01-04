@@ -1,6 +1,7 @@
 // @flow
 import * as ruleDB from './ruleDB'
 import * as saga from './saga'
+import {setStore} from './lazyStore'
 import consequence, {getRuleExecutionId} from './consequence'
 
 import type {Rule, Store, Action, RuleContext} from './types'
@@ -21,7 +22,7 @@ function notifyDispatchListener(action:Action, ruleExecutionId:number|null, wasD
 }
 
 export default function middleware(store:Store){
-  saga.setStore(store)
+  setStore(store)
   return (next:any) => (action:Action) => {
     const execId = executionId++
     const ruleExecutionId = getRuleExecutionId()

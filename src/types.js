@@ -28,17 +28,17 @@ export type Saga<Logic> = (
 
 export type Rule = {
   id: string,
-  target: '*' | string | string[],
+  target?: '*' | string | string[],
   position?: Position,
   zIndex?: number,
   concurrency?: LogicConcurrency,
   debounce?: number,
   throttle?: number,
-  condition?: (action:Action, getState:GetState) => boolean,
+  condition?: (action?:Action, getState:GetState) => boolean,
   consequence: ({
     dispatch:Dispatch,
     getState:GetState, 
-    action:Action, 
+    action?:Action, 
     addRule:AddRule,
     removeRule:RemoveRule, 
     effect: (()=>mixed)=>void

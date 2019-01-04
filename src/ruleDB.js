@@ -1,6 +1,8 @@
 // @flow
 import * as saga from './saga'
 import type {Rule, RuleContext, Position} from './types'
+import consequence from './consequence'
+import {applyLazyStore} from './lazyStore'
 
 type ActiveRules = {
   INSERT_BEFORE: {[ruleId:string]: Rule[]},
@@ -41,7 +43,8 @@ export function addRule(rule:Rule, parentRuleId?:string|null, forceAdd?:boolean)
   const add = () => {
     context.active = true
     ruleContextList[rule.id] = context
-    forEachTarget(rule.target, target => {
+    !rule.target && applyLazyStore(store => consequence(context, undefined, store, -1))
+    rule.target && forEachTarget(rule.target, target => {
       if(!activeRules[position][target]) activeRules[position][target] = []
       const list = activeRules[position][target]
       if(list.length > 0) pushByZIndex(list, rule)
@@ -80,7 +83,7 @@ export function removeRule(rule:Rule){
     for(i=0;i<context.childRules.length;i++){removeRule(context.childRules[i])}
   }
   context.active = false
-  forEachTarget(rule.target, target => {
+  rule.target && forEachTarget(rule.target, target => {
     const list = activeRules[position][target]
     activeRules[position][target] = list.filter(r => r.id !== rule.id)
   })
