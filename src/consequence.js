@@ -128,10 +128,12 @@ export default function consequence (context:RuleContext, action?:Action, store:
     const cb:Function = result
     const applyCb = () => {
       unlisten(context, execId, cancel)
+      context.off('REMOVE_RULE', applyCb)
+      context.off('CANCEL_CONSEQUENCE', applyCb)
       cb()
     }
-    context.on('REMOVE_RULE', cb)
-    context.on('CANCEL_CONSEQUENCE', cb)
+    context.on('REMOVE_RULE', applyCb)
+    context.on('CANCEL_CONSEQUENCE', applyCb)
   }
 
   // unlisten for void return
