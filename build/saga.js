@@ -3,25 +3,12 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.setStore = setStore;
 exports.applyAction = applyAction;
 exports.createSaga = createSaga;
 
+var _lazyStore = require('./lazyStore');
 
-var store = null;
-
-var initialSagas = [];
 var listeners = {};
-
-function setStore(_store) {
-  store = _store;
-  if (initialSagas.length) {
-    initialSagas.forEach(function (saga) {
-      return saga();
-    });
-    initialSagas = [];
-  }
-}
 
 function applyAction(action) {
   var globalCallbacks = listeners.global;
@@ -53,25 +40,27 @@ function addListener(target, cb) {
   }
 }
 
-function createSaga(context, saga, cb) {
+function createSaga(context, saga, cb, store) {
   if (!store) {
-    initialSagas.push(function () {
-      return createSaga(context, saga, cb);
+    (0, _lazyStore.applyLazyStore)(function (store) {
+      return createSaga(context, saga, cb, store);
     });
     return;
   }
-  var cancel = function cancel() {
-    return null;
-  };
-  context.addCancelListener(function (key) {
-    if (key !== 'global') return false;
-    cancel();
-    return true;
-  });
+  context.pendingSaga = true;
+  context.sagaStep = -1;
+  var boundStore = store;
+  var cancel = function cancel() {};
+
   var run = function run(gen) {
     var next = function next(iter, payload) {
+      context.sagaStep++;
       var result = iter.next(payload);
-      if (result.done) cb(result.value);
+      if (result.done) {
+        context.pendingSaga = false;
+        context.off('REMOVE_RULE', cancel);
+        cb(result.value);
+      }
     };
     var action = function action(target, cb) {
       var _addListener = function _addListener() {
@@ -82,11 +71,14 @@ function createSaga(context, saga, cb) {
       };
       _addListener();
     };
-    var iter = gen(action, store.getState);
-    next(iter);
+    var iter = gen(action, boundStore.getState);
     cancel = function cancel() {
-      return iter.return('CANCELED');
+      iter.return('CANCELED');
+      next(iter);
     };
+    context.on('REMOVE_RULE', cancel);
+    next(iter);
   };
+
   run(saga);
 }

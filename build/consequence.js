@@ -4,142 +4,234 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
+var _defineProperty2 = require('babel-runtime/helpers/defineProperty');
+
+var _defineProperty3 = _interopRequireDefault(_defineProperty2);
+
 var _typeof2 = require('babel-runtime/helpers/typeof');
 
 var _typeof3 = _interopRequireDefault(_typeof2);
 
-var _assign = require('babel-runtime/core-js/object/assign');
+var _promise = require('babel-runtime/core-js/promise');
 
-var _assign2 = _interopRequireDefault(_assign);
+var _promise2 = _interopRequireDefault(_promise);
 
+exports.getRuleExecutionId = getRuleExecutionId;
 exports.default = consequence;
 
 var _ruleDB = require('./ruleDB');
 
-var _ruleDB2 = _interopRequireDefault(_ruleDB);
-
-var _devTools = require('./devTools');
-
-var devtools = _interopRequireWildcard(_devTools);
+var ruleDB = _interopRequireWildcard(_ruleDB);
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var store = null;
+var executionId = 1;
 
-function consequence(context, action, store, addRule, removeRule, actionExecId) {
-  var execId = devtools.createRuleExecutionId();
-  var _addRule = addRule;
-  var _removeRule = removeRule;
-  addRule = function addRule(rule) {
-    context.childRules.push(rule);return _addRule(rule, context.rule.id);
-  };
-  removeRule = function removeRule(rule) {
-    context.childRules.forEach(_removeRule);return _removeRule(rule);
-  };
+var i = void 0;
+
+var nextExecutionId = null;
+function getRuleExecutionId() {
+  var id = nextExecutionId;
+  return id;
+}
+
+var orderedListeners = {};
+
+function consequence(context, action, store, actionExecId) {
+  var execId = executionId++;
   var rule = context.rule;
+  context.trigger('CONSEQUENCE_START', execId);
+
+  /**
+   * Check concurrency and conditions
+   */
+
+  // trigger when consequence should not be invoked (e.g condition does not match)
+  var skipConsequence = function skipConsequence() {
+    context.trigger('CONSEQUENCE_END', execId);
+    return false;
+  };
+
   // skip when concurrency matches
-  if (rule.concurrency === 'ONCE' && context.running) {
-    devtools.executeRule(execId, context, actionExecId, 'CONCURRENCY');
-    return false;
-  }
-  if (rule.concurrency === 'FIRST' && context.running) {
-    devtools.executeRule(execId, context, actionExecId, 'CONCURRENCY');
-    return false;
-  }
-  if (rule.addOnce && context.running) {
-    devtools.executeRule(execId, context, actionExecId, 'ADD_ONCE');
-    return false;
+  if (context.running) {
+    if (rule.concurrency === 'ONCE') return skipConsequence();
+    if (rule.concurrency === 'FIRST') return skipConsequence();
+    if (rule.addOnce) return skipConsequence();
+    if (rule.concurrency === 'LAST') context.trigger('CANCEL_CONSEQUENCE');
+    if (rule.debounce) context.trigger('CANCEL_CONSEQUENCE');
   }
   // skip if 'skipRule' condition matched
-  if (action.meta && action.meta.skipRule) {
-    var skipRules = Array.isArray(action.meta.skipRule) ? action.meta.skipRule : [action.meta.skipRule];
-    if (skipRules[0] === '*' || skipRules.find(function (id) {
-      return id === rule.id;
-    })) {
-      devtools.executeRule(execId, context, actionExecId, 'SKIP');
-      return false;
-    }
+  if (action && action.meta && action.meta.skipRule && matchGlob(rule.id, action.meta.skipRule)) {
+    return skipConsequence();
   }
   // skip if rule condition does not match
   if (rule.condition && !rule.condition(action, store.getState)) {
-    devtools.executeRule(execId, context, actionExecId, 'NO_CONDITION_MATCH');
-    return false;
+    return skipConsequence();
   }
 
-  var cancelCB = function cancelCB() {
-    return false;
-  };
+  /**
+   * Prepare Execution
+   */
+
   var canceled = false;
-
-  if (rule.concurrency === 'LAST') {
-    if (context.running) {
-      context.cancelRule('consequence');
+  var execution = null;
+  var cancel = function cancel() {
+    canceled = true;
+  };
+  var effect = function effect(fn) {
+    if (canceled) return;
+    if (rule.concurrency === 'ORDERED' && execution && execution.active !== execId) {
+      execution.effects[execId].push(function () {
+        return effect(fn);
+      });
+      return;
     }
-    cancelCB = function cancelCB() {
-      canceled = true;
-      return true;
-    };
-    context.addCancelListener(cancelCB);
-    var _store = store;
-    store = (0, _assign2.default)({}, store, {
-      dispatch: function dispatch(action) {
-        if (canceled) return action;
-        return _store.dispatch(action);
-      }
+    rule.concurrency === 'SWITCH' && context.trigger('CANCEL_CONSEQUENCE');
+    fn();
+  };
+  var getState = store.getState;
+  var dispatch = function dispatch(action) {
+    effect(function () {
+      nextExecutionId = execId;
+      var result = store.dispatch(action);
+      nextExecutionId = null;
+      return result;
+    });return action;
+  };
+  var addRule = function addRule(rule, parentRuleId) {
+    effect(function () {
+      context.childRules.push(rule);
+      return parentRuleId ? ruleDB.addRule(rule) : ruleDB.addRule(rule, { parentRuleId: context.rule.id });
+    });return rule;
+  };
+  var removeRule = function removeRule(rule) {
+    effect(function () {
+      return ruleDB.removeRule(rule);
     });
-    var _addRule2 = addRule;
-    var _removeRule2 = removeRule;
-    addRule = function addRule(rule) {
-      return !canceled && _addRule2(rule);
-    };
-    removeRule = function removeRule(rule) {
-      return !canceled && _removeRule2(rule);
-    };
+  };
+
+  /**
+   * Setup Cancel Listeners
+   */
+  if (rule.concurrency === 'ORDERED') {
+    execution = registerExecution(context, execId);
   }
 
-  if (devtools) {
-    var _store2 = store;
-    store = (0, _assign2.default)({}, store, {
-      dispatch: function dispatch(action) {
-        devtools.extendNextAction(execId, rule.id);
-        return _store2.dispatch(action);
-      }
-    });
-  }
+  context.on('CANCEL_CONSEQUENCE', cancel);
+  context.on('REMOVE_RULE', cancel);
 
-  if (rule.position === 'INSERT_INSTEAD') {
-    devtools.dispatchAction(actionExecId, true);
-  }
+  /**
+   * Execute consequence
+   */
 
   context.running++;
-  var result = rule.consequence(store, action, { addRule: addRule, removeRule: removeRule });
+  var result = void 0;
 
-  if ((typeof result === 'undefined' ? 'undefined' : (0, _typeof3.default)(result)) === 'object' && result.type) {
-    var _action = result;
-    store.dispatch(_action);
-    rule.concurrency !== 'ONCE' && context.running--;
-    rule.addOnce && _ruleDB2.default.removeRule(rule);
-    rule.concurrency === 'LAST' && context.removeCancelListener(cancelCB);
-  } else if ((typeof result === 'undefined' ? 'undefined' : (0, _typeof3.default)(result)) === 'object' && result.then) {
-    var promise = result;
-    promise.then(function (action) {
-      action && action.type && store.dispatch(action);
-      rule.concurrency !== 'ONCE' && context.running--;
-      rule.addOnce && _ruleDB2.default.removeRule(rule);
-      rule.concurrency === 'LAST' && context.removeCancelListener(cancelCB);
+  if (rule.debounce || rule.throttle) {
+    result = new _promise2.default(function (resolve) {
+      return setTimeout(function () {
+        if (canceled) return resolve();
+        var result = rule.consequence({ dispatch: dispatch, getState: getState, action: action, addRule: addRule, removeRule: removeRule, effect: effect });
+        resolve(result);
+      }, rule.throttle || rule.debounce);
     });
-  } else if (typeof result === 'function') {
-    _ruleDB2.default.addUnlistenCallback(rule, function () {
-      return result(store.getState);
-    });
-    rule.concurrency !== 'ONCE' && context.running--;
-    rule.addOnce && _ruleDB2.default.removeRule(rule);
-    rule.concurrency === 'LAST' && context.removeCancelListener(cancelCB);
+  } else {
+    result = rule.consequence({ dispatch: dispatch, getState: getState, action: action, addRule: addRule, removeRule: removeRule, effect: effect });
   }
 
-  devtools.executeRule(execId, context, actionExecId, 'CONDITION_MATCH');
+  /**
+   * Handle return types
+   */
+
+  // dispatch returned action
+  if ((typeof result === 'undefined' ? 'undefined' : (0, _typeof3.default)(result)) === 'object' && result.type) {
+    var _action = result;
+    dispatch(_action);
+    unlisten(context, execId, cancel);
+  }
+
+  // dispatch returned (promise-wrapped) action
+  else if ((typeof result === 'undefined' ? 'undefined' : (0, _typeof3.default)(result)) === 'object' && result.then) {
+      var promise = result;
+      promise.then(function (action) {
+        action && action.type && dispatch(action);
+        if (rule.concurrency === 'ORDERED') effect(function () {
+          return unlisten(context, execId, cancel);
+        });else unlisten(context, execId, cancel);
+      });
+    }
+
+    // register unlisten callback
+    else if (typeof result === 'function') {
+        var cb = result;
+        var applyCb = function applyCb() {
+          unlisten(context, execId, cancel);
+          context.off('REMOVE_RULE', applyCb);
+          context.off('CANCEL_CONSEQUENCE', applyCb);
+          cb();
+        };
+        context.on('REMOVE_RULE', applyCb);
+        context.on('CANCEL_CONSEQUENCE', applyCb);
+      }
+
+      // unlisten for void return
+      else {
+          unlisten(context, execId, cancel);
+        }
 
   return true;
+}
+
+// HELPERS
+
+function unlisten(context, execId, cancelFn) {
+  context.rule.concurrency !== 'ONCE' && context.running--;
+  context.trigger('CONSEQUENCE_END', execId);
+  context.rule.addOnce && ruleDB.removeRule(context.rule);
+  context.off('CANCEL_CONSEQUENCE', cancelFn);
+  context.off('REMOVE_RULE', cancelFn);
+}
+
+function matchGlob(id, glob) {
+  if (glob === '*') return true;
+  if (typeof glob === 'string') return glob === id;else return glob.includes(id);
+}
+
+var db = {};
+function registerExecution(context, execId) {
+  var id = context.rule.id;
+
+  if (db[id]) {
+    db[id].buffer.push(execId);
+    db[id].effects[execId] = [];
+    return db[id];
+  }
+  db[id] = {
+    active: execId,
+    buffer: [],
+    effects: (0, _defineProperty3.default)({}, execId, [])
+  };
+  var store = db[id];
+
+  var clearStore = function clearStore() {
+    context.off('CONSEQUENCE_END', updateActive);
+    context.off('CANCEL_CONSEQUENCE', clearStore);
+    delete db[context.rule.id];
+  };
+
+  var updateActive = function updateActive() {
+    var nextId = store.buffer.splice(0, 1)[0];
+    if (!nextId) return clearStore();
+    store.active = nextId;
+    var effects = store.effects[nextId];
+    effects.forEach(function (fn) {
+      return fn();
+    });
+  };
+
+  context.on('CONSEQUENCE_END', updateActive);
+  context.on('CANCEL_CONSEQUENCE', clearStore); // important when debouncing
+  return store;
 }

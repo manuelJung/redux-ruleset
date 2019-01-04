@@ -3,113 +3,207 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.getPrivatesForTesting = undefined;
+exports.addRule = addRule;
+exports.removeRule = removeRule;
+exports.forEachRuleContext = forEachRuleContext;
+exports.addLaterAddedRules = addLaterAddedRules;
+exports.getRuleContext = getRuleContext;
+exports.registerContextListener = registerContextListener;
 
-var _toConsumableArray2 = require('babel-runtime/helpers/toConsumableArray');
+var _saga = require('./saga');
 
-var _toConsumableArray3 = _interopRequireDefault(_toConsumableArray2);
+var saga = _interopRequireWildcard(_saga);
 
-var _map = require('babel-runtime/core-js/map');
+var _consequence = require('./consequence');
 
-var _map2 = _interopRequireDefault(_map);
+var _consequence2 = _interopRequireDefault(_consequence);
 
-var _devTools = require('./devTools');
-
-var devtools = _interopRequireWildcard(_devTools);
-
-function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+var _lazyStore = require('./lazyStore');
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var store = {
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+
+var activeRules = {
   'INSERT_BEFORE': {},
   'INSERT_INSTEAD': {},
   'INSERT_AFTER': {}
 };
 
 
-var unlisteners = new _map2.default();
+var laterAddedRules = [];
 
-var storeAdd = function storeAdd(key, context) {
-  var position = context.rule.position || 'INSERT_AFTER';
-  if (!store[position][key]) store[position][key] = [];
-  var list = store[position][key];
-  if (typeof context.rule.zIndex === 'number') {
-    var index = list.reduce(function (p, n, i) {
-      if (typeof n.rule.zIndex !== 'number') {
-        console.warn('if multiple rules are attached to a action you have to specify the order (zIndex)', n);
-        return p;
-      }
-      if (typeof context.rule.zIndex !== 'number') return p;
-      if (context.rule.zIndex < n.rule.zIndex) return i;else return p;
-    }, 0);
-    store[position][key] = [].concat((0, _toConsumableArray3.default)(list.slice(0, index)), [context], (0, _toConsumableArray3.default)(list.slice(index)));
-  } else {
-    list.push(context);
-  }
+var i = void 0;
+
+var ruleContextList = {};
+
+var contextListeners = [];
+
+var getPrivatesForTesting = exports.getPrivatesForTesting = function getPrivatesForTesting(key) {
+  return { activeRules: activeRules, laterAddedRules: laterAddedRules, ruleContextList: ruleContextList, contextListeners: contextListeners }[key];
 };
 
-function addRule(context) {
-  if (typeof context.rule.target === 'string') {
-    if (context.rule.target === '*') storeAdd('global', context);else storeAdd(context.rule.target, context);
-  } else {
-    context.rule.target.forEach(function (target) {
-      return storeAdd(target, context);
-    });
-  }
-  return context.rule;
-}
+function addRule(rule) {
+  var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+  var parentRuleId = options.parentRuleId,
+      forceAdd = options.forceAdd;
 
-// TODO: better performance for removing child rules
-function removeRule(rule) {
-  var removedByParent = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
-
-  var context = void 0;
+  var context = createContext(rule);
   var position = rule.position || 'INSERT_AFTER';
-  if (typeof rule.target === 'string') {
-    context = store[position][rule.target === '*' ? 'global' : rule.target].find(function (c) {
-      return c.rule === rule;
-    });
-    var target = rule.target;
-    if (rule.target === '*') store[position].global = store[position].global.filter(function (c) {
-      return c.rule !== rule;
-    });else store[position][target] = store[position][target].filter(function (c) {
-      return c.rule !== rule;
-    });
-  } else {
-    context = store[position][rule.target[0]].find(function (c) {
-      return c.rule === rule;
-    });
-    rule.target.forEach(function (target) {
-      store[position][target] = store[position][target].filter(function (c) {
-        return c.rule !== rule;
-      });
-    });
+  if (contextListeners.length && !getRuleContext(rule)) {
+    for (i = 0; i < contextListeners.length; i++) {
+      contextListeners[i](context);
+    }
   }
-  var unlistenerList = unlisteners.get(rule);
-  if (unlistenerList) {
-    unlistenerList.forEach(function (cb) {
-      return cb();
-    });
+
+  if (parentRuleId) {
+    var parentContext = ruleContextList[parentRuleId];
+    parentContext.childRules.push(rule);
   }
-  context && context.cancelRule();
-  context && context.childRules.forEach(function (rule) {
-    return removeRule(rule, true);
-  });
-  context && devtools.removeRule(context, removedByParent);
+
+  var add = function add() {
+    context.active = true;
+    ruleContextList[rule.id] = context;
+    !rule.target && (0, _lazyStore.applyLazyStore)(function (store) {
+      return (0, _consequence2.default)(context, undefined, store, -1);
+    });
+    rule.target && forEachTarget(rule.target, function (target) {
+      if (!activeRules[position][target]) activeRules[position][target] = [];
+      var list = activeRules[position][target];
+      if (list.length > 0) pushByZIndex(list, rule);else list.push(rule);
+    });
+    addUntil();
+    context.trigger('ADD_RULE');
+  };
+  var addWhen = function addWhen() {
+    return rule.addWhen && saga.createSaga(context, rule.addWhen, function (logic) {
+      switch (logic) {
+        case 'ADD_RULE':
+          laterAddedRules.push(add);break;
+        case 'ADD_RULE_BEFORE':
+          add();break;
+        case 'REAPPLY_WHEN':
+          addWhen();break;
+      }
+    });
+  };
+  var addUntil = function addUntil() {
+    return rule.addUntil && saga.createSaga(context, rule.addUntil, function (logic) {
+      switch (logic) {
+        case 'RECREATE_RULE':
+          removeRule(rule);addRule(rule, { parentRuleId: parentRuleId });break;
+        case 'REMOVE_RULE':
+          removeRule(rule);break;
+        case 'REAPPLY_REMOVE':
+          addUntil();break;
+        case 'READD_RULE':
+          removeRule(rule);addRule(rule, { parentRuleId: parentRuleId, forceAdd: true });break;
+      }
+    });
+  };
+
+  if (rule.addWhen && !forceAdd) addWhen();else add();
   return rule;
 }
 
+function removeRule(rule) {
+  var context = ruleContextList[rule.id];
+  var position = rule.position || 'INSERT_AFTER';
+
+  // remove child rules before parent rule (logical order)
+  if (context.childRules.length) {
+    for (i = 0; i < context.childRules.length; i++) {
+      removeRule(context.childRules[i]);
+    }
+  }
+  context.active = false;
+  rule.target && forEachTarget(rule.target, function (target) {
+    var list = activeRules[position][target];
+    activeRules[position][target] = list.filter(function (r) {
+      return r.id !== rule.id;
+    });
+  });
+  context.trigger('REMOVE_RULE');
+}
+
 function forEachRuleContext(position, actionType, cb) {
-  var globalRules = store[position].global;
-  var boundRules = store[position][actionType];
-  globalRules && globalRules.forEach(cb);
-  boundRules && boundRules.forEach(cb);
+  var globalRules = activeRules[position].global;
+  var boundRules = activeRules[position][actionType];
+  if (globalRules) {
+    for (i = 0; i < globalRules.length; i++) {
+      cb(ruleContextList[globalRules[i].id]);
+    }
+  }
+  if (boundRules) {
+    for (i = 0; i < boundRules.length; i++) {
+      cb(ruleContextList[boundRules[i].id]);
+    }
+  }
 }
 
-function addUnlistenCallback(rule, cb) {
-  var list = unlisteners.get(rule) || [];
-  list.push(cb);
-  unlisteners.set(rule, list);
+function addLaterAddedRules() {
+  if (!laterAddedRules.length) return;
+  for (i = 0; i < laterAddedRules.length; i++) {
+    laterAddedRules[i]();
+  }
+  laterAddedRules = [];
 }
 
-exports.default = { addRule: addRule, removeRule: removeRule, forEachRuleContext: forEachRuleContext, addUnlistenCallback: addUnlistenCallback };
+function getRuleContext(rule) {
+  return ruleContextList[rule.id];
+}
+
+function registerContextListener(cb) {
+  contextListeners.push(cb);
+}
+
+// HELPERS
+
+function createContext(rule) {
+  var listeners = {};
+  return {
+    rule: rule,
+    childRules: [],
+    running: 0,
+    active: false,
+    pendingSaga: false,
+    sagaStep: 0,
+    on: function on(e, cb) {
+      if (!listeners[e]) listeners[e] = [];
+      listeners[e].push(cb);
+    },
+    off: function off(e, cb) {
+      listeners[e] = listeners[e].filter(function (l) {
+        return l !== cb;
+      });
+    },
+    trigger: function trigger(e, payload) {
+      if (!listeners[e]) return;
+      for (i = 0; i < listeners[e].length; i++) {
+        var cb = listeners[e][i];
+        cb(payload);
+      }
+    }
+  };
+}
+
+function forEachTarget(target, cb) {
+  if (typeof target === 'string') {
+    if (target === '*') cb('global');else cb(target);
+  } else {
+    for (i = 0; i < target.length; i++) {
+      cb(target[i]);
+    }
+  }
+}
+
+function pushByZIndex(list, rule) {
+  var index = list.reduce(function (p, n, i) {
+    if (typeof n.zIndex !== 'number' || typeof rule.zIndex !== 'number') {
+      return p;
+    }
+    if (rule.zIndex > n.zIndex) return i + 1;else return p;
+  }, 0);
+  list.splice(index, 0, rule);
+}
