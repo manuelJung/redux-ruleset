@@ -60,7 +60,7 @@ describe('add rules', () => {
   })
   test('if rule was created by another rule, it should be added to parent rule', () => {
     const parent = ruleDB.addRule(createRule('parent', 'ANY_TYPE'))
-    const child = ruleDB.addRule(createRule('child', 'ANY_TYPE'), parent.id)
+    const child = ruleDB.addRule(createRule('child', 'ANY_TYPE'), {parentRuleId: parent.id})
     const ruleContextList = ruleDB.getPrivatesForTesting('ruleContextList')
     expect(ruleContextList.parent.childRules).toEqual([child])
   })
@@ -70,7 +70,7 @@ describe('add rules', () => {
     expect(activeRules.INSERT_AFTER.ANY_TYPE).toBeUndefined()
   })
   test('if rule contains "addWhen" cb, but was invoked with "forceAdd", it should be added', () => {
-    const rule = ruleDB.addRule(createRule('force-add', 'ANY_TYPE', {addWhen: function*(){}}), null, true)
+    const rule = ruleDB.addRule(createRule('force-add', 'ANY_TYPE', {addWhen: function*(){}}), {forceAdd:true})
     const activeRules = ruleDB.getPrivatesForTesting('activeRules')
     expect(activeRules.INSERT_AFTER.ANY_TYPE).toContain(rule)
   })
@@ -86,7 +86,7 @@ describe('remove rules', () => {
   })
   test('child rules should also be removed', () => {
     const parent = ruleDB.addRule(createRule('reove-parent', 'ANY_TYPE'))
-    const child = ruleDB.addRule(createRule('remove-child', 'ANY_TYPE'), parent.id)
+    const child = ruleDB.addRule(createRule('remove-child', 'ANY_TYPE'), {parentRuleId: parent.id})
     ruleDB.removeRule(parent)
     const activeRules = ruleDB.getPrivatesForTesting('activeRules')
     expect(activeRules.INSERT_AFTER.ANY_TYPE).not.toContain(child)

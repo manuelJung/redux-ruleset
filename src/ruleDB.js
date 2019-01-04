@@ -10,6 +10,11 @@ type ActiveRules = {
   INSERT_AFTER: {[ruleId:string]: Rule[]}
 }
 
+type AddRuleOptions = {
+  parentRuleId?:string,
+  forceAdd?:boolean
+}
+
 const activeRules:ActiveRules = {
   'INSERT_BEFORE': {},
   'INSERT_INSTEAD': {},
@@ -26,7 +31,8 @@ const contextListeners = []
 
 export const getPrivatesForTesting = (key:string) => ({activeRules, laterAddedRules, ruleContextList, contextListeners})[key]
 
-export function addRule(rule:Rule, parentRuleId?:string|null, forceAdd?:boolean):Rule{
+export function addRule(rule:Rule, options?:AddRuleOptions={}):Rule{
+  const {parentRuleId, forceAdd} = options
   const context = createContext(rule)
   const position = rule.position || 'INSERT_AFTER'
   if(contextListeners.length && !getRuleContext(rule)) {
@@ -62,10 +68,10 @@ export function addRule(rule:Rule, parentRuleId?:string|null, forceAdd?:boolean)
   })
   const addUntil = () => rule.addUntil && saga.createSaga(context, rule.addUntil, logic => {
     switch(logic){
-      case 'RECREATE_RULE': removeRule(rule); addRule(rule, parentRuleId); break
+      case 'RECREATE_RULE': removeRule(rule); addRule(rule, {parentRuleId}); break
       case 'REMOVE_RULE': removeRule(rule); break
       case 'REAPPLY_REMOVE': addUntil(); break
-      case 'READD_RULE': removeRule(rule); addRule(rule, parentRuleId, true); break
+      case 'READD_RULE': removeRule(rule); addRule(rule, {parentRuleId, forceAdd:true}); break
     }
   })
 
