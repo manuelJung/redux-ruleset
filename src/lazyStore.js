@@ -12,7 +12,7 @@ export function setStore(store:Store){
   callbacks = []
 }
 
-export function applyLazyStore(cb:Function){
+export function applyLazyStore(cb:(store:Store) => void){
   if(!lazyStore) callbacks.push(cb)
   else cb(lazyStore)
 }

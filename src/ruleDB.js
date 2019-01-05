@@ -49,7 +49,7 @@ export function addRule(rule:Rule, options?:AddRuleOptions={}):Rule{
   const add = () => {
     context.active = true
     ruleContextList[rule.id] = context
-    !rule.target && applyLazyStore(store => consequence(context, undefined, store, -1))
+    !rule.target && applyLazyStore(store => {consequence(context, undefined, store, -1)})
     rule.target && forEachTarget(rule.target, target => {
       if(!activeRules[position][target]) activeRules[position][target] = []
       const list = activeRules[position][target]
