@@ -66,7 +66,7 @@ function addRule(rule) {
     context.active = true;
     ruleContextList[rule.id] = context;
     !rule.target && (0, _lazyStore.applyLazyStore)(function (store) {
-      return (0, _consequence2.default)(context, undefined, store, -1);
+      (0, _consequence2.default)(context, undefined, store, -1);
     });
     rule.target && forEachTarget(rule.target, function (target) {
       if (!activeRules[position][target]) activeRules[position][target] = [];

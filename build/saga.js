@@ -9,34 +9,38 @@ exports.createSaga = createSaga;
 var _lazyStore = require('./lazyStore');
 
 var listeners = {};
+var i = void 0;
 
 function applyAction(action) {
   var globalCallbacks = listeners.global;
   var boundCallbacks = listeners[action.type];
-  listeners.global = [];
-  listeners[action.type] = [];
-  globalCallbacks && globalCallbacks.forEach(function (cb) {
-    return cb(action);
-  });
-  boundCallbacks && boundCallbacks.forEach(function (cb) {
-    return cb(action);
-  });
+  if (globalCallbacks) {
+    listeners.global = undefined;
+    for (i = 0; i < globalCallbacks.length; i++) {
+      globalCallbacks[i](action);
+    }
+  }
+  if (boundCallbacks) {
+    listeners[action.type] = undefined;
+    for (i = 0; i < boundCallbacks.length; i++) {
+      boundCallbacks[i](action);
+    }
+  }
 }
 
 function addListener(target, cb) {
   if (typeof target === 'function') {
     cb = target;
     target = '*';
-  }
-  if (typeof target === 'string') {
+  } else if (typeof target === 'string') {
     if (target === '*') target = 'global';
     if (!listeners[target]) listeners[target] = [];
-    listeners[target].push(cb);
-  } else {
-    target && target.forEach(function (target) {
-      if (!listeners[target]) listeners[target] = [];
-      listeners[target].push(cb);
-    });
+    listeners[target] && listeners[target].push(cb);
+  } else if (target) {
+    for (i = 0; i < target.length; i++) {
+      if (!listeners[target[i]]) listeners[target[i]] = [];
+      listeners[target[i]].push(cb);
+    }
   }
 }
 
