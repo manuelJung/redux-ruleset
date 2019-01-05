@@ -4,14 +4,19 @@ import type {Action, Saga, RuleContext, Store} from './types'
 import {applyLazyStore} from './lazyStore'
 
 const listeners = {}
+let i
 
 export function applyAction(action:Action){
   const globalCallbacks = listeners.global
   const boundCallbacks = listeners[action.type]
-  listeners.global = []
-  listeners[action.type] = []
-  globalCallbacks && globalCallbacks.forEach(cb => cb(action))
-  boundCallbacks && boundCallbacks.forEach(cb => cb(action))
+  if(globalCallbacks){
+    listeners.global = undefined
+    for(i=0;i<globalCallbacks.length;i++){globalCallbacks[i](action)}
+  }
+  if(boundCallbacks){
+    listeners[action.type] = undefined
+    for(i=0;i<boundCallbacks.length;i++){boundCallbacks[i](action)}
+  }
 }
 
 function addListener(target, cb){
@@ -19,16 +24,16 @@ function addListener(target, cb){
     cb = target
     target = '*'
   }
-  if(typeof target === 'string'){
+  else if(typeof target === 'string'){
     if(target === '*') target = 'global'
     if(!listeners[target]) listeners[target] = []
-    listeners[target].push(cb)
+    listeners[target] && listeners[target].push(cb)
   }
-  else {
-    target && target.forEach(target => {
-      if(!listeners[target]) listeners[target] = []
-      listeners[target].push(cb)
-    })
+  else if(target) {
+    for(i=0;i<target.length;i++){
+      if(!listeners[target[i]]) listeners[target[i]] = []
+      listeners[target[i]].push(cb)
+    }
   }
 }
 
