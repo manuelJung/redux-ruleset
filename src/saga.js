@@ -11,11 +11,11 @@ export function applyAction(action:Action){
   const boundCallbacks = listeners[action.type]
   if(globalCallbacks){
     listeners.global = undefined
-    for(i=0;i<globalCallbacks.length;i++){globalCallbacks[i](action)}
+    for(let i=0;i<globalCallbacks.length;i++){globalCallbacks[i](action)}
   }
   if(boundCallbacks){
     listeners[action.type] = undefined
-    for(i=0;i<boundCallbacks.length;i++){boundCallbacks[i](action)}
+    for(let i=0;i<boundCallbacks.length;i++){boundCallbacks[i](action)}
   }
 }
 
@@ -30,7 +30,7 @@ function addListener(target, cb){
     listeners[target] && listeners[target].push(cb)
   }
   else if(target) {
-    for(i=0;i<target.length;i++){
+    for(let i=0;i<target.length;i++){
       if(!listeners[target[i]]) listeners[target[i]] = []
       listeners[target[i]].push(cb)
     }

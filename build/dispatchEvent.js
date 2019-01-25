@@ -18,12 +18,13 @@ var _ruleDB = require('./ruleDB');
 
 var ruleDB = _interopRequireWildcard(_ruleDB);
 
+var _laterEvents = require('./laterEvents');
+
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var executionId = 1;
-
 var dispatchListeners = [];
 
 function registerDispatchListener(cb) {
@@ -54,6 +55,6 @@ function dispatchEvent(action, store, cb) {
   !instead && ruleDB.forEachRuleContext('INSERT_AFTER', action.type, function (context) {
     return (0, _consequence2.default)(context, action, store, execId);
   });
-  ruleDB.addLaterAddedRules();
+  (0, _laterEvents.executeBuffer)();
   return result;
 }

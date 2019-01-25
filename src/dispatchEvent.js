@@ -2,6 +2,7 @@
 import consequence, {getRuleExecutionId} from './consequence'
 import * as saga from './saga'
 import * as ruleDB from './ruleDB'
+import {executeBuffer} from './laterEvents'
 
 import type {Action,Store} from './types'
 
@@ -32,6 +33,6 @@ export default function dispatchEvent (action:Action, store:Store, cb?:()=>mixed
   const result = instead || !cb ? null : cb()
   notifyDispatchListener(action, ruleExecutionId, !instead)
   !instead && ruleDB.forEachRuleContext('INSERT_AFTER', action.type, context => consequence(context, action, store, execId))
-  ruleDB.addLaterAddedRules()
+  executeBuffer()
   return result
 }

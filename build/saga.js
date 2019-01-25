@@ -16,14 +16,14 @@ function applyAction(action) {
   var boundCallbacks = listeners[action.type];
   if (globalCallbacks) {
     listeners.global = undefined;
-    for (i = 0; i < globalCallbacks.length; i++) {
-      globalCallbacks[i](action);
+    for (var _i = 0; _i < globalCallbacks.length; _i++) {
+      globalCallbacks[_i](action);
     }
   }
   if (boundCallbacks) {
     listeners[action.type] = undefined;
-    for (i = 0; i < boundCallbacks.length; i++) {
-      boundCallbacks[i](action);
+    for (var _i2 = 0; _i2 < boundCallbacks.length; _i2++) {
+      boundCallbacks[_i2](action);
     }
   }
 }
@@ -37,9 +37,9 @@ function addListener(target, cb) {
     if (!listeners[target]) listeners[target] = [];
     listeners[target] && listeners[target].push(cb);
   } else if (target) {
-    for (i = 0; i < target.length; i++) {
-      if (!listeners[target[i]]) listeners[target[i]] = [];
-      listeners[target[i]].push(cb);
+    for (var _i3 = 0; _i3 < target.length; _i3++) {
+      if (!listeners[target[_i3]]) listeners[target[_i3]] = [];
+      listeners[target[_i3]].push(cb);
     }
   }
 }

@@ -3,6 +3,7 @@ import * as saga from './saga'
 import type {Rule, RuleContext, Position} from './types'
 import consequence from './consequence'
 import {applyLazyStore} from './lazyStore'
+import {addCallback} from './laterEvents'
 
 type ActiveRules = {
   INSERT_BEFORE: {[ruleId:string]: Rule[]},
@@ -21,22 +22,20 @@ const activeRules:ActiveRules = {
   'INSERT_AFTER': {}
 }
 
-let laterAddedRules:(()=>void)[] = []
-
 let i
 
 const ruleContextList:{[ruleId:string]: RuleContext} = {}
 
 const contextListeners = []
 
-export const getPrivatesForTesting = (key:string) => ({activeRules, laterAddedRules, ruleContextList, contextListeners})[key]
+export const getPrivatesForTesting = (key:string) => ({activeRules, ruleContextList, contextListeners})[key]
 
 export function addRule(rule:Rule, options?:AddRuleOptions={}):Rule{
   const {parentRuleId, forceAdd} = options
   const context = createContext(rule)
   const position = rule.position || 'INSERT_AFTER'
   if(contextListeners.length && !getRuleContext(rule)) {
-    for(i=0;i<contextListeners.length;i++){
+    for(let i=0;i<contextListeners.length;i++){
       contextListeners[i](context)
     }
   }
@@ -61,17 +60,18 @@ export function addRule(rule:Rule, options?:AddRuleOptions={}):Rule{
   }
   const addWhen = () => rule.addWhen && saga.createSaga(context, rule.addWhen, logic => {
     switch(logic){
-      case 'ADD_RULE': laterAddedRules.push(add); break
+      case 'ADD_RULE': addCallback(add); break
       case 'ADD_RULE_BEFORE': add(); break
-      case 'REAPPLY_WHEN': addWhen(); break
+      case 'REAPPLY_WHEN': addCallback(addWhen); break
     }
   })
   const addUntil = () => rule.addUntil && saga.createSaga(context, rule.addUntil, logic => {
     switch(logic){
-      case 'RECREATE_RULE': removeRule(rule); addRule(rule, {parentRuleId}); break
-      case 'REMOVE_RULE': removeRule(rule); break
-      case 'REAPPLY_REMOVE': addUntil(); break
-      case 'READD_RULE': removeRule(rule); addRule(rule, {parentRuleId, forceAdd:true}); break
+      case 'RECREATE_RULE': addCallback(() => {removeRule(rule); addRule(rule, {parentRuleId})}); break
+      case 'REMOVE_RULE': addCallback(() => {removeRule(rule)}); break
+      case 'REMOVE_RULE_BEFORE': removeRule(rule); break
+      case 'REAPPLY_REMOVE': addCallback(addUntil); break
+      case 'READD_RULE': addCallback(() => {removeRule(rule); addRule(rule, {parentRuleId, forceAdd:true})}); break
     }
   })
 
@@ -86,7 +86,7 @@ export function removeRule(rule:Rule){
 
   // remove child rules before parent rule (logical order)
   if(context.childRules.length){
-    for(i=0;i<context.childRules.length;i++){removeRule(context.childRules[i])}
+    for(let i=0;i<context.childRules.length;i++){removeRule(context.childRules[i])}
   }
   context.active = false
   rule.target && forEachTarget(rule.target, target => {
@@ -100,17 +100,11 @@ export function forEachRuleContext(position:Position, actionType:string, cb:(con
   const globalRules = activeRules[position].global
   const boundRules = activeRules[position][actionType]
   if(globalRules){
-    for(i=0;i<globalRules.length;i++){cb(ruleContextList[globalRules[i].id])}
+    for(let i=0;i<globalRules.length;i++){cb(ruleContextList[globalRules[i].id])}
   }
   if(boundRules){
-    for(i=0;i<boundRules.length;i++){cb(ruleContextList[boundRules[i].id])}
+    for(let i=0;i<boundRules.length;i++){cb(ruleContextList[boundRules[i].id])}
   }
-}
-
-export function addLaterAddedRules(){
-  if(!laterAddedRules.length) return
-  for (i=0;i<laterAddedRules.length;i++){ laterAddedRules[i]() }
-  laterAddedRules = []
 }
 
 export function getRuleContext(rule:Rule):RuleContext|void {
@@ -141,7 +135,7 @@ function createContext(rule:Rule):RuleContext{
     },
     trigger: (e, payload) => {
       if(!listeners[e]) return
-      for(i=0;i<listeners[e].length;i++){
+      for(let i=0;i<listeners[e].length;i++){
         const cb = listeners[e][i]
         cb(payload)
       }
@@ -155,7 +149,7 @@ function forEachTarget(target:'*' | string | string[], cb:(target:string)=>mixed
     else cb(target)
   }
   else {
-    for(i=0;i<target.length;i++){ cb(target[i]) }
+    for(let i=0;i<target.length;i++){ cb(target[i]) }
   }
 }
 
