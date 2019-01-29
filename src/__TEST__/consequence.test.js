@@ -25,6 +25,7 @@ const createContext = ():RuleContext => {
     active: false,
     pendingSaga: false,
     sagaStep: 0,
+    debounceTimeoutId: null,
     on: jest.fn((e, cb) => {
       if(!listeners[e]) listeners[e] = []
       listeners[e].push(cb)
@@ -192,10 +193,10 @@ describe('return types', () => {
   })
 })
 
-describe('debounce and throttle consequence', () => {
+describe('debounce, delay and throttle consequence', () => {
   beforeEach(initTest)
-  test('debounce should work correctly', async () => {
-    context.rule.debounce = 10
+  test('throttle should work correctly', async () => {
+    context.rule.throttle = 10
     const cb = jest.fn()
     context.rule.consequence = () => cb('ONE')
     consequence(context, action, store, 1)
@@ -215,12 +216,35 @@ describe('debounce and throttle consequence', () => {
     expect(cb).toBeCalledWith('FIVE')
     expect(cb).toBeCalledTimes(2)
   })
-  test('throttle should work correctly', async () => {
-    context.rule.throttle = 5
+  test('delay should work correctly', async () => {
+    context.rule.delay = 5
     consequence(context, action, store, 1)
+    consequence(context, action, store, 2)
     expect(context.rule.consequence).not.toBeCalled()
     await wait(10)
-    expect(context.rule.consequence).toBeCalled()
+    expect(context.rule.consequence).toBeCalledTimes(2)
+  })
+  test('debounce should work correctly', async () => {
+    context.rule.debounce = 10
+    const cb = jest.fn()
+    context.rule.consequence = () => cb('ONE')
+    consequence(context, action, store, 1)
+    expect(cb).not.toBeCalled()
+    await wait(5)
+    context.rule.consequence = () => cb('TWO')
+    consequence(context, action, store, 1)
+    expect(cb).not.toBeCalled()
+    await wait(5)
+    context.rule.consequence = () => cb('THREE')
+    consequence(context, action, store, 1)
+    expect(cb).not.toBeCalled()
+    await wait(5)
+    context.rule.consequence = () => cb('FOUR')
+    consequence(context, action, store, 1)
+    expect(cb).not.toBeCalled()
+    await wait(15)
+    expect(cb).toBeCalledWith('FOUR')
+    expect(cb).toBeCalledTimes(1)
   })
 })
 

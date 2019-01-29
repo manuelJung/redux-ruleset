@@ -34,6 +34,7 @@ export type Rule = {
   concurrency?: LogicConcurrency,
   debounce?: number,
   throttle?: number,
+  delay?: number,
   condition?: (action?:Action, getState:GetState) => boolean,
   consequence: ({
     dispatch:Dispatch,
@@ -55,6 +56,7 @@ export type RuleContext = {
   active: boolean,
   pendingSaga:boolean,
   sagaStep: number,
+  debounceTimeoutId: TimeoutID | null,
   on: (e:ContextEvent, cb:(payload:mixed) => void) => void,
   off: (e:ContextEvent, cb:(payload:mixed) => void) => void,
   trigger: (e:ContextEvent, payload?:mixed) => void,

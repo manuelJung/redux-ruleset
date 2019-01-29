@@ -34,6 +34,7 @@ export default function consequence (context:RuleContext, action?:Action, store:
     if(rule.concurrency === 'FIRST') return skipConsequence()
     if(rule.addOnce) return skipConsequence()
     if(rule.concurrency === 'LAST') context.trigger('CANCEL_CONSEQUENCE')
+    if(rule.throttle) context.trigger('CANCEL_CONSEQUENCE')
     if(rule.debounce) context.trigger('CANCEL_CONSEQUENCE')
   }
   // skip if 'skipRule' condition matched
@@ -91,12 +92,16 @@ export default function consequence (context:RuleContext, action?:Action, store:
   context.running++
   let result
 
-  if(rule.debounce || rule.throttle){
-    result = new Promise(resolve => setTimeout(() => {
-      if(canceled) return resolve()
-      const result = rule.consequence({dispatch, getState, action, addRule, removeRule, effect})
-      resolve(result)
-    }, rule.throttle || rule.debounce))
+  if(rule.throttle || rule.delay || rule.debounce){
+    result = new Promise(resolve => {
+      if(rule.debounce && context.debounceTimeoutId) clearTimeout(context.debounceTimeoutId)
+      context.debounceTimeoutId = setTimeout(() => {
+        context.debounceTimeoutId = null
+        if(canceled) return resolve()
+        const result = rule.consequence({dispatch, getState, action, addRule, removeRule, effect})
+        resolve(result)
+      }, rule.throttle || rule.delay || rule.debounce)
+    })
   }
   else {
     result = rule.consequence({dispatch, getState, action, addRule, removeRule, effect})
