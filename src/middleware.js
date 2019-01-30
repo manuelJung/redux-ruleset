@@ -6,5 +6,6 @@ import type {Store, Action} from './types'
 
 export default function middleware(store:Store){
   setStore(store)
-  return (next:(action:Action)=>mixed) => (action:Action) => dispatchEvent(action, store, () => next(action))
+  return (next:(action:Action)=>mixed) => (action:Action) => 
+    dispatchEvent(action, store, () => next(action), true)
 }

@@ -4,6 +4,7 @@ import type {Rule, RuleContext, Position} from './types'
 import consequence from './consequence'
 import {applyLazyStore} from './lazyStore'
 import {addCallback} from './laterEvents'
+import * as devTools from './devTools'
 
 type ActiveRules = {
   INSERT_BEFORE: {[ruleId:string]: Rule[]},
@@ -48,7 +49,7 @@ export function addRule(rule:Rule, options?:AddRuleOptions={}):Rule{
   const add = () => {
     context.active = true
     ruleContextList[rule.id] = context
-    !rule.target && applyLazyStore(store => {consequence(context, undefined, store, -1)})
+    !rule.target && applyLazyStore(store => {consequence(context, undefined, store, null)})
     rule.target && forEachTarget(rule.target, target => {
       if(!activeRules[position][target]) activeRules[position][target] = []
       const list = activeRules[position][target]
@@ -57,6 +58,9 @@ export function addRule(rule:Rule, options?:AddRuleOptions={}):Rule{
     })
     addUntil()
     context.trigger('ADD_RULE')
+    if(process.env.NODE_ENV === 'development'){
+      devTools.addRule(rule, options.parentRuleId || null)
+    }
   }
   const addWhen = () => rule.addWhen && saga.createSaga(context, rule.addWhen, logic => {
     switch(logic){
@@ -80,13 +84,13 @@ export function addRule(rule:Rule, options?:AddRuleOptions={}):Rule{
   return rule
 }
 
-export function removeRule(rule:Rule){
+export function removeRule(rule:Rule, removedByParent?: boolean){
   const context = ruleContextList[rule.id]
   const position = rule.position || 'INSERT_AFTER'
 
   // remove child rules before parent rule (logical order)
   if(context.childRules.length){
-    for(let i=0;i<context.childRules.length;i++){removeRule(context.childRules[i])}
+    for(let i=0;i<context.childRules.length;i++){removeRule(context.childRules[i], true)}
   }
   context.active = false
   rule.target && forEachTarget(rule.target, target => {
@@ -94,6 +98,9 @@ export function removeRule(rule:Rule){
     activeRules[position][target] = list.filter(r => r.id !== rule.id)
   })
   context.trigger('REMOVE_RULE')
+  if(process.env.NODE_ENV === 'development'){
+    devTools.removeRule(rule.id, removedByParent || false)
+  }
 }
 
 export function forEachRuleContext(position:Position, actionType:string, cb:(context:RuleContext)=>mixed){

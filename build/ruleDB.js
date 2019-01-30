@@ -22,6 +22,10 @@ var _lazyStore = require('./lazyStore');
 
 var _laterEvents = require('./laterEvents');
 
+var _devTools = require('./devTools');
+
+var devTools = _interopRequireWildcard(_devTools);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
@@ -31,6 +35,7 @@ var activeRules = {
   'INSERT_INSTEAD': {},
   'INSERT_AFTER': {}
 };
+
 
 var i = void 0;
 
@@ -64,7 +69,7 @@ function addRule(rule) {
     context.active = true;
     ruleContextList[rule.id] = context;
     !rule.target && (0, _lazyStore.applyLazyStore)(function (store) {
-      (0, _consequence2.default)(context, undefined, store, -1);
+      (0, _consequence2.default)(context, undefined, store, null);
     });
     rule.target && forEachTarget(rule.target, function (target) {
       if (!activeRules[position][target]) activeRules[position][target] = [];
@@ -73,6 +78,9 @@ function addRule(rule) {
     });
     addUntil();
     context.trigger('ADD_RULE');
+    if (process.env.NODE_ENV === 'development') {
+      devTools.addRule(rule, options.parentRuleId || null);
+    }
   };
   var addWhen = function addWhen() {
     return rule.addWhen && saga.createSaga(context, rule.addWhen, function (logic) {
@@ -113,14 +121,14 @@ function addRule(rule) {
   return rule;
 }
 
-function removeRule(rule) {
+function removeRule(rule, removedByParent) {
   var context = ruleContextList[rule.id];
   var position = rule.position || 'INSERT_AFTER';
 
   // remove child rules before parent rule (logical order)
   if (context.childRules.length) {
     for (var _i2 = 0; _i2 < context.childRules.length; _i2++) {
-      removeRule(context.childRules[_i2]);
+      removeRule(context.childRules[_i2], true);
     }
   }
   context.active = false;
@@ -131,6 +139,9 @@ function removeRule(rule) {
     });
   });
   context.trigger('REMOVE_RULE');
+  if (process.env.NODE_ENV === 'development') {
+    devTools.removeRule(rule.id, removedByParent || false);
+  }
 }
 
 function forEachRuleContext(position, actionType, cb) {

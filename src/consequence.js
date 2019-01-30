@@ -1,6 +1,7 @@
 // @flow
 import * as ruleDB from './ruleDB'
 import type {Rule,Action,Store,RuleContext} from './types'
+import * as devTools from './devTools'
 
 let executionId = 1
 let i
@@ -13,7 +14,7 @@ export function getRuleExecutionId(){
 
 const orderedListeners = {}
 
-export default function consequence (context:RuleContext, action?:Action, store:Store, actionExecId:number):boolean{
+export default function consequence (context:RuleContext, action?:Action, store:Store, actionExecId:number|null):boolean{
   let execId = executionId++
   const rule = context.rule
   context.trigger('CONSEQUENCE_START', execId)
@@ -27,6 +28,10 @@ export default function consequence (context:RuleContext, action?:Action, store:
   }
   const concurrency = context.concurrency[concurrencyId]
 
+  if(process.env.NODE_ENV === 'development'){
+    devTools.execRuleStart(rule.id, execId, actionExecId, concurrencyId)
+  }
+
   /**
    * Check concurrency and conditions
    */
@@ -34,6 +39,9 @@ export default function consequence (context:RuleContext, action?:Action, store:
   // trigger when consequence should not be invoked (e.g condition does not match)
   const skipConsequence = () => {
     context.trigger('CONSEQUENCE_END', execId)
+    if(process.env.NODE_ENV === 'development'){
+      devTools.execRuleEnd(rule.id, execId, actionExecId, concurrencyId, 'SKIP')
+    }
     return false
   }
 
@@ -52,7 +60,11 @@ export default function consequence (context:RuleContext, action?:Action, store:
   }
   // skip if rule condition does not match
   if(rule.condition && !rule.condition(action, store.getState)){
-    return skipConsequence()
+    if(process.env.NODE_ENV === 'development'){
+      devTools.execRuleEnd(rule.id, execId, actionExecId, concurrencyId, 'CONDITION_NOT_MATCH')
+    }
+    context.trigger('CONSEQUENCE_END', execId)
+    return false
   }
 
   /**
@@ -125,6 +137,9 @@ export default function consequence (context:RuleContext, action?:Action, store:
     const action:any = result
     dispatch(action)
     unlisten(context, execId, cancel, concurrency)
+    if(process.env.NODE_ENV === 'development'){
+      devTools.execRuleEnd(rule.id, execId, actionExecId, concurrencyId, 'RESOLVED')
+    }
   }
 
   // dispatch returned (promise-wrapped) action
@@ -134,6 +149,9 @@ export default function consequence (context:RuleContext, action?:Action, store:
       action && action.type && dispatch(action)
       if(rule.concurrency === 'ORDERED') effect(() => unlisten(context, execId, cancel, concurrency))
       else unlisten(context, execId, cancel, concurrency)
+      if(process.env.NODE_ENV === 'development'){
+        devTools.execRuleEnd(rule.id, execId, actionExecId, concurrencyId, 'RESOLVED')
+      }
     })
   }
 
@@ -144,6 +162,9 @@ export default function consequence (context:RuleContext, action?:Action, store:
       unlisten(context, execId, cancel, concurrency)
       context.off('REMOVE_RULE', applyCb)
       context.off('CANCEL_CONSEQUENCE', applyCb)
+      if(process.env.NODE_ENV === 'development'){
+        devTools.execRuleEnd(rule.id, execId, actionExecId, concurrencyId, 'RESOLVED')
+      }
       cb()
     }
     context.on('REMOVE_RULE', applyCb)
@@ -153,6 +174,9 @@ export default function consequence (context:RuleContext, action?:Action, store:
   // unlisten for void return
   else {
     unlisten(context, execId, cancel, concurrency)
+    if(process.env.NODE_ENV === 'development'){
+      devTools.execRuleEnd(rule.id, execId, actionExecId, concurrencyId, 'RESOLVED')
+    }
   }
 
   return true

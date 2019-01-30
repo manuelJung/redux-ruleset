@@ -33,7 +33,7 @@ var removeRule = exports.removeRule = function removeRule(rule) {
 
 var dispatchEvent = exports.dispatchEvent = function dispatchEvent(action, cb) {
   return (0, _lazyStore.applyLazyStore)(function (store) {
-    (0, _dispatchEvent2.default)(action, store, cb);
+    (0, _dispatchEvent2.default)(action, store, cb, false);
   });
 };
 

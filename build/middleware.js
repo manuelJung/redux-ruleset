@@ -19,7 +19,7 @@ function middleware(store) {
     return function (action) {
       return (0, _dispatchEvent2.default)(action, store, function () {
         return next(action);
-      });
+      }, true);
     };
   };
 }

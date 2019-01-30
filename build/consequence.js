@@ -23,12 +23,15 @@ var _ruleDB = require('./ruleDB');
 
 var ruleDB = _interopRequireWildcard(_ruleDB);
 
+var _devTools = require('./devTools');
+
+var devTools = _interopRequireWildcard(_devTools);
+
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var executionId = 1;
-
 var i = void 0;
 
 var nextExecutionId = null;
@@ -53,6 +56,10 @@ function consequence(context, action, store, actionExecId) {
   }
   var concurrency = context.concurrency[concurrencyId];
 
+  if (process.env.NODE_ENV === 'development') {
+    devTools.execRuleStart(rule.id, execId, actionExecId, concurrencyId);
+  }
+
   /**
    * Check concurrency and conditions
    */
@@ -60,6 +67,9 @@ function consequence(context, action, store, actionExecId) {
   // trigger when consequence should not be invoked (e.g condition does not match)
   var skipConsequence = function skipConsequence() {
     context.trigger('CONSEQUENCE_END', execId);
+    if (process.env.NODE_ENV === 'development') {
+      devTools.execRuleEnd(rule.id, execId, actionExecId, concurrencyId, 'SKIP');
+    }
     return false;
   };
 
@@ -78,7 +88,11 @@ function consequence(context, action, store, actionExecId) {
   }
   // skip if rule condition does not match
   if (rule.condition && !rule.condition(action, store.getState)) {
-    return skipConsequence();
+    if (process.env.NODE_ENV === 'development') {
+      devTools.execRuleEnd(rule.id, execId, actionExecId, concurrencyId, 'CONDITION_NOT_MATCH');
+    }
+    context.trigger('CONSEQUENCE_END', execId);
+    return false;
   }
 
   /**
@@ -162,6 +176,9 @@ function consequence(context, action, store, actionExecId) {
     var _action = result;
     dispatch(_action);
     unlisten(context, execId, cancel, concurrency);
+    if (process.env.NODE_ENV === 'development') {
+      devTools.execRuleEnd(rule.id, execId, actionExecId, concurrencyId, 'RESOLVED');
+    }
   }
 
   // dispatch returned (promise-wrapped) action
@@ -172,6 +189,9 @@ function consequence(context, action, store, actionExecId) {
         if (rule.concurrency === 'ORDERED') effect(function () {
           return unlisten(context, execId, cancel, concurrency);
         });else unlisten(context, execId, cancel, concurrency);
+        if (process.env.NODE_ENV === 'development') {
+          devTools.execRuleEnd(rule.id, execId, actionExecId, concurrencyId, 'RESOLVED');
+        }
       });
     }
 
@@ -182,6 +202,9 @@ function consequence(context, action, store, actionExecId) {
           unlisten(context, execId, cancel, concurrency);
           context.off('REMOVE_RULE', applyCb);
           context.off('CANCEL_CONSEQUENCE', applyCb);
+          if (process.env.NODE_ENV === 'development') {
+            devTools.execRuleEnd(rule.id, execId, actionExecId, concurrencyId, 'RESOLVED');
+          }
           cb();
         };
         context.on('REMOVE_RULE', applyCb);
@@ -191,6 +214,9 @@ function consequence(context, action, store, actionExecId) {
       // unlisten for void return
       else {
           unlisten(context, execId, cancel, concurrency);
+          if (process.env.NODE_ENV === 'development') {
+            devTools.execRuleEnd(rule.id, execId, actionExecId, concurrencyId, 'RESOLVED');
+          }
         }
 
   return true;

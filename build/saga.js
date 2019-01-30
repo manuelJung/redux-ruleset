@@ -6,24 +6,33 @@ Object.defineProperty(exports, "__esModule", {
 exports.applyAction = applyAction;
 exports.createSaga = createSaga;
 
+var _devTools = require('./devTools');
+
+var devTools = _interopRequireWildcard(_devTools);
+
+var _consequence = require('./consequence');
+
 var _lazyStore = require('./lazyStore');
 
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+
 var listeners = {};
-var i = void 0;
+
+var id = 1;
 
 function applyAction(action) {
   var globalCallbacks = listeners.global;
   var boundCallbacks = listeners[action.type];
   if (globalCallbacks) {
     listeners.global = undefined;
-    for (var _i = 0; _i < globalCallbacks.length; _i++) {
-      globalCallbacks[_i](action);
+    for (var i = 0; i < globalCallbacks.length; i++) {
+      globalCallbacks[i](action);
     }
   }
   if (boundCallbacks) {
     listeners[action.type] = undefined;
-    for (var _i2 = 0; _i2 < boundCallbacks.length; _i2++) {
-      boundCallbacks[_i2](action);
+    for (var _i = 0; _i < boundCallbacks.length; _i++) {
+      boundCallbacks[_i](action);
     }
   }
 }
@@ -37,9 +46,9 @@ function addListener(target, cb) {
     if (!listeners[target]) listeners[target] = [];
     listeners[target] && listeners[target].push(cb);
   } else if (target) {
-    for (var _i3 = 0; _i3 < target.length; _i3++) {
-      if (!listeners[target[_i3]]) listeners[target[_i3]] = [];
-      listeners[target[_i3]].push(cb);
+    for (var i = 0; i < target.length; i++) {
+      if (!listeners[target[i]]) listeners[target[i]] = [];
+      listeners[target[i]].push(cb);
     }
   }
 }
@@ -50,6 +59,11 @@ function createSaga(context, saga, cb, store) {
       return createSaga(context, saga, cb, store);
     });
     return;
+  }
+  var execId = id++;
+  if (process.env.NODE_ENV === 'development') {
+    var sagaType = saga === context.rule.addWhen ? 'ADD_WHEN' : 'ADD_UNTIL';
+    devTools.execSagaStart(execId, context.rule.id, sagaType);
   }
   context.pendingSaga = true;
   context.sagaStep = -1;
@@ -63,6 +77,10 @@ function createSaga(context, saga, cb, store) {
       if (result.done) {
         context.pendingSaga = false;
         context.off('REMOVE_RULE', cancel);
+        if (process.env.NODE_ENV === 'development') {
+          var _sagaType = saga === context.rule.addWhen ? 'ADD_WHEN' : 'ADD_UNTIL';
+          devTools.execSagaEnd(execId, context.rule.id, _sagaType, result.value);
+        }
         cb(result.value);
       }
     };
@@ -70,6 +88,11 @@ function createSaga(context, saga, cb, store) {
       var _addListener = function _addListener() {
         return addListener(target, function (action) {
           var result = cb ? cb(action) : action; // false or mixed
+          if (process.env.NODE_ENV === 'development') {
+            var _sagaType2 = saga === context.rule.addWhen ? 'ADD_WHEN' : 'ADD_UNTIL';
+            var ruleExecId = (0, _consequence.getRuleExecutionId)();
+            devTools.yieldSaga(execId, context.rule.id, _sagaType2, action, ruleExecId, result ? 'RESOLVE' : 'REJECT');
+          }
           if (result) next(iter, result);else _addListener();
         });
       };
