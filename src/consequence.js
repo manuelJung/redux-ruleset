@@ -18,6 +18,15 @@ export default function consequence (context:RuleContext, action?:Action, store:
   const rule = context.rule
   context.trigger('CONSEQUENCE_START', execId)
 
+  const concurrencyId = rule.concurrencyFilter && action ? rule.concurrencyFilter(action) : 'default'
+  if(!context.concurrency[concurrencyId]){
+    context.concurrency[concurrencyId] = {
+      running: 0,
+      debounceTimeoutId: null
+    }
+  }
+  const concurrency = context.concurrency[concurrencyId]
+
   /**
    * Check concurrency and conditions
    */
@@ -29,7 +38,7 @@ export default function consequence (context:RuleContext, action?:Action, store:
   }
 
   // skip when concurrency matches
-  if(context.running){
+  if(concurrency.running){
     if(rule.concurrency === 'ONCE') return skipConsequence()
     if(rule.concurrency === 'FIRST') return skipConsequence()
     if(rule.addOnce) return skipConsequence()
@@ -89,14 +98,14 @@ export default function consequence (context:RuleContext, action?:Action, store:
    * Execute consequence
    */
 
-  context.running++
+  concurrency.running++
   let result
 
   if(rule.throttle || rule.delay || rule.debounce){
     result = new Promise(resolve => {
-      if(rule.debounce && context.debounceTimeoutId) clearTimeout(context.debounceTimeoutId)
-      context.debounceTimeoutId = setTimeout(() => {
-        context.debounceTimeoutId = null
+      if(rule.debounce && concurrency.debounceTimeoutId) clearTimeout(concurrency.debounceTimeoutId)
+      concurrency.debounceTimeoutId = setTimeout(() => {
+        concurrency.debounceTimeoutId = null
         if(canceled) return resolve()
         const result = rule.consequence({dispatch, getState, action, addRule, removeRule, effect})
         resolve(result)
@@ -115,7 +124,7 @@ export default function consequence (context:RuleContext, action?:Action, store:
   if(typeof result === 'object' && result.type){
     const action:any = result
     dispatch(action)
-    unlisten(context, execId, cancel)
+    unlisten(context, execId, cancel, concurrency)
   }
 
   // dispatch returned (promise-wrapped) action
@@ -123,8 +132,8 @@ export default function consequence (context:RuleContext, action?:Action, store:
     const promise:any = result
     promise.then(action => {
       action && action.type && dispatch(action)
-      if(rule.concurrency === 'ORDERED') effect(() => unlisten(context, execId, cancel))
-      else unlisten(context, execId, cancel)
+      if(rule.concurrency === 'ORDERED') effect(() => unlisten(context, execId, cancel, concurrency))
+      else unlisten(context, execId, cancel, concurrency)
     })
   }
 
@@ -132,7 +141,7 @@ export default function consequence (context:RuleContext, action?:Action, store:
   else if(typeof result === 'function'){
     const cb:Function = result
     const applyCb = () => {
-      unlisten(context, execId, cancel)
+      unlisten(context, execId, cancel, concurrency)
       context.off('REMOVE_RULE', applyCb)
       context.off('CANCEL_CONSEQUENCE', applyCb)
       cb()
@@ -143,7 +152,7 @@ export default function consequence (context:RuleContext, action?:Action, store:
 
   // unlisten for void return
   else {
-    unlisten(context, execId, cancel)
+    unlisten(context, execId, cancel, concurrency)
   }
 
   return true
@@ -152,8 +161,8 @@ export default function consequence (context:RuleContext, action?:Action, store:
 
 // HELPERS
 
-function unlisten(context:RuleContext, execId:number, cancelFn:Function){
-  context.rule.concurrency !== 'ONCE' && context.running--
+function unlisten(context:RuleContext, execId:number, cancelFn:Function, concurrency: {running:number}){
+  context.rule.concurrency !== 'ONCE' && concurrency.running--
   context.trigger('CONSEQUENCE_END', execId)
   context.rule.addOnce && ruleDB.removeRule(context.rule)
   context.off('CANCEL_CONSEQUENCE', cancelFn)

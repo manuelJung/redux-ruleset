@@ -22,11 +22,15 @@ const createContext = ():RuleContext => {
   return {
     rule: rule,
     childRules: [],
-    running: 0,
     active: false,
     pendingSaga: false,
     sagaStep: 0,
-    debounceTimeoutId: null,
+    concurrency: {
+      default: {
+        running: 0,
+        debounceTimeoutId: null
+      }
+    },
     on: jest.fn((e, cb) => {
       if(!listeners[e]) listeners[e] = []
       listeners[e].push(cb)
@@ -85,7 +89,7 @@ describe('skip rule', () => {
   })
   test('skip rule when concurrency is FIRST and the rule is already executing', () => {
     context.rule.concurrency = 'FIRST'
-    context.running = 1
+    context.concurrency.default.running = 1
     const result = consequence(context, action, store, 1)
     expect(result).toBe(false)
   })
@@ -98,7 +102,7 @@ describe('skip rule', () => {
   })
   test('skip rule when "addOnce" flag is set and the rule already has been executed', () => {
     context.rule.addOnce = true
-    context.running = 1
+    context.concurrency.default.running = 1
     const result = consequence(context, action, store, 1)
     expect(result).toBe(false)
   })
@@ -350,5 +354,22 @@ describe('getRuleExecutionId()', () => {
     consequence(context, action, store, 1)
     expect(typeof execId).toBe('number')
     expect(getRuleExecutionId()).toBe(null)
+  })
+})
+
+describe('concurrencyFilter', () => {
+  beforeEach(initTest)
+  test('it should split the concurrency logic by id', async () => {
+    context.rule.concurrency = 'ONCE'
+    // $FlowFixMe
+    context.rule.concurrencyFilter = action => action.id
+    const action1 = {type: 'ACTION', id: 'id1'}
+    const action2 = {type: 'ACTION', id: 'id2'}
+    const action3 = {type: 'ACTION', id: 'id3'}
+    consequence(context, action1, store, 1)
+    consequence(context, action2, store, 2)
+    await wait(5)
+    consequence(context, action3, store, 3)
+    expect(context.rule.consequence).toBeCalledTimes(3)
   })
 })

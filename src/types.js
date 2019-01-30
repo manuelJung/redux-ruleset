@@ -35,6 +35,7 @@ export type Rule = {
   debounce?: number,
   throttle?: number,
   delay?: number,
+  concurrencyFilter?: (action:Action) => string,
   condition?: (action?:Action, getState:GetState) => boolean,
   consequence: ({
     dispatch:Dispatch,
@@ -52,11 +53,13 @@ export type Rule = {
 export type RuleContext = {
   rule: Rule,
   childRules: Rule[],
-  running: number,
   active: boolean,
   pendingSaga:boolean,
   sagaStep: number,
-  debounceTimeoutId: TimeoutID | null,
+  concurrency: {[concurrencyId:string]: {
+    running: number,
+    debounceTimeoutId: TimeoutID | null,
+  }},
   on: (e:ContextEvent, cb:(payload:mixed) => void) => void,
   off: (e:ContextEvent, cb:(payload:mixed) => void) => void,
   trigger: (e:ContextEvent, payload?:mixed) => void,
