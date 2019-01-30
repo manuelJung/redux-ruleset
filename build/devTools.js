@@ -3,7 +3,14 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+var events = [];
+
+window.__getRulesetEvents = function () {
+  return events;
+};
+
 function dispatch(event) {
+  events.push(event);
   return event;
 }
 

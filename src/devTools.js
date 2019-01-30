@@ -97,9 +97,15 @@ export type Event = AddRuleEvent
 | ExecActionEndEvent 
 | ExecSagaStartEvent 
 | ExecSagaEndEvent 
+| YieldSagaEvent
 | DispatchActionEvent
 
+const events:Event[] = []
+
+window.__getRulesetEvents = () => events
+
 function dispatch<E:*>(event:E):E{
+  events.push(event)
   return event
 }
 
