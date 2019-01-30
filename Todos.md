@@ -1,7 +1,6 @@
 
 # Todos
 
-- INSERT_INSTEAD should not kill own dispatched actions
 - created "debug" flag
 - validate rules
 - add pubsub for devtools
@@ -10,6 +9,7 @@
 
 # Resolved
 
+- INSERT_INSTEAD should not kill own dispatched actions
 - implement "extendId" logic
 - correctly implement throttle, and debounce logic
 - implement delay logic (= current throttle)
