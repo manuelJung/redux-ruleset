@@ -1,4 +1,5 @@
 // @flow
+// $FlowFixMe
 import createStoreCreator from 'redux-mock-store'
 import consequence, {getRuleExecutionId} from '../consequence'
 import type {RuleContext} from '../types'
