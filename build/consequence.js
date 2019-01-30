@@ -44,6 +44,15 @@ function consequence(context, action, store, actionExecId) {
   var rule = context.rule;
   context.trigger('CONSEQUENCE_START', execId);
 
+  var concurrencyId = rule.concurrencyFilter && action ? rule.concurrencyFilter(action) : 'default';
+  if (!context.concurrency[concurrencyId]) {
+    context.concurrency[concurrencyId] = {
+      running: 0,
+      debounceTimeoutId: null
+    };
+  }
+  var concurrency = context.concurrency[concurrencyId];
+
   /**
    * Check concurrency and conditions
    */
@@ -55,11 +64,12 @@ function consequence(context, action, store, actionExecId) {
   };
 
   // skip when concurrency matches
-  if (context.running) {
+  if (concurrency.running) {
     if (rule.concurrency === 'ONCE') return skipConsequence();
     if (rule.concurrency === 'FIRST') return skipConsequence();
     if (rule.addOnce) return skipConsequence();
     if (rule.concurrency === 'LAST') context.trigger('CANCEL_CONSEQUENCE');
+    if (rule.throttle) context.trigger('CANCEL_CONSEQUENCE');
     if (rule.debounce) context.trigger('CANCEL_CONSEQUENCE');
   }
   // skip if 'skipRule' condition matched
@@ -126,16 +136,18 @@ function consequence(context, action, store, actionExecId) {
    * Execute consequence
    */
 
-  context.running++;
+  concurrency.running++;
   var result = void 0;
 
-  if (rule.debounce || rule.throttle) {
+  if (rule.throttle || rule.delay || rule.debounce) {
     result = new _promise2.default(function (resolve) {
-      return setTimeout(function () {
+      if (rule.debounce && concurrency.debounceTimeoutId) clearTimeout(concurrency.debounceTimeoutId);
+      concurrency.debounceTimeoutId = setTimeout(function () {
+        concurrency.debounceTimeoutId = null;
         if (canceled) return resolve();
         var result = rule.consequence({ dispatch: dispatch, getState: getState, action: action, addRule: addRule, removeRule: removeRule, effect: effect });
         resolve(result);
-      }, rule.throttle || rule.debounce);
+      }, rule.throttle || rule.delay || rule.debounce);
     });
   } else {
     result = rule.consequence({ dispatch: dispatch, getState: getState, action: action, addRule: addRule, removeRule: removeRule, effect: effect });
@@ -149,7 +161,7 @@ function consequence(context, action, store, actionExecId) {
   if ((typeof result === 'undefined' ? 'undefined' : (0, _typeof3.default)(result)) === 'object' && result.type) {
     var _action = result;
     dispatch(_action);
-    unlisten(context, execId, cancel);
+    unlisten(context, execId, cancel, concurrency);
   }
 
   // dispatch returned (promise-wrapped) action
@@ -158,8 +170,8 @@ function consequence(context, action, store, actionExecId) {
       promise.then(function (action) {
         action && action.type && dispatch(action);
         if (rule.concurrency === 'ORDERED') effect(function () {
-          return unlisten(context, execId, cancel);
-        });else unlisten(context, execId, cancel);
+          return unlisten(context, execId, cancel, concurrency);
+        });else unlisten(context, execId, cancel, concurrency);
       });
     }
 
@@ -167,7 +179,7 @@ function consequence(context, action, store, actionExecId) {
     else if (typeof result === 'function') {
         var cb = result;
         var applyCb = function applyCb() {
-          unlisten(context, execId, cancel);
+          unlisten(context, execId, cancel, concurrency);
           context.off('REMOVE_RULE', applyCb);
           context.off('CANCEL_CONSEQUENCE', applyCb);
           cb();
@@ -178,7 +190,7 @@ function consequence(context, action, store, actionExecId) {
 
       // unlisten for void return
       else {
-          unlisten(context, execId, cancel);
+          unlisten(context, execId, cancel, concurrency);
         }
 
   return true;
@@ -186,8 +198,8 @@ function consequence(context, action, store, actionExecId) {
 
 // HELPERS
 
-function unlisten(context, execId, cancelFn) {
-  context.rule.concurrency !== 'ONCE' && context.running--;
+function unlisten(context, execId, cancelFn, concurrency) {
+  context.rule.concurrency !== 'ONCE' && concurrency.running--;
   context.trigger('CONSEQUENCE_END', execId);
   context.rule.addOnce && ruleDB.removeRule(context.rule);
   context.off('CANCEL_CONSEQUENCE', cancelFn);

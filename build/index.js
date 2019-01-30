@@ -37,4 +37,21 @@ var dispatchEvent = exports.dispatchEvent = function dispatchEvent(action, cb) {
   });
 };
 
+// export const disableRule = (action:Action, ruleId:string|string[]) => ({
+//   ...action,
+//   meta: {
+//     ...action.meta,
+//     skipRule: (() => {
+//       if(!action.meta || !action.meta.skipRule) return ruleId
+//       if(action.meta.skipRule === '*') return '*'
+//       if(typeof action.meta.skipRule === 'string'){
+//         if(typeof ruleId === 'string') return [ruleId, action.meta.skipRule]
+//         return [...ruleId, action.meta.skipRule]
+//       }
+//       if(typeof ruleId === 'string') return [ruleId, ...action.meta.skipRule]
+//       return [...ruleId, ...action.meta.skipRule]
+//     })()
+//   }
+// })
+
 exports.default = _middleware2.default;

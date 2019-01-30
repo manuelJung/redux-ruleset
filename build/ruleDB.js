@@ -163,10 +163,15 @@ function createContext(rule) {
   return {
     rule: rule,
     childRules: [],
-    running: 0,
     active: false,
     pendingSaga: false,
     sagaStep: 0,
+    concurrency: {
+      default: {
+        running: 0,
+        debounceTimeoutId: null
+      }
+    },
     on: function on(e, cb) {
       if (!listeners[e]) listeners[e] = [];
       listeners[e].push(cb);
