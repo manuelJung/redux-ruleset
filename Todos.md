@@ -3,12 +3,12 @@
 
 - created "debug" flag
 - validate rules
-- add pubsub for devtools
 - rename position without prefix "INSERT_"
 - export constants
 
 # Resolved
 
+- add pubsub for devtools
 - INSERT_INSTEAD should not kill own dispatched actions
 - implement "extendId" logic
 - correctly implement throttle, and debounce logic

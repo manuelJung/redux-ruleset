@@ -101,6 +101,8 @@ function addRule(rule) {
           (0, _laterEvents.addCallback)(function () {
             removeRule(rule);addRule(rule, { parentRuleId: parentRuleId });
           });break;
+        case 'RECREATE_RULE_BEFORE':
+          removeRule(rule);addRule(rule, { parentRuleId: parentRuleId });break;
         case 'REMOVE_RULE':
           (0, _laterEvents.addCallback)(function () {
             removeRule(rule);

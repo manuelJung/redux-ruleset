@@ -72,6 +72,7 @@ export function addRule(rule:Rule, options?:AddRuleOptions={}):Rule{
   const addUntil = () => rule.addUntil && saga.createSaga(context, rule.addUntil, logic => {
     switch(logic){
       case 'RECREATE_RULE': addCallback(() => {removeRule(rule); addRule(rule, {parentRuleId})}); break
+      case 'RECREATE_RULE_BEFORE': removeRule(rule); addRule(rule, {parentRuleId}); break
       case 'REMOVE_RULE': addCallback(() => {removeRule(rule)}); break
       case 'REMOVE_RULE_BEFORE': removeRule(rule); break
       case 'REAPPLY_REMOVE': addCallback(addUntil); break
