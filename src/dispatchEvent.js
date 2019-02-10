@@ -31,7 +31,7 @@ export default function dispatchEvent (action:Action, store:Store, cb?:()=>mixed
     devTools.execActionStart(execId, ruleExeId, action)
   }
 
-  saga.applyAction(action)
+  saga.applyAction(action, execId)
   ruleDB.forEachRuleContext('INSERT_INSTEAD', action.type, context => {
     if(!instead && consequence(context, action, store, execId)) instead = true
   })

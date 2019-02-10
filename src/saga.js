@@ -5,20 +5,21 @@ import type {Action, Saga, RuleContext, Store} from './types'
 
 import {applyLazyStore} from './lazyStore'
 
-const listeners = {}
+type Listener = (action:Action, actionExecId:number) => mixed
+const listeners:{[type:string]:Listener[]|void} = {}
 let id = 1
 
 
-export function applyAction(action:Action){
+export function applyAction(action:Action, actionExecId:number){
   const globalCallbacks = listeners.global
   const boundCallbacks = listeners[action.type]
   if(globalCallbacks){
     listeners.global = undefined
-    for(let i=0;i<globalCallbacks.length;i++){globalCallbacks[i](action)}
+    for(let i=0;i<globalCallbacks.length;i++){globalCallbacks[i](action, actionExecId)}
   }
   if(boundCallbacks){
     listeners[action.type] = undefined
-    for(let i=0;i<boundCallbacks.length;i++){boundCallbacks[i](action)}
+    for(let i=0;i<boundCallbacks.length;i++){boundCallbacks[i](action, actionExecId)}
   }
 }
 
@@ -77,13 +78,13 @@ export function createSaga<Logic>(
       }
     }
     const nextAction = (target, cb) => {
-      const _addListener = () => addListener(target, action => {
+      const _addListener = () => addListener(target, (action, actionExecId) => {
         const result = cb ? cb(action) : action // false or mixed
         lastAction = action
         if(process.env.NODE_ENV === 'development'){
           const sagaType = saga === context.rule.addWhen ? 'ADD_WHEN' : 'ADD_UNTIL'
           const ruleExecId = getRuleExecutionId()
-          devTools.yieldSaga(execId, context.rule.id, sagaType, action, ruleExecId, result ? 'RESOLVE' : 'REJECT')
+          devTools.yieldSaga(execId, context.rule.id, sagaType, action, ruleExecId, actionExecId, result ? 'RESOLVE' : 'REJECT')
         }
         if(result) next(iter, result)
         else _addListener()

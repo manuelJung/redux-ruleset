@@ -78,6 +78,7 @@ export type YieldSagaEvent = {
   sagaType: 'ADD_WHEN' | 'ADD_UNTIL',
   action: Action,
   ruleExecId: number | null,
+  actionExecId: number,
   result: 'REJECT' | 'RESOLVE'
 }
 
@@ -176,7 +177,7 @@ export const execSagaEnd = (sagaId:number, ruleId:string, sagaType:'ADD_WHEN' | 
   result
 })
 
-export const yieldSaga = (sagaId:number, ruleId:string, sagaType:'ADD_WHEN' | 'ADD_UNTIL', action:Action, ruleExecId:number|null, result:'REJECT' | 'RESOLVE'):YieldSagaEvent => dispatch({
+export const yieldSaga = (sagaId:number, ruleId:string, sagaType:'ADD_WHEN' | 'ADD_UNTIL', action:Action, ruleExecId:number|null, actionExecId:number, result:'REJECT' | 'RESOLVE'):YieldSagaEvent => dispatch({
   type: 'YIELD_SAGA',
   timestamp: Date.now(),
   sagaId,
@@ -184,6 +185,7 @@ export const yieldSaga = (sagaId:number, ruleId:string, sagaType:'ADD_WHEN' | 'A
   sagaType,
   action,
   ruleExecId,
+  actionExecId,
   result
 })
 
