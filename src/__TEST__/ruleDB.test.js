@@ -102,13 +102,15 @@ describe('addWhen', () => {
     laterEvents = require('../laterEvents')
   })
   test('if saga yields "ADD_RULE_BEFORE", the rule should be added before current action', () => {
-    jest.spyOn(saga, 'createSaga').mockImplementation((context, saga, cb) => {cb('ADD_RULE_BEFORE')})
+    const sagaResult = {logic: 'ADD_RULE_BEFORE', action: {type:'ANY_TYPE'}}
+    jest.spyOn(saga, 'createSaga').mockImplementation((context, saga, action, cb) => {cb(sagaResult)})
     const rule = ruleDB.addRule(createRule('add-rule-before', 'ANY_TYPE', { addWhen: function*(){} }))
     const activeRules = ruleDB.getPrivatesForTesting('activeRules')
     expect(activeRules.INSERT_AFTER.ANY_TYPE).toContain(rule)
   })
   test('if saga yields "ADD_RULE", the rule should be added after current action', () => {
-    jest.spyOn(saga, 'createSaga').mockImplementation((context, saga, cb) => {cb('ADD_RULE')})
+    const sagaResult = {logic: 'ADD_RULE', action: {type:'ANY_TYPE'}}
+    jest.spyOn(saga, 'createSaga').mockImplementation((context, saga, action, cb) => {cb(sagaResult)})
     const rule = ruleDB.addRule(createRule('add-rule', 'ANY_TYPE', { addWhen: function*(){} }))
     const laterAddedRules = ruleDB.getPrivatesForTesting('laterAddedRules')
     const activeRules = ruleDB.getPrivatesForTesting('activeRules')
@@ -117,15 +119,16 @@ describe('addWhen', () => {
     expect(activeRules.INSERT_AFTER.ANY_TYPE).toContain(rule)
   })
   test('if saga yields "ABORT", no rule should be added', () => {
-    jest.spyOn(saga, 'createSaga').mockImplementation((context, saga, cb) => {cb('ABORT')})
+    const sagaResult = {logic: 'ABORT', action: {type:'ANY_TYPE'}}
+    jest.spyOn(saga, 'createSaga').mockImplementation((context, saga, action, cb) => {cb(sagaResult)})
     const rule = ruleDB.addRule(createRule('abort', 'ANY_TYPE', { addWhen: function*(){} }))
     const activeRules = ruleDB.getPrivatesForTesting('activeRules')
     expect(activeRules.INSERT_AFTER.ANY_TYPE).toBeUndefined()
   })
   test('if saga yields "REAPPLY_WHEN", the addWhen saga should be reinvoked after current action', () => {
     jest.spyOn(saga, 'createSaga')
-      .mockImplementationOnce((context, saga, cb) => {cb('REAPPLY_WHEN')})
-      .mockImplementationOnce((context, saga, cb) => {cb('ABORT')})
+      .mockImplementationOnce((context, saga, action, cb) => {cb({logic: 'REAPPLY_WHEN', action: {type:'ANY_TYPE'}})})
+      .mockImplementationOnce((context, saga, action, cb) => {cb({logic: 'ABORT', action: {type:'ANY_TYPE'}})})
     const rule = ruleDB.addRule(createRule('reapply-when', 'ANY_TYPE', { addWhen: function*(){} }))
     expect(saga.createSaga).toBeCalledTimes(1)
     laterEvents.executeBuffer()
@@ -141,7 +144,8 @@ describe('addUntil', () => {
     laterEvents = require('../laterEvents')
   })
   test('if saga yields "REMOVE_RULE", the rule should be removed after current action', () => {
-    jest.spyOn(saga, 'createSaga').mockImplementation((context, saga, cb) => {cb('REMOVE_RULE')})
+    const sagaResult = {logic: 'REMOVE_RULE', action: {type:'ANY_TYPE'}}
+    jest.spyOn(saga, 'createSaga').mockImplementation((context, saga, action, cb) => {cb(sagaResult)})
     const rule = ruleDB.addRule(createRule('remove-rule', 'ANY_TYPE', { addUntil: function*(){} }))
     const activeRules = ruleDB.getPrivatesForTesting('activeRules')
     expect(activeRules.INSERT_AFTER.ANY_TYPE).toContain(rule)
@@ -150,25 +154,28 @@ describe('addUntil', () => {
     expect(activeRules.INSERT_AFTER.ANY_TYPE).not.toContain(rule)
   })
   test('if saga yields "REMOVE_RULE_BEFORE", the rule should be removed before current action', () => {
-    jest.spyOn(saga, 'createSaga').mockImplementation((context, saga, cb) => {cb('REMOVE_RULE_BEFORE')})
+    const sagaResult = {logic: 'REMOVE_RULE_BEFORE', action: {type:'ANY_TYPE'}}
+    jest.spyOn(saga, 'createSaga').mockImplementation((context, saga, action, cb) => {cb(sagaResult)})
     const rule = ruleDB.addRule(createRule('remove-rule-before', 'ANY_TYPE', { addUntil: function*(){} }))
     const activeRules = ruleDB.getPrivatesForTesting('activeRules')
     expect(saga.createSaga).toBeCalledTimes(1)
     expect(activeRules.INSERT_AFTER.ANY_TYPE).not.toContain(rule)
   })
   test('if saga yields "ABORT", the rule should be kept', () => {
-    jest.spyOn(saga, 'createSaga').mockImplementation((context, saga, cb) => {cb('ABORT')})
+    const sagaResult = {logic: 'ABORT', action: {type:'ANY_TYPE'}}
+    jest.spyOn(saga, 'createSaga').mockImplementation((context, saga, action, cb) => {cb(sagaResult)})
     const rule = ruleDB.addRule(createRule('abort', 'ANY_TYPE', { addUntil: function*(){} }))
     const activeRules = ruleDB.getPrivatesForTesting('activeRules')
     expect(activeRules.INSERT_AFTER.ANY_TYPE).toContain(rule)
     expect(saga.createSaga).toBeCalledTimes(1)
   })
   test('if saga yields "RECREATE_RULE", the rule should be totally recreated after current action', () => {
+    const sagaResult = logic => ({logic, action: {type:'ANY_TYPE'}})
     jest.spyOn(saga, 'createSaga')
-      .mockImplementationOnce((context, saga, cb) => {cb('ADD_RULE_BEFORE')}) // add rule
-      .mockImplementationOnce((context, saga, cb) => {cb('RECREATE_RULE')}) // destroy rule
-      .mockImplementationOnce((context, saga, cb) => {cb('ADD_RULE_BEFORE')}) // re-add rule
-      .mockImplementationOnce((context, saga, cb) => {cb('ABORT')}) // keep rule
+      .mockImplementationOnce((context, saga, action, cb) => {cb(sagaResult('ADD_RULE_BEFORE'))}) // add rule
+      .mockImplementationOnce((context, saga, action, cb) => {cb(sagaResult('RECREATE_RULE'))}) // destroy rule
+      .mockImplementationOnce((context, saga, action, cb) => {cb(sagaResult('ADD_RULE_BEFORE'))}) // re-add rule
+      .mockImplementationOnce((context, saga, action, cb) => {cb(sagaResult('ABORT'))}) // keep rule
     const rule = ruleDB.addRule(createRule('remove-rule', 'ANY_TYPE', { 
       addWhen: function*(){}, 
       addUntil: function*(){} 
@@ -180,9 +187,10 @@ describe('addUntil', () => {
     expect(saga.createSaga).toBeCalledTimes(4)
   })
   test('if saga yields "REAPPLY_REMOVE", the addUntil saga should be reinvoked after current action', () => {
+    const sagaResult = logic => ({logic, action: {type:'ANY_TYPE'}})
     jest.spyOn(saga, 'createSaga')
-      .mockImplementationOnce((context, saga, cb) => {cb('REAPPLY_REMOVE')})
-      .mockImplementationOnce((context, saga, cb) => {cb('REMOVE_RULE')})
+      .mockImplementationOnce((context, saga, action, cb) => {cb(sagaResult('REAPPLY_REMOVE'))})
+      .mockImplementationOnce((context, saga, action, cb) => {cb(sagaResult('REMOVE_RULE'))})
     const rule = ruleDB.addRule(createRule('reapply-remove', 'ANY_TYPE', { addUntil: function*(){} }))
     const activeRules = ruleDB.getPrivatesForTesting('activeRules')
     expect(activeRules.INSERT_AFTER.ANY_TYPE).toContain(rule)
@@ -192,10 +200,11 @@ describe('addUntil', () => {
     expect(saga.createSaga).toBeCalledTimes(2)
   })
   test('if saga yields "READD_RULE", the rule should be readded after current action without applying the addWhen logic', () => {
+    const sagaResult = logic => ({logic, action: {type:'ANY_TYPE'}})
     jest.spyOn(saga, 'createSaga')
-      .mockImplementationOnce((context, saga, cb) => {cb('ADD_RULE_BEFORE')}) // add rule
-      .mockImplementationOnce((context, saga, cb) => {cb('READD_RULE')}) // destroy rule an readd
-      .mockImplementationOnce((context, saga, cb) => {cb('ABORT')}) // keep rule
+      .mockImplementationOnce((context, saga, action, cb) => {cb(sagaResult('ADD_RULE_BEFORE'))}) // add rule
+      .mockImplementationOnce((context, saga, action, cb) => {cb(sagaResult('READD_RULE'))}) // destroy rule an readd
+      .mockImplementationOnce((context, saga, action, cb) => {cb(sagaResult('ABORT'))}) // keep rule
     const rule = ruleDB.addRule(createRule('readd-rule', 'ANY_TYPE', { 
       addWhen: function*(){}, 
       addUntil: function*(){} 

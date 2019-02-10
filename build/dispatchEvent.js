@@ -53,7 +53,7 @@ function dispatchEvent(action, store, cb, isReduxDispatch) {
     devTools.execActionStart(execId, ruleExeId, action);
   }
 
-  saga.applyAction(action);
+  saga.applyAction(action, execId);
   ruleDB.forEachRuleContext('INSERT_INSTEAD', action.type, function (context) {
     if (!instead && (0, _consequence2.default)(context, action, store, execId)) instead = true;
   });

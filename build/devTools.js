@@ -5,7 +5,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 var events = [];
 
-window.__getRulesetEvents = function () {
+if (process.env.NODE_ENV === 'development') window.__getRulesetEvents = function () {
   return events;
 };
 
@@ -97,7 +97,7 @@ var execSagaEnd = exports.execSagaEnd = function execSagaEnd(sagaId, ruleId, sag
   });
 };
 
-var yieldSaga = exports.yieldSaga = function yieldSaga(sagaId, ruleId, sagaType, action, ruleExecId, result) {
+var yieldSaga = exports.yieldSaga = function yieldSaga(sagaId, ruleId, sagaType, action, ruleExecId, actionExecId, result) {
   return dispatch({
     type: 'YIELD_SAGA',
     timestamp: Date.now(),
@@ -106,6 +106,7 @@ var yieldSaga = exports.yieldSaga = function yieldSaga(sagaId, ruleId, sagaType,
     sagaType: sagaType,
     action: action,
     ruleExecId: ruleExecId,
+    actionExecId: actionExecId,
     result: result
   });
 };

@@ -20,19 +20,19 @@ var listeners = {};
 
 var id = 1;
 
-function applyAction(action) {
+function applyAction(action, actionExecId) {
   var globalCallbacks = listeners.global;
   var boundCallbacks = listeners[action.type];
   if (globalCallbacks) {
     listeners.global = undefined;
     for (var i = 0; i < globalCallbacks.length; i++) {
-      globalCallbacks[i](action);
+      globalCallbacks[i](action, actionExecId);
     }
   }
   if (boundCallbacks) {
     listeners[action.type] = undefined;
     for (var _i = 0; _i < boundCallbacks.length; _i++) {
-      boundCallbacks[_i](action);
+      boundCallbacks[_i](action, actionExecId);
     }
   }
 }
@@ -87,13 +87,13 @@ function createSaga(context, saga, action, cb, store) {
     };
     var nextAction = function nextAction(target, cb) {
       var _addListener = function _addListener() {
-        return addListener(target, function (action) {
+        return addListener(target, function (action, actionExecId) {
           var result = cb ? cb(action) : action; // false or mixed
           lastAction = action;
           if (process.env.NODE_ENV === 'development') {
             var _sagaType2 = saga === context.rule.addWhen ? 'ADD_WHEN' : 'ADD_UNTIL';
             var ruleExecId = (0, _consequence.getRuleExecutionId)();
-            devTools.yieldSaga(execId, context.rule.id, _sagaType2, action, ruleExecId, result ? 'RESOLVE' : 'REJECT');
+            devTools.yieldSaga(execId, context.rule.id, _sagaType2, action, ruleExecId, actionExecId, result ? 'RESOLVE' : 'REJECT');
           }
           if (result) next(iter, result);else _addListener();
         });

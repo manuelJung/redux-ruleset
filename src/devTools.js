@@ -103,7 +103,7 @@ export type Event = AddRuleEvent
 
 const events:Event[] = []
 
-window.__getRulesetEvents = () => events
+if(process.env.NODE_ENV === 'development') window.__getRulesetEvents = () => events
 
 function dispatch<E:*>(event:E):E{
   events.push(event)
