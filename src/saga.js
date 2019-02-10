@@ -40,9 +40,15 @@ function addListener(target, cb){
   }
 }
 
-export function createSaga<Logic>(context:RuleContext, saga:Saga<Logic>, cb:(result:Logic|void) => mixed,store?:Store){
+export function createSaga<Logic>(
+  context:RuleContext, 
+  saga:Saga<Logic>, 
+  action?:Action, 
+  cb:(result:{logic: Logic|void, action:Action|void}) => mixed,
+  store?:Store
+){
   if(!store) {
-    applyLazyStore(store => createSaga(context,saga,cb,store))
+    applyLazyStore(store => createSaga(context,saga,action,cb,store))
     return
   }
   const execId = id++
@@ -54,6 +60,7 @@ export function createSaga<Logic>(context:RuleContext, saga:Saga<Logic>, cb:(res
   context.sagaStep = -1
   const boundStore = store
   let cancel = () => {}
+  let lastAction;
 
   const run = gen => {
     const next = (iter, payload) => {
@@ -66,12 +73,13 @@ export function createSaga<Logic>(context:RuleContext, saga:Saga<Logic>, cb:(res
           const sagaType = saga === context.rule.addWhen ? 'ADD_WHEN' : 'ADD_UNTIL'
           devTools.execSagaEnd(execId, context.rule.id, sagaType, (result.value:any))
         }
-        cb(result.value)
+        cb({logic: result.value, action: lastAction})
       }
     }
-    const action = (target, cb) => {
+    const nextAction = (target, cb) => {
       const _addListener = () => addListener(target, action => {
         const result = cb ? cb(action) : action // false or mixed
+        lastAction = action
         if(process.env.NODE_ENV === 'development'){
           const sagaType = saga === context.rule.addWhen ? 'ADD_WHEN' : 'ADD_UNTIL'
           const ruleExecId = getRuleExecutionId()
@@ -82,7 +90,7 @@ export function createSaga<Logic>(context:RuleContext, saga:Saga<Logic>, cb:(res
       })
       _addListener()
     }
-    const iter = gen(action, boundStore.getState)
+    const iter = gen(nextAction, boundStore.getState, action)
     cancel = () => {
       iter.return('CANCELED')
       next(iter)

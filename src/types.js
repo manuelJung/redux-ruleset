@@ -23,7 +23,8 @@ export type ContextEvent = 'REMOVE_RULE' | 'ADD_RULE' | 'CANCEL_CONSEQUENCE' | '
 
 export type Saga<Logic> = (
   action: (cb?:(action:Action) => mixed) => mixed,
-  getState: GetState
+  getState: GetState,
+  action?: Action
 ) => Generator<any,Logic,mixed>
 
 export type Rule = {

@@ -53,10 +53,10 @@ function addListener(target, cb) {
   }
 }
 
-function createSaga(context, saga, cb, store) {
+function createSaga(context, saga, action, cb, store) {
   if (!store) {
     (0, _lazyStore.applyLazyStore)(function (store) {
-      return createSaga(context, saga, cb, store);
+      return createSaga(context, saga, action, cb, store);
     });
     return;
   }
@@ -69,6 +69,7 @@ function createSaga(context, saga, cb, store) {
   context.sagaStep = -1;
   var boundStore = store;
   var cancel = function cancel() {};
+  var lastAction = void 0;
 
   var run = function run(gen) {
     var next = function next(iter, payload) {
@@ -81,13 +82,14 @@ function createSaga(context, saga, cb, store) {
           var _sagaType = saga === context.rule.addWhen ? 'ADD_WHEN' : 'ADD_UNTIL';
           devTools.execSagaEnd(execId, context.rule.id, _sagaType, result.value);
         }
-        cb(result.value);
+        cb({ logic: result.value, action: lastAction });
       }
     };
-    var action = function action(target, cb) {
+    var nextAction = function nextAction(target, cb) {
       var _addListener = function _addListener() {
         return addListener(target, function (action) {
           var result = cb ? cb(action) : action; // false or mixed
+          lastAction = action;
           if (process.env.NODE_ENV === 'development') {
             var _sagaType2 = saga === context.rule.addWhen ? 'ADD_WHEN' : 'ADD_UNTIL';
             var ruleExecId = (0, _consequence.getRuleExecutionId)();
@@ -98,7 +100,7 @@ function createSaga(context, saga, cb, store) {
       };
       _addListener();
     };
-    var iter = gen(action, boundStore.getState);
+    var iter = gen(nextAction, boundStore.getState, action);
     cancel = function cancel() {
       iter.return('CANCELED');
       next(iter);

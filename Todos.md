@@ -5,6 +5,9 @@
 - validate rules
 - rename position without prefix "INSERT_"
 - export constants
+- add action (creation action) to addUntil saga
+- rules should not be applied when dispatching from itself
+- enshure that nested sagas will be called first
 
 # Resolved
 

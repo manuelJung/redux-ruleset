@@ -65,7 +65,7 @@ function addRule(rule) {
     parentContext.childRules.push(rule);
   }
 
-  var add = function add() {
+  var add = function add(action) {
     context.active = true;
     ruleContextList[rule.id] = context;
     !rule.target && (0, _lazyStore.applyLazyStore)(function (store) {
@@ -76,26 +76,34 @@ function addRule(rule) {
       var list = activeRules[position][target];
       if (list.length > 0) pushByZIndex(list, rule);else list.push(rule);
     });
-    addUntil();
+    addUntil(action);
     context.trigger('ADD_RULE');
     if (process.env.NODE_ENV === 'development') {
       devTools.addRule(rule, options.parentRuleId || null);
     }
   };
   var addWhen = function addWhen() {
-    return rule.addWhen && saga.createSaga(context, rule.addWhen, function (logic) {
+    return rule.addWhen && saga.createSaga(context, rule.addWhen, undefined, function (_ref) {
+      var logic = _ref.logic,
+          action = _ref.action;
+
       switch (logic) {
         case 'ADD_RULE':
-          (0, _laterEvents.addCallback)(add);break;
+          (0, _laterEvents.addCallback)(function () {
+            return add(action);
+          });break;
         case 'ADD_RULE_BEFORE':
-          add();break;
+          add(action);break;
         case 'REAPPLY_WHEN':
           (0, _laterEvents.addCallback)(addWhen);break;
       }
     });
   };
-  var addUntil = function addUntil() {
-    return rule.addUntil && saga.createSaga(context, rule.addUntil, function (logic) {
+  var addUntil = function addUntil(action) {
+    return rule.addUntil && saga.createSaga(context, rule.addUntil, action, function (_ref2) {
+      var logic = _ref2.logic,
+          action = _ref2.action;
+
       switch (logic) {
         case 'RECREATE_RULE':
           (0, _laterEvents.addCallback)(function () {
@@ -110,7 +118,9 @@ function addRule(rule) {
         case 'REMOVE_RULE_BEFORE':
           removeRule(rule);break;
         case 'REAPPLY_REMOVE':
-          (0, _laterEvents.addCallback)(addUntil);break;
+          (0, _laterEvents.addCallback)(function () {
+            return addUntil(action);
+          });break;
         case 'READD_RULE':
           (0, _laterEvents.addCallback)(function () {
             removeRule(rule);addRule(rule, { parentRuleId: parentRuleId, forceAdd: true });

@@ -1,6 +1,6 @@
 // @flow
 import * as saga from './saga'
-import type {Rule, RuleContext, Position} from './types'
+import type {Rule, Action, RuleContext, Position} from './types'
 import consequence from './consequence'
 import {applyLazyStore} from './lazyStore'
 import {addCallback} from './laterEvents'
@@ -46,7 +46,7 @@ export function addRule(rule:Rule, options?:AddRuleOptions={}):Rule{
     parentContext.childRules.push(rule)
   }
 
-  const add = () => {
+  const add = (action?:Action) => {
     context.active = true
     ruleContextList[rule.id] = context
     !rule.target && applyLazyStore(store => {consequence(context, undefined, store, null)})
@@ -56,26 +56,26 @@ export function addRule(rule:Rule, options?:AddRuleOptions={}):Rule{
       if(list.length > 0) pushByZIndex(list, rule)
       else list.push(rule)
     })
-    addUntil()
+    addUntil(action)
     context.trigger('ADD_RULE')
     if(process.env.NODE_ENV === 'development'){
       devTools.addRule(rule, options.parentRuleId || null)
     }
   }
-  const addWhen = () => rule.addWhen && saga.createSaga(context, rule.addWhen, logic => {
+  const addWhen = () => rule.addWhen && saga.createSaga(context, rule.addWhen, undefined, ({logic, action}) => {
     switch(logic){
-      case 'ADD_RULE': addCallback(add); break
-      case 'ADD_RULE_BEFORE': add(); break
+      case 'ADD_RULE': addCallback(() => add(action)); break
+      case 'ADD_RULE_BEFORE': add(action); break
       case 'REAPPLY_WHEN': addCallback(addWhen); break
     }
   })
-  const addUntil = () => rule.addUntil && saga.createSaga(context, rule.addUntil, logic => {
+  const addUntil = (action?:Action) => rule.addUntil && saga.createSaga(context, rule.addUntil, action, ({logic, action}) => {
     switch(logic){
       case 'RECREATE_RULE': addCallback(() => {removeRule(rule); addRule(rule, {parentRuleId})}); break
       case 'RECREATE_RULE_BEFORE': removeRule(rule); addRule(rule, {parentRuleId}); break
       case 'REMOVE_RULE': addCallback(() => {removeRule(rule)}); break
       case 'REMOVE_RULE_BEFORE': removeRule(rule); break
-      case 'REAPPLY_REMOVE': addCallback(addUntil); break
+      case 'REAPPLY_REMOVE': addCallback(() => addUntil(action)); break
       case 'READD_RULE': addCallback(() => {removeRule(rule); addRule(rule, {parentRuleId, forceAdd:true})}); break
     }
   })
