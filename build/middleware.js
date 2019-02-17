@@ -17,7 +17,7 @@ function middleware(store) {
   (0, _lazyStore.setStore)(store);
   return function (next) {
     return function (action) {
-      return (0, _dispatchEvent2.default)(action, store, function () {
+      return (0, _dispatchEvent2.default)(action, store, function (action) {
         return next(action);
       }, true);
     };

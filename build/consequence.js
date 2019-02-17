@@ -70,7 +70,7 @@ function consequence(context, action, store, actionExecId) {
     if (process.env.NODE_ENV === 'development') {
       devTools.execRuleEnd(rule.id, execId, actionExecId, concurrencyId, 'SKIP');
     }
-    return false;
+    return { resolved: false };
   };
 
   // skip when concurrency matches
@@ -92,7 +92,7 @@ function consequence(context, action, store, actionExecId) {
       devTools.execRuleEnd(rule.id, execId, actionExecId, concurrencyId, 'CONDITION_NOT_MATCH');
     }
     context.trigger('CONSEQUENCE_END', execId);
-    return false;
+    return { resolved: false };
   }
 
   /**
@@ -171,10 +171,16 @@ function consequence(context, action, store, actionExecId) {
    * Handle return types
    */
 
+  // position:INSTEAD can extend the action if type is equal
+  if (action && (typeof result === 'undefined' ? 'undefined' : (0, _typeof3.default)(result)) === 'object' && result.type && rule.position === 'INSERT_INSTEAD' && result.type === action.type) {
+    var _action = result;
+    return { resolved: true, action: _action };
+  }
+
   // dispatch returned action
   if ((typeof result === 'undefined' ? 'undefined' : (0, _typeof3.default)(result)) === 'object' && result.type) {
-    var _action = result;
-    dispatch(_action);
+    var _action2 = result;
+    dispatch(_action2);
     unlisten(context, execId, cancel, concurrency);
     if (process.env.NODE_ENV === 'development') {
       devTools.execRuleEnd(rule.id, execId, actionExecId, concurrencyId, 'RESOLVED');
@@ -219,7 +225,7 @@ function consequence(context, action, store, actionExecId) {
           }
         }
 
-  return true;
+  return { resolved: true };
 }
 
 // HELPERS

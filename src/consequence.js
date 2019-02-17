@@ -14,7 +14,12 @@ export function getRuleExecutionId(){
 
 const orderedListeners = {}
 
-export default function consequence (context:RuleContext, action?:Action, store:Store, actionExecId:number|null):boolean{
+type ReturnType = {
+  resolved: boolean,
+  action?: Action
+}
+
+export default function consequence (context:RuleContext, action?:Action, store:Store, actionExecId:number|null):ReturnType{
   let execId = executionId++
   const rule = context.rule
   context.trigger('CONSEQUENCE_START', execId)
@@ -42,7 +47,7 @@ export default function consequence (context:RuleContext, action?:Action, store:
     if(process.env.NODE_ENV === 'development'){
       devTools.execRuleEnd(rule.id, execId, actionExecId, concurrencyId, 'SKIP')
     }
-    return false
+    return {resolved:false}
   }
 
   // skip when concurrency matches
@@ -64,7 +69,7 @@ export default function consequence (context:RuleContext, action?:Action, store:
       devTools.execRuleEnd(rule.id, execId, actionExecId, concurrencyId, 'CONDITION_NOT_MATCH')
     }
     context.trigger('CONSEQUENCE_END', execId)
-    return false
+    return {resolved:false}
   }
 
   /**
@@ -132,6 +137,12 @@ export default function consequence (context:RuleContext, action?:Action, store:
    * Handle return types
    */
 
+  // position:INSTEAD can extend the action if type is equal
+  if(action && typeof result === 'object' && result.type && rule.position === 'INSERT_INSTEAD' && result.type === action.type){
+    const action:Action = (result:any)
+    return {resolved: true, action}
+  }
+
   // dispatch returned action
   if(typeof result === 'object' && result.type){
     const action:any = result
@@ -179,7 +190,7 @@ export default function consequence (context:RuleContext, action?:Action, store:
     }
   }
 
-  return true
+  return {resolved:true}
 }
 
 

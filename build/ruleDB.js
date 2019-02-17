@@ -134,6 +134,9 @@ function addRule(rule) {
 }
 
 function removeRule(rule, removedByParent) {
+  if (rule.id.startsWith('categories/LAZY_FETCH/dispatch/')) {
+    console.log('remove');
+  }
   var context = ruleContextList[rule.id];
   var position = rule.position || 'INSERT_AFTER';
 

@@ -86,6 +86,9 @@ export function addRule(rule:Rule, options?:AddRuleOptions={}):Rule{
 }
 
 export function removeRule(rule:Rule, removedByParent?: boolean){
+  if(rule.id.startsWith('categories/LAZY_FETCH/dispatch/')){
+    console.log('remove')
+  }
   const context = ruleContextList[rule.id]
   const position = rule.position || 'INSERT_AFTER'
 

@@ -10,7 +10,7 @@ export const addRule = (rule:Rule) => ruleDB.addRule(rule)
 
 export const removeRule = (rule:Rule) => ruleDB.removeRule(rule)
 
-export const dispatchEvent = (action:Action,cb:Function) => applyLazyStore(store => {dispatch(action, store, cb, false)})
+export const dispatchEvent = (action:Action,cb:(action:Action)=>mixed) => applyLazyStore(store => {dispatch(action, store, cb, false)})
 
 // export const disableRule = (action:Action, ruleId:string|string[]) => ({
 //   ...action,

@@ -22,7 +22,7 @@ function notifyDispatchListener(action:Action, ruleExecutionId:number|null, wasD
   }
 }
 
-export default function dispatchEvent (action:Action, store:Store, cb?:()=>mixed, isReduxDispatch:boolean){
+export default function dispatchEvent (action:Action, store:Store, cb?:(action:Action)=>mixed, isReduxDispatch:boolean){
   const execId = executionId++
   const ruleExeId = getRuleExecutionId()
   let instead = false
@@ -33,10 +33,15 @@ export default function dispatchEvent (action:Action, store:Store, cb?:()=>mixed
 
   saga.applyAction(action, execId)
   ruleDB.forEachRuleContext('INSERT_INSTEAD', action.type, context => {
-    if(!instead && consequence(context, action, store, execId)) instead = true
+    if(instead) return
+    const result = consequence(context, action, store, execId)
+    if(result.resolved) {
+      if(result.action) action = result.action
+      else instead = true
+    }
   })
   !instead && ruleDB.forEachRuleContext('INSERT_BEFORE', action.type, context => consequence(context, action, store, execId))
-  const result = instead || !cb ? null : cb()
+  const result = instead || !cb ? null : cb(action)
   if(process.env.NODE_ENV === 'development'){
     devTools.dispatchAction(execId, instead, isReduxDispatch, action)
   }

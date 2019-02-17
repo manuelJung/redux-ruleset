@@ -68,43 +68,43 @@ describe('skip rule', () => {
   test('skip rule when condition does not match', () => {
     context.rule.condition = () => false
     const result = consequence(context, action, store, 1)
-    expect(result).toBe(false)
+    expect(result.resolved).toBe(false)
   })
   test('skip rule when action has a matching skip rule', () => {
     { // string skip type
       let action = {type:'ANY_RULE', meta:{skipRule:'consequence-test'}}
       const result = consequence(context, action, store, 1)
-      expect(result).toBe(false)
+      expect(result.resolved).toBe(false)
     }
     { // array skip type
       let action = {type:'ANY_RULE', meta:{skipRule:['consequence-test']}}
       const result = consequence(context, action, store, 1)
-      expect(result).toBe(false)
+      expect(result.resolved).toBe(false)
     }
     { // all skip type
       let action = {type:'ANY_RULE', meta:{skipRule:'*'}}
       const result = consequence(context, action, store, 1)
-      expect(result).toBe(false)
+      expect(result.resolved).toBe(false)
     }
   })
   test('skip rule when concurrency is FIRST and the rule is already executing', () => {
     context.rule.concurrency = 'FIRST'
     context.concurrency.default.running = 1
     const result = consequence(context, action, store, 1)
-    expect(result).toBe(false)
+    expect(result.resolved).toBe(false)
   })
   test('skip rule when concurrency is ONCE and the rule already has been executed', () => {
     context.rule.concurrency = 'ONCE'
     const result1 = consequence(context, action, store, 1)
     const result2 = consequence(context, action, store, 1)
-    expect(result1).toBe(true)
-    expect(result2).toBe(false)
+    expect(result1.resolved).toBe(true)
+    expect(result2.resolved).toBe(false)
   })
   test('skip rule when "addOnce" flag is set and the rule already has been executed', () => {
     context.rule.addOnce = true
     context.concurrency.default.running = 1
     const result = consequence(context, action, store, 1)
-    expect(result).toBe(false)
+    expect(result.resolved).toBe(false)
   })
 })
 
@@ -161,6 +161,14 @@ describe('abort consequence', () => {
 
 describe('return types', () => {
   beforeEach(initTest)
+  test('when a action with same type as original action was returned and the position is "INSERT_INSTEAD" the result should contain this action and nothing should be dispatched', () => {
+    jest.spyOn(store, 'dispatch')
+    context.rule.position = 'INSERT_INSTEAD'
+    context.rule.consequence = () => ({type:'ANY_TYPE'})
+    const result = consequence(context, action, store, 1)
+    expect(store.dispatch).not.toBeCalled()
+    expect(result.action).toEqual({type:'ANY_TYPE'})
+  })
   test('when a action was returned it should be dispatched', () => {
     jest.spyOn(store, 'dispatch')
     context.rule.consequence = () => ({type:'ACTION_RETURN'})
