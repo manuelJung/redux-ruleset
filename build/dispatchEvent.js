@@ -53,10 +53,6 @@ function dispatchEvent(action, store, cb, isReduxDispatch) {
     devTools.execActionStart(execId, ruleExeId, action);
   }
 
-  if (action.type === 'navigation/SET_CATEGORIES') {
-    console.log('start');
-  }
-
   saga.applyAction(action, execId);
   ruleDB.forEachRuleContext('INSERT_INSTEAD', action.type, function (context) {
     if (instead) return;
@@ -68,23 +64,14 @@ function dispatchEvent(action, store, cb, isReduxDispatch) {
   !instead && ruleDB.forEachRuleContext('INSERT_BEFORE', action.type, function (context) {
     return (0, _consequence2.default)(context, action, store, execId);
   });
-  if (action.type === 'navigation/SET_CATEGORIES') {
-    console.log('before');
-  }
   var result = instead || !cb ? null : cb(action);
   if (process.env.NODE_ENV === 'development') {
     devTools.dispatchAction(execId, instead, isReduxDispatch, action);
   }
   notifyDispatchListener(action, ruleExeId, !instead);
   !instead && ruleDB.forEachRuleContext('INSERT_AFTER', action.type, function (context) {
-    if (action.type === 'navigation/SET_CATEGORIES') {
-      console.log(context.rule.id);
-    }
-    (0, _consequence2.default)(context, action, store, execId);
+    return (0, _consequence2.default)(context, action, store, execId);
   });
-  if (action.type === 'navigation/SET_CATEGORIES') {
-    console.log('end');
-  }
   (0, _laterEvents.executeBuffer)();
 
   if (process.env.NODE_ENV === 'development') {
