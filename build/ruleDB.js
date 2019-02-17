@@ -85,44 +85,46 @@ function addRule(rule) {
   var addWhen = function addWhen() {
     return rule.addWhen && saga.createSaga(context, rule.addWhen, undefined, function (_ref) {
       var logic = _ref.logic,
-          action = _ref.action;
+          action = _ref.action,
+          actionExecId = _ref.actionExecId;
 
       switch (logic) {
         case 'ADD_RULE':
-          (0, _laterEvents.addCallback)(function () {
+          (0, _laterEvents.addCallback)(actionExecId, function () {
             return add(action);
           });break;
         case 'ADD_RULE_BEFORE':
           add(action);break;
         case 'REAPPLY_WHEN':
-          (0, _laterEvents.addCallback)(addWhen);break;
+          (0, _laterEvents.addCallback)(actionExecId, addWhen);break;
       }
     });
   };
   var addUntil = function addUntil(action) {
     return rule.addUntil && saga.createSaga(context, rule.addUntil, action, function (_ref2) {
       var logic = _ref2.logic,
-          action = _ref2.action;
+          action = _ref2.action,
+          actionExecId = _ref2.actionExecId;
 
       switch (logic) {
         case 'RECREATE_RULE':
-          (0, _laterEvents.addCallback)(function () {
+          (0, _laterEvents.addCallback)(actionExecId, function () {
             removeRule(rule);addRule(rule, { parentRuleId: parentRuleId });
           });break;
         case 'RECREATE_RULE_BEFORE':
           removeRule(rule);addRule(rule, { parentRuleId: parentRuleId });break;
         case 'REMOVE_RULE':
-          (0, _laterEvents.addCallback)(function () {
+          (0, _laterEvents.addCallback)(actionExecId, function () {
             removeRule(rule);
           });break;
         case 'REMOVE_RULE_BEFORE':
           removeRule(rule);break;
         case 'REAPPLY_REMOVE':
-          (0, _laterEvents.addCallback)(function () {
+          (0, _laterEvents.addCallback)(actionExecId, function () {
             return addUntil(action);
           });break;
         case 'READD_RULE':
-          (0, _laterEvents.addCallback)(function () {
+          (0, _laterEvents.addCallback)(actionExecId, function () {
             removeRule(rule);addRule(rule, { parentRuleId: parentRuleId, forceAdd: true });
           });break;
       }

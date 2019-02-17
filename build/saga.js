@@ -72,7 +72,7 @@ function createSaga(context, saga, action, cb, store) {
   var lastAction = void 0;
 
   var run = function run(gen) {
-    var next = function next(iter, payload) {
+    var next = function next(iter, payload, actionExecId) {
       context.sagaStep++;
       var result = iter.next(payload);
       if (result.done) {
@@ -82,7 +82,7 @@ function createSaga(context, saga, action, cb, store) {
           var _sagaType = saga === context.rule.addWhen ? 'ADD_WHEN' : 'ADD_UNTIL';
           devTools.execSagaEnd(execId, context.rule.id, _sagaType, result.value);
         }
-        cb({ logic: result.value, action: lastAction });
+        cb({ logic: result.value, action: lastAction, actionExecId: actionExecId });
       }
     };
     var nextAction = function nextAction(target, cb) {
@@ -95,7 +95,7 @@ function createSaga(context, saga, action, cb, store) {
             var ruleExecId = (0, _consequence.getRuleExecutionId)();
             devTools.yieldSaga(execId, context.rule.id, _sagaType2, action, ruleExecId, actionExecId, result ? 'RESOLVE' : 'REJECT');
           }
-          if (result) next(iter, result);else _addListener();
+          if (result) next(iter, result, actionExecId);else _addListener();
         });
       };
       _addListener();
@@ -103,10 +103,10 @@ function createSaga(context, saga, action, cb, store) {
     var iter = gen(nextAction, boundStore.getState, action);
     cancel = function cancel() {
       iter.return('CANCELED');
-      next(iter);
+      next(iter, undefined, 0);
     };
     context.on('REMOVE_RULE', cancel);
-    next(iter);
+    next(iter, undefined, 0);
   };
 
   run(saga);

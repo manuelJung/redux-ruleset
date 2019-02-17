@@ -45,7 +45,7 @@ export function createSaga<Logic>(
   context:RuleContext, 
   saga:Saga<Logic>, 
   action?:Action, 
-  cb:(result:{logic: Logic|void, action:Action|void}) => mixed,
+  cb:(result:{logic: Logic|void, action:Action|void, actionExecId:number}) => mixed,
   store?:Store
 ){
   if(!store) {
@@ -64,7 +64,7 @@ export function createSaga<Logic>(
   let lastAction;
 
   const run = gen => {
-    const next = (iter, payload) => {
+    const next = (iter, payload, actionExecId) => {
       context.sagaStep++
       const result = iter.next(payload)
       if(result.done) {
@@ -74,7 +74,7 @@ export function createSaga<Logic>(
           const sagaType = saga === context.rule.addWhen ? 'ADD_WHEN' : 'ADD_UNTIL'
           devTools.execSagaEnd(execId, context.rule.id, sagaType, (result.value:any))
         }
-        cb({logic: result.value, action: lastAction})
+        cb({logic: result.value, action: lastAction, actionExecId})
       }
     }
     const nextAction = (target, cb) => {
@@ -86,7 +86,7 @@ export function createSaga<Logic>(
           const ruleExecId = getRuleExecutionId()
           devTools.yieldSaga(execId, context.rule.id, sagaType, action, ruleExecId, actionExecId, result ? 'RESOLVE' : 'REJECT')
         }
-        if(result) next(iter, result)
+        if(result) next(iter, result, actionExecId)
         else _addListener()
       })
       _addListener()
@@ -94,10 +94,10 @@ export function createSaga<Logic>(
     const iter = gen(nextAction, boundStore.getState, action)
     cancel = () => {
       iter.return('CANCELED')
-      next(iter)
+      next(iter, undefined, 0)
     }
     context.on('REMOVE_RULE', cancel)
-    next(iter)
+    next(iter, undefined, 0)
   }
 
   run(saga)

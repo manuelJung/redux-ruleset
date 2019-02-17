@@ -62,21 +62,21 @@ export function addRule(rule:Rule, options?:AddRuleOptions={}):Rule{
       devTools.addRule(rule, options.parentRuleId || null)
     }
   }
-  const addWhen = () => rule.addWhen && saga.createSaga(context, rule.addWhen, undefined, ({logic, action}) => {
+  const addWhen = () => rule.addWhen && saga.createSaga(context, rule.addWhen, undefined, ({logic, action, actionExecId}) => {
     switch(logic){
-      case 'ADD_RULE': addCallback(() => add(action)); break
+      case 'ADD_RULE': addCallback(actionExecId, () => add(action)); break
       case 'ADD_RULE_BEFORE': add(action); break
-      case 'REAPPLY_WHEN': addCallback(addWhen); break
+      case 'REAPPLY_WHEN': addCallback(actionExecId, addWhen); break
     }
   })
-  const addUntil = (action?:Action) => rule.addUntil && saga.createSaga(context, rule.addUntil, action, ({logic, action}) => {
+  const addUntil = (action?:Action) => rule.addUntil && saga.createSaga(context, rule.addUntil, action, ({logic, action, actionExecId}) => {
     switch(logic){
-      case 'RECREATE_RULE': addCallback(() => {removeRule(rule); addRule(rule, {parentRuleId})}); break
+      case 'RECREATE_RULE': addCallback(actionExecId, () => {removeRule(rule); addRule(rule, {parentRuleId})}); break
       case 'RECREATE_RULE_BEFORE': removeRule(rule); addRule(rule, {parentRuleId}); break
-      case 'REMOVE_RULE': addCallback(() => {removeRule(rule)}); break
+      case 'REMOVE_RULE': addCallback(actionExecId, () => {removeRule(rule)}); break
       case 'REMOVE_RULE_BEFORE': removeRule(rule); break
-      case 'REAPPLY_REMOVE': addCallback(() => addUntil(action)); break
-      case 'READD_RULE': addCallback(() => {removeRule(rule); addRule(rule, {parentRuleId, forceAdd:true})}); break
+      case 'REAPPLY_REMOVE': addCallback(actionExecId, () => addUntil(action)); break
+      case 'READD_RULE': addCallback(actionExecId, () => {removeRule(rule); addRule(rule, {parentRuleId, forceAdd:true})}); break
     }
   })
 

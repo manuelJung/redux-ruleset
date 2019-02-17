@@ -72,7 +72,7 @@ function dispatchEvent(action, store, cb, isReduxDispatch) {
   !instead && ruleDB.forEachRuleContext('INSERT_AFTER', action.type, function (context) {
     return (0, _consequence2.default)(context, action, store, execId);
   });
-  (0, _laterEvents.executeBuffer)();
+  (0, _laterEvents.executeBuffer)(execId);
 
   if (process.env.NODE_ENV === 'development') {
     devTools.execActionEnd(execId, ruleExeId, action, instead ? 'ABORTED' : 'DISPATCHED');

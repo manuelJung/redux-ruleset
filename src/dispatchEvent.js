@@ -47,7 +47,7 @@ export default function dispatchEvent (action:Action, store:Store, cb?:(action:A
   }
   notifyDispatchListener(action, ruleExeId, !instead)
   !instead && ruleDB.forEachRuleContext('INSERT_AFTER', action.type, context => consequence(context, action, store, execId))
-  executeBuffer()
+  executeBuffer(execId)
 
   if(process.env.NODE_ENV === 'development'){
     devTools.execActionEnd(execId, ruleExeId, action, instead ? 'ABORTED' : 'DISPATCHED')
