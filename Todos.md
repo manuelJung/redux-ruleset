@@ -4,7 +4,6 @@
 - validate rules
 - rename position without prefix "INSERT_"
 - export constants
-- enshure that nested sagas will be called first
 - add performance measurments (performance.mark)
 
 # Resolved
