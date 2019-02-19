@@ -32,6 +32,11 @@ var executionId = 1;
 
 var dispatchListeners = [];
 
+var cycle = {
+  waiting: false,
+  step: 0
+};
+
 function registerDispatchListener(cb) {
   dispatchListeners.push(cb);
 }
@@ -46,11 +51,21 @@ function notifyDispatchListener(action, ruleExecutionId, wasDispatched) {
 
 function dispatchEvent(action, store, cb, isReduxDispatch) {
   var execId = executionId++;
+  cycle.step++;
   var ruleExeId = (0, _consequence.getRuleExecutionId)();
   var instead = false;
 
   if (process.env.NODE_ENV === 'development') {
     devTools.execActionStart(execId, ruleExeId, action);
+    if (!cycle.waiting) {
+      cycle.waiting = true;
+      requestAnimationFrame(function () {
+        cycle.waiting = false;
+        cycle.step = 0;
+      });
+    }
+    if (cycle.step > 1000) console.warn('detected endless cycle with action', action);
+    if (cycle.step > 1010) throw new Error('detected endless cycle');
   }
 
   saga.applyAction(action, execId);

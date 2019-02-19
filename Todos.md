@@ -6,10 +6,10 @@
 - export constants
 - enshure that nested sagas will be called first
 - add performance measurments (performance.mark)
-- detect endless-cycles
 
 # Resolved
 
+- detect endless-cycles
 - rules should not be applied when dispatching from itself
 - add action (creation action) to addUntil saga
 - add pubsub for devtools

@@ -10,6 +10,11 @@ import type {Action,Store} from './types'
 let executionId = 1
 const dispatchListeners = []
 
+const cycle = {
+  waiting: false,
+  step: 0
+}
+
 export function registerDispatchListener(cb:(action:Action, wasDispatched:boolean, ruleExecutionId:number|null)=>void){
   dispatchListeners.push(cb)
 }
@@ -24,11 +29,21 @@ function notifyDispatchListener(action:Action, ruleExecutionId:number|null, wasD
 
 export default function dispatchEvent (action:Action, store:Store, cb?:(action:Action)=>mixed, isReduxDispatch:boolean){
   const execId = executionId++
+  cycle.step++
   const ruleExeId = getRuleExecutionId()
   let instead = false
 
   if(process.env.NODE_ENV === 'development'){
     devTools.execActionStart(execId, ruleExeId, action)
+    if(!cycle.waiting){
+      cycle.waiting = true
+      requestAnimationFrame(() => {
+        cycle.waiting = false
+        cycle.step = 0
+      })
+    }
+    if(cycle.step > 1000) console.warn('detected endless cycle with action', action)
+    if(cycle.step > 1010) throw new Error('detected endless cycle')
   }
 
   saga.applyAction(action, execId)
