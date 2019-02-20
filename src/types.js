@@ -11,7 +11,7 @@ export type Store = {
   dispatch: Dispatch
 }
 
-export type Position = 'INSERT_BEFORE' | 'INSERT_INSTEAD' | 'INSERT_AFTER'
+export type Position = 'BEFORE' | 'INSTEAD' | 'AFTER'
 
 export type LogicAdd = 'ADD_RULE' | 'ABORT' | 'REAPPLY_WHEN' | 'ADD_RULE_BEFORE'
 

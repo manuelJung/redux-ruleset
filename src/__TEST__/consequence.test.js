@@ -160,9 +160,9 @@ describe('abort consequence', () => {
 
 describe('return types', () => {
   beforeEach(initTest)
-  test('when a action with same type as original action was returned and the position is "INSERT_INSTEAD" the result should contain this action and nothing should be dispatched', () => {
+  test('when a action with same type as original action was returned and the position is "INSTEAD" the result should contain this action and nothing should be dispatched', () => {
     jest.spyOn(store, 'dispatch')
-    context.rule.position = 'INSERT_INSTEAD'
+    context.rule.position = 'INSTEAD'
     context.rule.consequence = () => ({type:'ANY_TYPE'})
     const result = consequence(context, action, store, 1)
     expect(store.dispatch).not.toBeCalled()

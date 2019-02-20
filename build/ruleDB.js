@@ -35,9 +35,9 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
 var activeRules = {
-  'INSERT_BEFORE': {},
-  'INSERT_INSTEAD': {},
-  'INSERT_AFTER': {}
+  'BEFORE': {},
+  'INSTEAD': {},
+  'AFTER': {}
 };
 
 var i = void 0;
@@ -56,7 +56,7 @@ function addRule(rule) {
       forceAdd = options.forceAdd;
 
   var context = createContext(rule);
-  var position = rule.position || 'INSERT_AFTER';
+  var position = rule.position || 'AFTER';
   if (contextListeners.length && !getRuleContext(rule)) {
     for (var _i = 0; _i < contextListeners.length; _i++) {
       contextListeners[_i](context);
@@ -140,7 +140,7 @@ function addRule(rule) {
 
 function removeRule(rule, removedByParent) {
   var context = ruleContextList[rule.id];
-  var position = rule.position || 'INSERT_AFTER';
+  var position = rule.position || 'AFTER';
 
   // remove child rules before parent rule (logical order)
   if (context.childRules.length) {

@@ -46,7 +46,7 @@ export default function dispatchEvent (action:Action, store:Store, cb?:(action:A
     if(cycle.step > 1010) throw new Error('detected endless cycle')
   }
 
-  ruleDB.forEachRuleContext('INSERT_INSTEAD', action.type, context => {
+  ruleDB.forEachRuleContext('INSTEAD', action.type, context => {
     if(instead) return
     const result = consequence(context, action, store, execId)
     if(result.resolved) {
@@ -55,13 +55,13 @@ export default function dispatchEvent (action:Action, store:Store, cb?:(action:A
     }
   })
   !instead && saga.applyAction(action, execId)
-  !instead && ruleDB.forEachRuleContext('INSERT_BEFORE', action.type, context => consequence(context, action, store, execId))
+  !instead && ruleDB.forEachRuleContext('BEFORE', action.type, context => consequence(context, action, store, execId))
   const result = instead || !cb ? null : cb(action)
   if(process.env.NODE_ENV === 'development'){
     devTools.dispatchAction(execId, instead, isReduxDispatch, action)
   }
   notifyDispatchListener(action, ruleExeId, !instead)
-  !instead && ruleDB.forEachRuleContext('INSERT_AFTER', action.type, context => consequence(context, action, store, execId))
+  !instead && ruleDB.forEachRuleContext('AFTER', action.type, context => consequence(context, action, store, execId))
   executeBuffer(execId)
 
   if(process.env.NODE_ENV === 'development'){

@@ -8,9 +8,9 @@ import * as devTools from './utils/devTools'
 import removeItem from './utils/removeItem'
 
 type ActiveRules = {
-  INSERT_BEFORE: {[ruleId:string]: Rule[]},
-  INSERT_INSTEAD: {[ruleId:string]: Rule[]},
-  INSERT_AFTER: {[ruleId:string]: Rule[]}
+  BEFORE: {[ruleId:string]: Rule[]},
+  INSTEAD: {[ruleId:string]: Rule[]},
+  AFTER: {[ruleId:string]: Rule[]}
 }
 
 type AddRuleOptions = {
@@ -19,9 +19,9 @@ type AddRuleOptions = {
 }
 
 const activeRules:ActiveRules = {
-  'INSERT_BEFORE': {},
-  'INSERT_INSTEAD': {},
-  'INSERT_AFTER': {}
+  'BEFORE': {},
+  'INSTEAD': {},
+  'AFTER': {}
 }
 
 let i
@@ -35,7 +35,7 @@ export const getPrivatesForTesting = (key:string) => ({activeRules, ruleContextL
 export function addRule(rule:Rule, options?:AddRuleOptions={}):Rule{
   const {parentRuleId, forceAdd} = options
   const context = createContext(rule)
-  const position = rule.position || 'INSERT_AFTER'
+  const position = rule.position || 'AFTER'
   if(contextListeners.length && !getRuleContext(rule)) {
     for(let i=0;i<contextListeners.length;i++){
       contextListeners[i](context)
@@ -88,7 +88,7 @@ export function addRule(rule:Rule, options?:AddRuleOptions={}):Rule{
 
 export function removeRule(rule:Rule, removedByParent?: boolean){
   const context = ruleContextList[rule.id]
-  const position = rule.position || 'INSERT_AFTER'
+  const position = rule.position || 'AFTER'
 
   // remove child rules before parent rule (logical order)
   if(context.childRules.length){

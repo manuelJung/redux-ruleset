@@ -2,12 +2,12 @@
 # Todos
 
 - validate rules
-- rename position without prefix "INSERT_"
 - export constants
 - add performance measurments (performance.mark)
 
 # Resolved
 
+- rename position without prefix "INSERT_"
 - detect endless-cycles
 - rules should not be applied when dispatching from itself
 - add action (creation action) to addUntil saga

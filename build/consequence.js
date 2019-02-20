@@ -172,7 +172,7 @@ function consequence(context, action, store, actionExecId) {
    */
 
   // position:INSTEAD can extend the action if type is equal
-  if (action && (typeof result === 'undefined' ? 'undefined' : (0, _typeof3.default)(result)) === 'object' && result.type && rule.position === 'INSERT_INSTEAD' && result.type === action.type) {
+  if (action && (typeof result === 'undefined' ? 'undefined' : (0, _typeof3.default)(result)) === 'object' && result.type && rule.position === 'INSTEAD' && result.type === action.type) {
     var _action = result;
     return { resolved: true, action: _action };
   }
