@@ -2,8 +2,7 @@
 # Todos
 
 - validate rules
-- export constants
-- add performance measurments (performance.mark)
+- create README
 
 # Resolved
 
