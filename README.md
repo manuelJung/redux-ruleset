@@ -62,9 +62,15 @@ addRule({
   target: 'FETCH_USER_REQUEST', // the action type the rule listens to
   concurrency: 'FIRST', // as long as api.fetchUser did not resolve the rule won't be executed again
   consequence: () => api.fetchUser().then(
-    user => ({ type: 'FETCH_USER_SUCCESS', payload: user }),
-    error => ({ type: 'FETCHUSER_FAILURE', payload: error })
+    user => ({ type: 'FETCH_USER_SUCCESS', payload: user }), // dispatch success
+    error => ({ type: 'FETCHUSER_FAILURE', payload: error }) // dispatch error
   )
 })
 ```
 
+## Documentation
+
+- Introduction (TODO)
+- Basic Concepts (TODO)
+- Advanced Concepts (TODO)
+- API Refference (TODO)
