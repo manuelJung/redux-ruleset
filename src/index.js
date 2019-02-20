@@ -12,21 +12,26 @@ export const removeRule = (rule:Rule) => ruleDB.removeRule(rule)
 
 export const dispatchEvent = (action:Action,cb:(action:Action)=>mixed) => applyLazyStore(store => {dispatch(action, store, cb, false)})
 
-// export const disableRule = (action:Action, ruleId:string|string[]) => ({
-//   ...action,
-//   meta: {
-//     ...action.meta,
-//     skipRule: (() => {
-//       if(!action.meta || !action.meta.skipRule) return ruleId
-//       if(action.meta.skipRule === '*') return '*'
-//       if(typeof action.meta.skipRule === 'string'){
-//         if(typeof ruleId === 'string') return [ruleId, action.meta.skipRule]
-//         return [...ruleId, action.meta.skipRule]
-//       }
-//       if(typeof ruleId === 'string') return [ruleId, ...action.meta.skipRule]
-//       return [...ruleId, ...action.meta.skipRule]
-//     })()
-//   }
-// })
+
+export const skipRule = (ruleId:'*'|string|string[], action:Action) => {
+  if(action.meta && typeof action.meta !== 'object') throw new Error('Expect action.meta be be an action')
+  let newAction = {}
+  let key
+  for(key in action) {newAction[key] = action[key]}
+  if(!newAction.meta) newAction.meta = {}
+  else for (key in action.meta) {newAction.meta[key] = action.meta[key]}
+
+  if(!newAction.meta.skipRule) newAction.meta.skipRule = ruleId
+  else if(newAction.meta.skipRule === '*' || ruleId === '*') newAction.meta.skipRule = '*'
+  else if (typeof newAction.meta.skipRule === 'string'){
+    if(typeof ruleId === 'string') newAction.meta.skipRule = [ruleId, newAction.meta.skipRule]
+    else newAction.meta.skipRule = [...ruleId, newAction.meta.skipRule]
+  }
+  else if(Array.isArray(newAction.meta.skipRule)) {
+    if(typeof ruleId === 'string') newAction.meta.skipRule = [ruleId, ...newAction.meta.skipRule]
+    else newAction.meta.skipRule = [...ruleId, ...newAction.meta.skipRule]
+  }
+  return newAction
+}
 
 export default middleware

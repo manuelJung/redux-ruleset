@@ -3,7 +3,15 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.dispatchEvent = exports.removeRule = exports.addRule = undefined;
+exports.skipRule = exports.dispatchEvent = exports.removeRule = exports.addRule = undefined;
+
+var _toConsumableArray2 = require('babel-runtime/helpers/toConsumableArray');
+
+var _toConsumableArray3 = _interopRequireDefault(_toConsumableArray2);
+
+var _typeof2 = require('babel-runtime/helpers/typeof');
+
+var _typeof3 = _interopRequireDefault(_typeof2);
 
 var _ruleDB = require('./ruleDB');
 
@@ -19,9 +27,9 @@ var _dispatchEvent2 = _interopRequireDefault(_dispatchEvent);
 
 var _lazyStore = require('./utils/lazyStore');
 
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var addRule = exports.addRule = function addRule(rule) {
   return ruleDB.addRule(rule);
@@ -37,21 +45,23 @@ var dispatchEvent = exports.dispatchEvent = function dispatchEvent(action, cb) {
   });
 };
 
-// export const disableRule = (action:Action, ruleId:string|string[]) => ({
-//   ...action,
-//   meta: {
-//     ...action.meta,
-//     skipRule: (() => {
-//       if(!action.meta || !action.meta.skipRule) return ruleId
-//       if(action.meta.skipRule === '*') return '*'
-//       if(typeof action.meta.skipRule === 'string'){
-//         if(typeof ruleId === 'string') return [ruleId, action.meta.skipRule]
-//         return [...ruleId, action.meta.skipRule]
-//       }
-//       if(typeof ruleId === 'string') return [ruleId, ...action.meta.skipRule]
-//       return [...ruleId, ...action.meta.skipRule]
-//     })()
-//   }
-// })
+var skipRule = exports.skipRule = function skipRule(ruleId, action) {
+  if (action.meta && (0, _typeof3.default)(action.meta) !== 'object') throw new Error('Expect action.meta be be an action');
+  var newAction = {};
+  var key = void 0;
+  for (key in action) {
+    newAction[key] = action[key];
+  }
+  if (!newAction.meta) newAction.meta = {};else for (key in action.meta) {
+    newAction.meta[key] = action.meta[key];
+  }
+
+  if (!newAction.meta.skipRule) newAction.meta.skipRule = ruleId;else if (newAction.meta.skipRule === '*' || ruleId === '*') newAction.meta.skipRule = '*';else if (typeof newAction.meta.skipRule === 'string') {
+    if (typeof ruleId === 'string') newAction.meta.skipRule = [ruleId, newAction.meta.skipRule];else newAction.meta.skipRule = [].concat((0, _toConsumableArray3.default)(ruleId), [newAction.meta.skipRule]);
+  } else if (Array.isArray(newAction.meta.skipRule)) {
+    if (typeof ruleId === 'string') newAction.meta.skipRule = [ruleId].concat((0, _toConsumableArray3.default)(newAction.meta.skipRule));else newAction.meta.skipRule = [].concat((0, _toConsumableArray3.default)(ruleId), (0, _toConsumableArray3.default)(newAction.meta.skipRule));
+  }
+  return newAction;
+};
 
 exports.default = _middleware2.default;
