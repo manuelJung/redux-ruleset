@@ -1,9 +1,9 @@
 // @flow
-import * as devTools from './devTools'
+import * as devTools from './utils/devTools'
 import {getRuleExecutionId} from './consequence'
 import type {Action, Saga, RuleContext, Store} from './types'
 
-import {applyLazyStore} from './lazyStore'
+import {applyLazyStore} from './utils/lazyStore'
 
 type Listener = (action:Action, actionExecId:number) => mixed
 const listeners:{[type:string]:Listener[]|void} = {}

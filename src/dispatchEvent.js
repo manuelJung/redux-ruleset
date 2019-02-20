@@ -2,8 +2,8 @@
 import consequence, {getRuleExecutionId} from './consequence'
 import * as saga from './saga'
 import * as ruleDB from './ruleDB'
-import {executeBuffer} from './laterEvents'
-import * as devTools from './devTools'
+import {executeBuffer} from './utils/laterEvents'
+import * as devTools from './utils/devTools'
 
 import type {Action,Store} from './types'
 

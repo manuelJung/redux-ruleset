@@ -2,7 +2,7 @@
 import * as ruleDB from './ruleDB'
 import middleware from './middleware'
 import dispatch from './dispatchEvent'
-import {applyLazyStore} from './lazyStore'
+import {applyLazyStore} from './utils/lazyStore'
 
 import type {Rule, Action} from './types'
 

@@ -1,5 +1,5 @@
 // @flow
-import {setStore} from './lazyStore'
+import {setStore} from './utils/lazyStore'
 import dispatchEvent from './dispatchEvent'
 
 import type {Store, Action} from './types'

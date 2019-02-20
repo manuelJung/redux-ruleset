@@ -6,13 +6,13 @@ Object.defineProperty(exports, "__esModule", {
 exports.applyAction = applyAction;
 exports.createSaga = createSaga;
 
-var _devTools = require('./devTools');
+var _devTools = require('./utils/devTools');
 
 var devTools = _interopRequireWildcard(_devTools);
 
 var _consequence = require('./consequence');
 
-var _lazyStore = require('./lazyStore');
+var _lazyStore = require('./utils/lazyStore');
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 

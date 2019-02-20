@@ -17,7 +17,7 @@ var _dispatchEvent = require('./dispatchEvent');
 
 var _dispatchEvent2 = _interopRequireDefault(_dispatchEvent);
 
-var _lazyStore = require('./lazyStore');
+var _lazyStore = require('./utils/lazyStore');
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 

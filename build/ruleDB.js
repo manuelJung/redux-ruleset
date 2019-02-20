@@ -18,11 +18,11 @@ var _consequence = require('./consequence');
 
 var _consequence2 = _interopRequireDefault(_consequence);
 
-var _lazyStore = require('./lazyStore');
+var _lazyStore = require('./utils/lazyStore');
 
-var _laterEvents = require('./laterEvents');
+var _laterEvents = require('./utils/laterEvents');
 
-var _devTools = require('./devTools');
+var _devTools = require('./utils/devTools');
 
 var devTools = _interopRequireWildcard(_devTools);
 

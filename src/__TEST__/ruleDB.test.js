@@ -99,7 +99,7 @@ describe('addWhen', () => {
     jest.resetModules()
     ruleDB = require('../ruleDB')
     saga = require('../saga')
-    laterEvents = require('../laterEvents')
+    laterEvents = require('../utils/laterEvents')
   })
   test('if saga yields "ADD_RULE_BEFORE", the rule should be added before current action', () => {
     const sagaResult = {logic: 'ADD_RULE_BEFORE', action: {type:'ANY_TYPE'}}
@@ -141,7 +141,7 @@ describe('addUntil', () => {
     jest.resetModules()
     ruleDB = require('../ruleDB')
     saga = require('../saga')
-    laterEvents = require('../laterEvents')
+    laterEvents = require('../utils/laterEvents')
   })
   test('if saga yields "REMOVE_RULE", the rule should be removed after current action', () => {
     const sagaResult = {logic: 'REMOVE_RULE', action: {type:'ANY_TYPE'}}

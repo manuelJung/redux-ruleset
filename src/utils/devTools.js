@@ -1,5 +1,5 @@
 // @flow
-import type {Rule, Action, LogicAdd, LogicRemove} from './types'
+import type {Rule, Action, LogicAdd, LogicRemove} from '../types'
 
 export type AddRuleEvent = {
   type: 'ADD_RULE',

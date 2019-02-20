@@ -2,9 +2,9 @@
 import * as saga from './saga'
 import type {Rule, Action, RuleContext, Position} from './types'
 import consequence from './consequence'
-import {applyLazyStore} from './lazyStore'
-import {addCallback} from './laterEvents'
-import * as devTools from './devTools'
+import {applyLazyStore} from './utils/lazyStore'
+import {addCallback} from './utils/laterEvents'
+import * as devTools from './utils/devTools'
 import removeItem from './utils/removeItem'
 
 type ActiveRules = {

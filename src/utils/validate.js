@@ -1,6 +1,6 @@
 // @flow
-import {getRuleContext} from './ruleDB'
-import type {Rule} from './types'
+import {getRuleContext} from '../ruleDB'
+import type {Rule} from '../types'
 
 export default function validate (rule:Rule) {
   if(!rule.id){

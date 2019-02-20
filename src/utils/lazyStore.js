@@ -1,5 +1,5 @@
 // @flow
-import type {Store} from './types'
+import type {Store} from '../types'
 
 let lazyStore:Store|null = null
 

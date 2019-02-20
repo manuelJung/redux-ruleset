@@ -5,7 +5,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = middleware;
 
-var _lazyStore = require('./lazyStore');
+var _lazyStore = require('./utils/lazyStore');
 
 var _dispatchEvent = require('./dispatchEvent');
 

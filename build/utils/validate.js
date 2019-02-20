@@ -5,7 +5,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = validate;
 
-var _ruleDB = require('./ruleDB');
+var _ruleDB = require('../ruleDB');
 
 function validate(rule) {
   if (!rule.id) {

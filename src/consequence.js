@@ -1,7 +1,7 @@
 // @flow
 import * as ruleDB from './ruleDB'
 import type {Rule,Action,Store,RuleContext} from './types'
-import * as devTools from './devTools'
+import * as devTools from './utils/devTools'
 
 let executionId = 1
 let i

@@ -18,9 +18,9 @@ var _ruleDB = require('./ruleDB');
 
 var ruleDB = _interopRequireWildcard(_ruleDB);
 
-var _laterEvents = require('./laterEvents');
+var _laterEvents = require('./utils/laterEvents');
 
-var _devTools = require('./devTools');
+var _devTools = require('./utils/devTools');
 
 var devTools = _interopRequireWildcard(_devTools);
 
