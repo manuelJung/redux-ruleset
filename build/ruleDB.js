@@ -26,6 +26,10 @@ var _devTools = require('./devTools');
 
 var devTools = _interopRequireWildcard(_devTools);
 
+var _removeItem = require('./utils/removeItem');
+
+var _removeItem2 = _interopRequireDefault(_removeItem);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
@@ -35,7 +39,6 @@ var activeRules = {
   'INSERT_INSTEAD': {},
   'INSERT_AFTER': {}
 };
-
 
 var i = void 0;
 
@@ -147,10 +150,7 @@ function removeRule(rule, removedByParent) {
   }
   context.active = false;
   rule.target && forEachTarget(rule.target, function (target) {
-    var list = activeRules[position][target];
-    activeRules[position][target] = list.filter(function (r) {
-      return r.id !== rule.id;
-    });
+    (0, _removeItem2.default)(activeRules[position][target], rule);
   });
   context.trigger('REMOVE_RULE');
   if (process.env.NODE_ENV === 'development') {
@@ -202,9 +202,7 @@ function createContext(rule) {
       listeners[e].push(cb);
     },
     off: function off(e, cb) {
-      listeners[e] = listeners[e].filter(function (l) {
-        return l !== cb;
-      });
+      return (0, _removeItem2.default)(listeners[e], cb);
     },
     trigger: function trigger(e, payload) {
       if (!listeners[e]) return;

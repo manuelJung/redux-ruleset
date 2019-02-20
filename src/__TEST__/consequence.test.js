@@ -3,6 +3,7 @@
 import createStoreCreator from 'redux-mock-store'
 import consequence, {getRuleExecutionId} from '../consequence'
 import type {RuleContext} from '../types'
+import removeItem from '../utils/removeItem'
 
 const createStore = createStoreCreator()
 
@@ -35,9 +36,7 @@ const createContext = ():RuleContext => {
       if(!listeners[e]) listeners[e] = []
       listeners[e].push(cb)
     }),
-    off: jest.fn((e, cb) => {
-      listeners[e] = listeners[e].filter(l => l !== cb)
-    }),
+    off: jest.fn((e, cb) => removeItem(listeners[e], cb)),
     trigger: jest.fn((e, payload) => {
       if(!listeners[e]) return
       for(let i=0;i<listeners[e].length;i++){

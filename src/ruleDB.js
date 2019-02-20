@@ -5,6 +5,7 @@ import consequence from './consequence'
 import {applyLazyStore} from './lazyStore'
 import {addCallback} from './laterEvents'
 import * as devTools from './devTools'
+import removeItem from './utils/removeItem'
 
 type ActiveRules = {
   INSERT_BEFORE: {[ruleId:string]: Rule[]},
@@ -95,8 +96,7 @@ export function removeRule(rule:Rule, removedByParent?: boolean){
   }
   context.active = false
   rule.target && forEachTarget(rule.target, target => {
-    const list = activeRules[position][target]
-    activeRules[position][target] = list.filter(r => r.id !== rule.id)
+    removeItem(activeRules[position][target], rule)
   })
   context.trigger('REMOVE_RULE')
   if(process.env.NODE_ENV === 'development'){
@@ -143,9 +143,7 @@ function createContext(rule:Rule):RuleContext{
       if(!listeners[e]) listeners[e] = []
       listeners[e].push(cb)
     },
-    off: (e, cb) => {
-      listeners[e] = listeners[e].filter(l => l !== cb)
-    },
+    off: (e, cb) => removeItem(listeners[e], cb),
     trigger: (e, payload) => {
       if(!listeners[e]) return
       for(let i=0;i<listeners[e].length;i++){

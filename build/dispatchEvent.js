@@ -68,7 +68,6 @@ function dispatchEvent(action, store, cb, isReduxDispatch) {
     if (cycle.step > 1010) throw new Error('detected endless cycle');
   }
 
-  saga.applyAction(action, execId);
   ruleDB.forEachRuleContext('INSERT_INSTEAD', action.type, function (context) {
     if (instead) return;
     var result = (0, _consequence2.default)(context, action, store, execId);
@@ -76,6 +75,7 @@ function dispatchEvent(action, store, cb, isReduxDispatch) {
       if (result.action) action = result.action;else instead = true;
     }
   });
+  !instead && saga.applyAction(action, execId);
   !instead && ruleDB.forEachRuleContext('INSERT_BEFORE', action.type, function (context) {
     return (0, _consequence2.default)(context, action, store, execId);
   });
