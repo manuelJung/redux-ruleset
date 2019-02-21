@@ -75,14 +75,14 @@ addRule({
   id: 'PING_PONG',
   target: 'PING',
   addWhen: function* (next){
-    yield next('START_GAME')
-    return 'ADD_RULE'
+    yield next('START_GAME') // wait for next action with type START_GAME
+    return 'ADD_RULE' // set the rule to active
   },
   addUntil: function* (next){
-    yield next('STOP_GAME')
-    return 'RECREATE_RULE'
+    yield next('STOP_GAME') // wait for next action with type STOP_GAME
+    return 'RECREATE_RULE' // remove the rule and reapply addWhen
   },
-  consequence: () => ({ type: 'PONG' })
+  consequence: () => ({ type: 'PONG' }) // dispatch a PONG for every PING
 })
 ```
 
