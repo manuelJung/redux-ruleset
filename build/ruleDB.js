@@ -30,6 +30,10 @@ var _removeItem = require('./utils/removeItem');
 
 var _removeItem2 = _interopRequireDefault(_removeItem);
 
+var _validate = require('./utils/validate');
+
+var _validate2 = _interopRequireDefault(_validate);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
@@ -39,6 +43,7 @@ var activeRules = {
   'INSTEAD': {},
   'AFTER': {}
 };
+
 
 var i = void 0;
 
@@ -52,6 +57,10 @@ var getPrivatesForTesting = exports.getPrivatesForTesting = function getPrivates
 
 function addRule(rule) {
   var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+
+  if (process.env.NODE_ENV === 'development') {
+    (0, _validate2.default)(rule, ruleContextList);
+  }
   var parentRuleId = options.parentRuleId,
       forceAdd = options.forceAdd;
 

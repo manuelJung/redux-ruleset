@@ -6,6 +6,7 @@ import {applyLazyStore} from './utils/lazyStore'
 import {addCallback} from './utils/laterEvents'
 import * as devTools from './utils/devTools'
 import removeItem from './utils/removeItem'
+import validate from './utils/validate'
 
 type ActiveRules = {
   BEFORE: {[ruleId:string]: Rule[]},
@@ -33,6 +34,9 @@ const contextListeners = []
 export const getPrivatesForTesting = (key:string) => ({activeRules, ruleContextList, contextListeners})[key]
 
 export function addRule(rule:Rule, options?:AddRuleOptions={}):Rule{
+  if(process.env.NODE_ENV === 'development'){
+    validate(rule, ruleContextList)
+  }
   const {parentRuleId, forceAdd} = options
   const context = createContext(rule)
   const position = rule.position || 'AFTER'
