@@ -68,6 +68,24 @@ addRule({
 })
 ```
 
+You can also define the the exact time, when the rule should be active. Let's say we want to develop a game. Everytime the user clicks a button, a `PING` action is dispatched and your rule responds with a `PONG`. But this should only happen, when the game has started:
+
+```javascript
+addRule({
+  id: 'PING_PONG',
+  target: 'PING',
+  addWhen: function* (next){
+    yield next('START_GAME')
+    return 'ADD_RULE'
+  },
+  addUntil: function* (next){
+    yield next('STOP_GAME')
+    return 'RECREATE_RULE'
+  },
+  consequence: () => ({ type: 'PONG' })
+})
+```
+
 ## Documentation
 
 - Introduction (TODO)
