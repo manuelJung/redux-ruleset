@@ -4,7 +4,7 @@
 * [Introduction](/docs/introduction/README.md)
 * [Basic Concepts](/docs/basicConcepts/README.md)
   * [What is a rule](/docs/basicConcepts/rule_definition.md)
-  * [React to events](/docs/basicConcepts/react_to_events.md)
+  * [React to actions](/docs/basicConcepts/react_to_events.md)
   * [Dispatching actions](/docs/basicConcepts/dispatching_actions.md)
   * [Handle concurrency](/docs/basicConcepts/handle_concurrency.md)
   * [Set rule lifetime](/docs/basicConcepts/rule_lifetime.md)
