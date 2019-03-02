@@ -79,6 +79,7 @@ export default function consequence (context:RuleContext, action?:Action, store:
   let canceled = false
   let execution = null
   const cancel = () => {canceled = true}
+  const wasCanceled = () => canceled
   const effect = fn => {
     if(canceled) return
     if(rule.concurrency === 'ORDERED' && execution && execution.active !== execId){
@@ -117,6 +118,7 @@ export default function consequence (context:RuleContext, action?:Action, store:
 
   concurrency.running++
   let result
+  const args = {dispatch, getState, action, addRule, removeRule, effect, wasCanceled}
 
   if(rule.throttle || rule.delay || rule.debounce){
     result = new Promise(resolve => {
@@ -124,13 +126,13 @@ export default function consequence (context:RuleContext, action?:Action, store:
       concurrency.debounceTimeoutId = setTimeout(() => {
         concurrency.debounceTimeoutId = null
         if(canceled) return resolve()
-        const result = rule.consequence({dispatch, getState, action, addRule, removeRule, effect})
+        const result = rule.consequence(args)
         resolve(result)
       }, rule.throttle || rule.delay || rule.debounce)
     })
   }
   else {
-    result = rule.consequence({dispatch, getState, action, addRule, removeRule, effect})
+    result = rule.consequence(args)
   }
 
   /**

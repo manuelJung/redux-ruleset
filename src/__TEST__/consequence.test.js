@@ -109,7 +109,7 @@ describe('skip rule', () => {
 
 describe('consequence injection', () => {
   beforeEach(initTest)
-  test('a dispatch, getState, action, addRule, removeRule and efect fn should be injected', () => {
+  test('a dispatch, getState, action, addRule, removeRule, wasCanceled and efect fn should be injected', () => {
     consequence(context, action, store, 1)
     const args = context.rule.consequence.mock.calls[0][0]
     expect(args).toHaveProperty('dispatch')
@@ -118,6 +118,7 @@ describe('consequence injection', () => {
     expect(args).toHaveProperty('addRule')
     expect(args).toHaveProperty('removeRule')
     expect(args).toHaveProperty('effect')
+    expect(args).toHaveProperty('wasCanceled')
   })
 })
 
