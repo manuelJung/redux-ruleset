@@ -80,3 +80,48 @@ addRule({
 })
 ```
 
+## Define execution position
+
+When a rule reacts to an action, you can define the exact position, when it should react. You have tree options:
+
+- **AFTER**: the consequence (and condition) will becalled after the action was dispatched. This is the default behaviour
+- **BEFORE**: the rule's consequence (and condition) will be called before the action was dispatched. This is very usefull, when you want access the state before it is changed by the action
+- **INSTEAD**: The original action will be completely thrown away (it won't reach any other rule or middleware and won't be dispatched). Instead the consequence will be executed. 
+
+```javascript
+import {addRule} from 'redux-ruleset'
+
+// EXAMPLE: INSTEAD
+
+/**
+Given the user completes the registration form
+and clicks on the sign-up button
+When not all required fields have been completed
+Then an action TRIGGER_MISSING_FIELDS_ALERT should be dispatched
+*/
+addRule({
+  id: 'ALERT_MISSING_FIELDS',
+  target: 'SIGN_UP_REQUEST',
+  position: 'INSTEAD',
+  condtion: action => {
+    const fields = actions.payload
+    if(!fields.name || !field.password){
+      // user forgot to set name or password
+      return true
+    }
+  },
+  consequence: ({action}) => {
+    const fields = actions.payload
+    return {
+      type: 'TRIGGER_MISSING_FIELDS_ALERT',
+      payload: {
+        username: !fields.name,
+        password: !fields.password
+      }
+    }
+  }
+})
+```
+
+In the above example we listen to the SIGN_UP_REQUEST action (is dispatched, when user clicks on sign-up button). Everytime this action is dispatched, we check in the rule condition, if the user has completed all required fields.
+If not, we throw away the SIGN_UP_REQUEST action (no other rule can react to it anymore). Instead we dispatch another action, that tells the UI to hilight all missing fields
