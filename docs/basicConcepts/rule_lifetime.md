@@ -71,7 +71,7 @@ addRule({
 
     // don't recreate from location changes to same pathname
     if(action.type === 'LOCATION_CHANGE' && action.location.pathname === window.location.pathname){
-      return 'REAPPLY_REMOVE' // start addUntil saga again
+      return 'REAPPLY_ADD_UNTIL' // start addUntil saga again
     }
 
     return 'RECREATE_RULE'

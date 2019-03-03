@@ -125,9 +125,9 @@ describe('addWhen', () => {
     const activeRules = ruleDB.getPrivatesForTesting('activeRules')
     expect(activeRules.AFTER.ANY_TYPE).toBeUndefined()
   })
-  test('if saga yields "REAPPLY_WHEN", the addWhen saga should be reinvoked after current action', () => {
+  test('if saga yields "REAPPLY_ADD_WHEN", the addWhen saga should be reinvoked after current action', () => {
     jest.spyOn(saga, 'createSaga')
-      .mockImplementationOnce((context, saga, action, cb) => {cb({logic: 'REAPPLY_WHEN', action: {type:'ANY_TYPE'}})})
+      .mockImplementationOnce((context, saga, action, cb) => {cb({logic: 'REAPPLY_ADD_WHEN', action: {type:'ANY_TYPE'}})})
       .mockImplementationOnce((context, saga, action, cb) => {cb({logic: 'ABORT', action: {type:'ANY_TYPE'}})})
     const rule = ruleDB.addRule(createRule('reapply-when', 'ANY_TYPE', { addWhen: function*(){} }))
     expect(saga.createSaga).toBeCalledTimes(1)
@@ -186,10 +186,27 @@ describe('addUntil', () => {
     laterEvents.executeAllBuffer()
     expect(saga.createSaga).toBeCalledTimes(4)
   })
-  test('if saga yields "REAPPLY_REMOVE", the addUntil saga should be reinvoked after current action', () => {
+  test('if saga yields "RECREATE_RULE_BEFORE", the rule should be totally recreated before current action', () => {
     const sagaResult = logic => ({logic, action: {type:'ANY_TYPE'}})
     jest.spyOn(saga, 'createSaga')
-      .mockImplementationOnce((context, saga, action, cb) => {cb(sagaResult('REAPPLY_REMOVE'))})
+      .mockImplementationOnce((context, saga, action, cb) => {cb(sagaResult('ADD_RULE_BEFORE'))}) // add rule
+      .mockImplementationOnce((context, saga, action, cb) => {cb(sagaResult('RECREATE_RULE_BEFORE'))}) // destroy rule
+      .mockImplementationOnce((context, saga, action, cb) => {cb(sagaResult('ADD_RULE_BEFORE'))}) // re-add rule
+      .mockImplementationOnce((context, saga, action, cb) => {cb(sagaResult('ABORT'))}) // keep rule
+    const rule = ruleDB.addRule(createRule('remove-rule', 'ANY_TYPE', { 
+      addWhen: function*(){}, 
+      addUntil: function*(){} 
+    }))
+    const activeRules = ruleDB.getPrivatesForTesting('activeRules')
+    expect(activeRules.AFTER.ANY_TYPE).toContain(rule)
+    expect(saga.createSaga).toBeCalledTimes(4)
+    laterEvents.executeAllBuffer()
+    expect(saga.createSaga).toBeCalledTimes(4)
+  })
+  test('if saga yields "REAPPLY_ADD_UNTIL", the addUntil saga should be reinvoked after current action', () => {
+    const sagaResult = logic => ({logic, action: {type:'ANY_TYPE'}})
+    jest.spyOn(saga, 'createSaga')
+      .mockImplementationOnce((context, saga, action, cb) => {cb(sagaResult('REAPPLY_ADD_UNTIL'))})
       .mockImplementationOnce((context, saga, action, cb) => {cb(sagaResult('REMOVE_RULE'))})
     const rule = ruleDB.addRule(createRule('reapply-remove', 'ANY_TYPE', { addUntil: function*(){} }))
     const activeRules = ruleDB.getPrivatesForTesting('activeRules')
@@ -212,6 +229,22 @@ describe('addUntil', () => {
     const activeRules = ruleDB.getPrivatesForTesting('activeRules')
     expect(activeRules.AFTER.ANY_TYPE).toContain(rule)
     expect(saga.createSaga).toBeCalledTimes(2)
+    laterEvents.executeAllBuffer()
+    expect(saga.createSaga).toBeCalledTimes(3)
+  })
+  test('if saga yields "READD_RULE_BEFORE", the rule should be readded before current action without applying the addWhen logic', () => {
+    const sagaResult = logic => ({logic, action: {type:'ANY_TYPE'}})
+    jest.spyOn(saga, 'createSaga')
+      .mockImplementationOnce((context, saga, action, cb) => {cb(sagaResult('ADD_RULE_BEFORE'))}) // add rule
+      .mockImplementationOnce((context, saga, action, cb) => {cb(sagaResult('READD_RULE_BEFORE'))}) // destroy rule an readd
+      .mockImplementationOnce((context, saga, action, cb) => {cb(sagaResult('ABORT'))}) // keep rule
+    const rule = ruleDB.addRule(createRule('readd-rule', 'ANY_TYPE', { 
+      addWhen: function*(){}, 
+      addUntil: function*(){} 
+    }))
+    const activeRules = ruleDB.getPrivatesForTesting('activeRules')
+    expect(activeRules.AFTER.ANY_TYPE).toContain(rule)
+    expect(saga.createSaga).toBeCalledTimes(3)
     laterEvents.executeAllBuffer()
     expect(saga.createSaga).toBeCalledTimes(3)
   })

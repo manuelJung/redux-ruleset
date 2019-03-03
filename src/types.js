@@ -13,9 +13,16 @@ export type Store = {
 
 export type Position = 'BEFORE' | 'INSTEAD' | 'AFTER'
 
-export type LogicAdd = 'ADD_RULE' | 'ABORT' | 'REAPPLY_WHEN' | 'ADD_RULE_BEFORE'
+export type LogicAdd = 'ADD_RULE' | 'ABORT' | 'REAPPLY_ADD_WHEN' | 'ADD_RULE_BEFORE'
 
-export type LogicRemove = 'RECREATE_RULE' | 'REMOVE_RULE' | 'REMOVE_RULE_BEFORE' | 'REAPPLY_REMOVE' | 'ABORT' | 'READD_RULE' | 'RECREATE_RULE_BEFORE'
+export type LogicRemove = 'RECREATE_RULE' 
+| 'RECREATE_RULE_BEFORE'
+| 'REMOVE_RULE' 
+| 'REMOVE_RULE_BEFORE' 
+| 'REAPPLY_ADD_UNTIL' 
+| 'ABORT' 
+| 'READD_RULE' 
+| 'READD_RULE_BEFORE'
 
 export type LogicConcurrency = 'DEFAULT' | 'FIRST' | 'LAST' | 'ONCE' | 'SWITCH' | 'ORDERED'
 

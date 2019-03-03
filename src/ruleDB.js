@@ -71,7 +71,7 @@ export function addRule(rule:Rule, options?:AddRuleOptions={}):Rule{
     switch(logic){
       case 'ADD_RULE': addCallback(actionExecId, () => add(action)); break
       case 'ADD_RULE_BEFORE': add(action); break
-      case 'REAPPLY_WHEN': addCallback(actionExecId, addWhen); break
+      case 'REAPPLY_ADD_WHEN': addCallback(actionExecId, addWhen); break
     }
   })
   const addUntil = (action?:Action) => rule.addUntil && saga.createSaga(context, rule.addUntil, action, ({logic, action, actionExecId}) => {
@@ -80,8 +80,9 @@ export function addRule(rule:Rule, options?:AddRuleOptions={}):Rule{
       case 'RECREATE_RULE_BEFORE': removeRule(rule); addRule(rule, {parentRuleId}); break
       case 'REMOVE_RULE': addCallback(actionExecId, () => {removeRule(rule)}); break
       case 'REMOVE_RULE_BEFORE': removeRule(rule); break
-      case 'REAPPLY_REMOVE': addCallback(actionExecId, () => addUntil(action)); break
+      case 'REAPPLY_ADD_UNTIL': addCallback(actionExecId, () => addUntil(action)); break
       case 'READD_RULE': addCallback(actionExecId, () => {removeRule(rule); addRule(rule, {parentRuleId, forceAdd:true})}); break
+      case 'READD_RULE_BEFORE': removeRule(rule); addRule(rule, {parentRuleId, forceAdd:true}); break
     }
   })
 
