@@ -176,6 +176,10 @@ function forEachTarget(target:'*' | string | string[], cb:(target:string)=>mixed
 }
 
 function pushByZIndex(list:Rule[], rule:Rule):void{
+  if(!rule.zIndex) {
+    list.unshift(rule)
+    return
+  }
   const index = list.reduce((p,n,i) => {
     if(typeof n.zIndex !== 'number' || typeof rule.zIndex !== 'number'){
       return p

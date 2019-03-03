@@ -48,9 +48,6 @@ There are many more concurrency patterns.
 |SWITCH| as soon as the second consequence dispatches (or triggers an effect) the first one will be canceled|
 |ORDERED| if second rule dispatches (or triggers an effect) before first rule, it waits with the dispatch, until the first one dispatches|
 
-- debounce
-- throttle
-
 ##### refining concurrency
 
 Let's say we have an index `staticBlocks` where we store all our cms, we fetch from the server. This includes an action `FETCH_STATIC_BLOCK_REQUEST`, that triggers an fetch. 
@@ -83,4 +80,29 @@ In the above example we set a concurrency filter. The concurrency only matches f
 
 ## Rule concurrency
 
-TODO zIndex
+A rule concurrency happens, when two or more rules are attached to the same target and the same position. you can define the order of execution by setting a zIndex:
+
+```javascript
+import {addRule} from 'redux-ruleset'
+
+addRule({
+  id: 'EVENT_1',
+  target: 'ACTION',
+  zIndex: 2,
+  consequence: () => console.log('event 1')
+})
+
+addRule({
+  id: 'EVENT_2',
+  target: 'ACTION',
+  zIndex: 1,
+  consequence: () => console.log('event 2')
+})
+
+dispatch({type: 'ACTION'})
+
+// --> event 2
+// --> event 1
+```
+
+The zIndex only manages the execution order of `consequences`. Everything else remains untouched. But that is ok, since the only place where the outer world can be changed is inside a consequence. If no rule has an zIndex, later added rules will be executed first. 
