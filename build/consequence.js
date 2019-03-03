@@ -104,6 +104,9 @@ function consequence(context, action, store, actionExecId) {
   var cancel = function cancel() {
     canceled = true;
   };
+  var wasCanceled = function wasCanceled() {
+    return canceled;
+  };
   var effect = function effect(fn) {
     if (canceled) return;
     if (rule.concurrency === 'ORDERED' && execution && execution.active !== execId) {
@@ -152,6 +155,7 @@ function consequence(context, action, store, actionExecId) {
 
   concurrency.running++;
   var result = void 0;
+  var args = { dispatch: dispatch, getState: getState, action: action, addRule: addRule, removeRule: removeRule, effect: effect, wasCanceled: wasCanceled };
 
   if (rule.throttle || rule.delay || rule.debounce) {
     result = new _promise2.default(function (resolve) {
@@ -159,12 +163,12 @@ function consequence(context, action, store, actionExecId) {
       concurrency.debounceTimeoutId = setTimeout(function () {
         concurrency.debounceTimeoutId = null;
         if (canceled) return resolve();
-        var result = rule.consequence({ dispatch: dispatch, getState: getState, action: action, addRule: addRule, removeRule: removeRule, effect: effect });
+        var result = rule.consequence(args);
         resolve(result);
       }, rule.throttle || rule.delay || rule.debounce);
     });
   } else {
-    result = rule.consequence({ dispatch: dispatch, getState: getState, action: action, addRule: addRule, removeRule: removeRule, effect: effect });
+    result = rule.consequence(args);
   }
 
   /**

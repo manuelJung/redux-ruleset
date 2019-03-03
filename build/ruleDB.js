@@ -107,8 +107,13 @@ function addRule(rule) {
           });break;
         case 'ADD_RULE_BEFORE':
           add(action);break;
-        case 'REAPPLY_WHEN':
+        case 'REAPPLY_ADD_WHEN':
           (0, _laterEvents.addCallback)(actionExecId, addWhen);break;
+        case 'CANCELED':
+        case 'ABORT':
+          break;
+        default:
+          throw new Error('invalid return type for addWhen saga (' + rule.id + ')');
       }
     });
   };
@@ -131,7 +136,7 @@ function addRule(rule) {
           });break;
         case 'REMOVE_RULE_BEFORE':
           removeRule(rule);break;
-        case 'REAPPLY_REMOVE':
+        case 'REAPPLY_ADD_UNTIL':
           (0, _laterEvents.addCallback)(actionExecId, function () {
             return addUntil(action);
           });break;
@@ -139,6 +144,13 @@ function addRule(rule) {
           (0, _laterEvents.addCallback)(actionExecId, function () {
             removeRule(rule);addRule(rule, { parentRuleId: parentRuleId, forceAdd: true });
           });break;
+        case 'READD_RULE_BEFORE':
+          removeRule(rule);addRule(rule, { parentRuleId: parentRuleId, forceAdd: true });break;
+        case 'CANCELED':
+        case 'ABORT':
+          break;
+        default:
+          throw new Error('invalid return type for addUntil saga (' + rule.id + ')');
       }
     });
   };
