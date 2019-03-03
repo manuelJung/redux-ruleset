@@ -72,6 +72,9 @@ export function addRule(rule:Rule, options?:AddRuleOptions={}):Rule{
       case 'ADD_RULE': addCallback(actionExecId, () => add(action)); break
       case 'ADD_RULE_BEFORE': add(action); break
       case 'REAPPLY_ADD_WHEN': addCallback(actionExecId, addWhen); break
+      case 'CANCELED':
+      case 'ABORT': break
+      default: throw new Error('invalid return type for addUntil saga ', rule.id)
     }
   })
   const addUntil = (action?:Action) => rule.addUntil && saga.createSaga(context, rule.addUntil, action, ({logic, action, actionExecId}) => {
@@ -83,6 +86,9 @@ export function addRule(rule:Rule, options?:AddRuleOptions={}):Rule{
       case 'REAPPLY_ADD_UNTIL': addCallback(actionExecId, () => addUntil(action)); break
       case 'READD_RULE': addCallback(actionExecId, () => {removeRule(rule); addRule(rule, {parentRuleId, forceAdd:true})}); break
       case 'READD_RULE_BEFORE': removeRule(rule); addRule(rule, {parentRuleId, forceAdd:true}); break
+      case 'CANCELED':
+      case 'ABORT': break
+      default: throw new Error('invalid return type for addUntil saga ', rule.id)
     }
   })
 
