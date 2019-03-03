@@ -14,7 +14,7 @@
   * Handling streams
   * Defining execution order
   * Manipulate time
-  * Terminate rule
+  * Terminate rule (with sagas)
   * React to componente state changes
   * skip rules
 * Recipies
