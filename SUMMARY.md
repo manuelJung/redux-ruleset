@@ -9,17 +9,18 @@
   * [Handle concurrency](/docs/basicConcepts/handle_concurrency.md)
   * [Set rule lifetime](/docs/basicConcepts/rule_lifetime.md)
 * [Advanced Concepts](/docs/advancedConcepts/README.md)
-  * Manipulating actions
+  * [Manipulating actions](/docs/advancedConcepts/manipulating_actions.md)
   * Nesting rules
+  * skip rules
   * Handling streams
-  * Defining execution order
-  * Manipulate time
   * Terminate rule (with sagas)
   * React to componente state changes
-  * skip rules
+  * how it works
+  * devtools
+  * putting all together
 * Recipies
-  * [Hold back action](/docs/advancedConcepts/hold_back_action.md)
-  * [Hydrate state](/docs/advancedConcepts/hydrate_state.md)
+  * [Hold back action](/docs/recipies/hold_back_action.md)
+  * [Hydrate state](/docs/recipies/hydrate_state.md)
 * [API reference](/docs/apiReference/README.md)
   * [consequence](/docs/apiReference/consequence.md)
     * [Action return](/docs/apiReference/consequence_action_return.md)
