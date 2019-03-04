@@ -246,6 +246,10 @@ function forEachTarget(target, cb) {
 }
 
 function pushByZIndex(list, rule) {
+  if (!rule.zIndex) {
+    list.unshift(rule);
+    return;
+  }
   var index = list.reduce(function (p, n, i) {
     if (typeof n.zIndex !== 'number' || typeof rule.zIndex !== 'number') {
       return p;
