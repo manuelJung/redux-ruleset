@@ -11,4 +11,7 @@ addRule({
 })
 ```
 
-The consequence is the heart of a rule. Any task you want to perform is done within the consequence. There are several other keys available where you can manage concurrency, defining the lifetime of the rule or defining when a rule should be executed. This module consists of serveral little concepts that work really well together. There is no overly complex concepts within this middleware. The basic usage of this module can be learned and fully understood within a few hours. But the real power comes from the different possible combinations of all concepts. And this can take quite a time to master and requires some practive.
+The consequence is the heart of a rule. Any task you want to perform is done within the consequence. There are several other keys available where you can manage concurrency, defining the lifetime of the rule or defining when a rule should be executed. A rule consists of serveral keys that work really well together. There is no overly complex concepts within this middleware. The basic usage of this module can be learned and fully understood within a few hours. But the real power comes from the different possible combinations of alle rule-keys. And this can take quite a time to master and requires some practive.
+
+A very important concept of this middleware is, that a rule should be toggleable. That means, that you should be able to turn of a rule without crashing the app... TODO
+
