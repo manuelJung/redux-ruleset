@@ -155,7 +155,7 @@ describe('abort consequence', () => {
       })
     }
     consequence(context, action, store, 1)
-    context.trigger('CANCEL_CONSEQUENCE')
+    context.trigger('CANCEL_CONSEQUENCE', 'default')
   })
 })
 
@@ -201,7 +201,7 @@ describe('return types', () => {
     context.rule.consequence = () => cb
     consequence(context, action, store, 1)
     expect(cb).not.toBeCalled()
-    context.trigger('CANCEL_CONSEQUENCE')
+    context.trigger('CANCEL_CONSEQUENCE', 'default')
     expect(cb).toBeCalledTimes(1)
   })
 })

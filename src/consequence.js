@@ -55,9 +55,9 @@ export default function consequence (context:RuleContext, action?:Action, store:
     if(rule.concurrency === 'ONCE') return skipConsequence()
     if(rule.concurrency === 'FIRST') return skipConsequence()
     if(rule.addOnce) return skipConsequence()
-    if(rule.concurrency === 'LAST') context.trigger('CANCEL_CONSEQUENCE')
-    if(rule.throttle) context.trigger('CANCEL_CONSEQUENCE')
-    if(rule.debounce) context.trigger('CANCEL_CONSEQUENCE')
+    if(rule.concurrency === 'LAST') context.trigger('CANCEL_CONSEQUENCE', concurrencyId)
+    if(rule.throttle) context.trigger('CANCEL_CONSEQUENCE', concurrencyId)
+    if(rule.debounce) context.trigger('CANCEL_CONSEQUENCE', concurrencyId)
   }
   // skip if 'skipRule' condition matched
   if(action && action.meta && action.meta.skipRule && matchGlob(rule.id, action.meta.skipRule)){
@@ -86,7 +86,7 @@ export default function consequence (context:RuleContext, action?:Action, store:
       execution.effects[execId].push(() => effect(fn))
       return
     }
-    rule.concurrency === 'SWITCH' && context.trigger('CANCEL_CONSEQUENCE')
+    rule.concurrency === 'SWITCH' && context.trigger('CANCEL_CONSEQUENCE', concurrencyId)
     fn()
   }
   const getState = store.getState
@@ -106,10 +106,10 @@ export default function consequence (context:RuleContext, action?:Action, store:
    * Setup Cancel Listeners
    */
   if(rule.concurrency === 'ORDERED'){
-    execution = registerExecution(context, execId)
+    execution = registerOrdererdExecution(context, execId, concurrencyId)
   }
 
-  context.on('CANCEL_CONSEQUENCE', cancel)
+  context.on('CANCEL_CONSEQUENCE', id => {id === concurrencyId && cancel()})
   context.on('REMOVE_RULE', cancel)
 
   /**
@@ -181,7 +181,7 @@ export default function consequence (context:RuleContext, action?:Action, store:
       cb()
     }
     context.on('REMOVE_RULE', applyCb)
-    context.on('CANCEL_CONSEQUENCE', applyCb)
+    context.on('CANCEL_CONSEQUENCE', id => {id === concurrencyId && applyCb()})
   }
 
   // unlisten for void return
@@ -218,7 +218,7 @@ type DB = {[ruleId:string]: {
   effects: {[execId:number]:(()=>void)[]}
 }}
 const db:DB = {}
-function registerExecution(context:RuleContext, execId:number){
+function registerOrdererdExecution(context:RuleContext, execId:number, concurrencyId:string){
   const {id} = context.rule
   if(db[id]){
     db[id].buffer.push(execId)
@@ -247,6 +247,7 @@ function registerExecution(context:RuleContext, execId:number){
   }
 
   context.on('CONSEQUENCE_END', updateActive)
-  context.on('CANCEL_CONSEQUENCE', clearStore) // important when debouncing
+  context.on('REMOVE_RULE', clearStore)
+  context.on('CANCEL_CONSEQUENCE', id => {id === concurrencyId && clearStore()}) // important when debouncing
   return store
 }

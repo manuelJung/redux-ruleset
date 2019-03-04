@@ -78,9 +78,9 @@ function consequence(context, action, store, actionExecId) {
     if (rule.concurrency === 'ONCE') return skipConsequence();
     if (rule.concurrency === 'FIRST') return skipConsequence();
     if (rule.addOnce) return skipConsequence();
-    if (rule.concurrency === 'LAST') context.trigger('CANCEL_CONSEQUENCE');
-    if (rule.throttle) context.trigger('CANCEL_CONSEQUENCE');
-    if (rule.debounce) context.trigger('CANCEL_CONSEQUENCE');
+    if (rule.concurrency === 'LAST') context.trigger('CANCEL_CONSEQUENCE', concurrencyId);
+    if (rule.throttle) context.trigger('CANCEL_CONSEQUENCE', concurrencyId);
+    if (rule.debounce) context.trigger('CANCEL_CONSEQUENCE', concurrencyId);
   }
   // skip if 'skipRule' condition matched
   if (action && action.meta && action.meta.skipRule && matchGlob(rule.id, action.meta.skipRule)) {
@@ -115,7 +115,7 @@ function consequence(context, action, store, actionExecId) {
       });
       return;
     }
-    rule.concurrency === 'SWITCH' && context.trigger('CANCEL_CONSEQUENCE');
+    rule.concurrency === 'SWITCH' && context.trigger('CANCEL_CONSEQUENCE', concurrencyId);
     fn();
   };
   var getState = store.getState;
@@ -143,10 +143,12 @@ function consequence(context, action, store, actionExecId) {
    * Setup Cancel Listeners
    */
   if (rule.concurrency === 'ORDERED') {
-    execution = registerExecution(context, execId);
+    execution = registerOrdererdExecution(context, execId, concurrencyId);
   }
 
-  context.on('CANCEL_CONSEQUENCE', cancel);
+  context.on('CANCEL_CONSEQUENCE', function (id) {
+    id === concurrencyId && cancel();
+  });
   context.on('REMOVE_RULE', cancel);
 
   /**
@@ -218,7 +220,9 @@ function consequence(context, action, store, actionExecId) {
           cb();
         };
         context.on('REMOVE_RULE', applyCb);
-        context.on('CANCEL_CONSEQUENCE', applyCb);
+        context.on('CANCEL_CONSEQUENCE', function (id) {
+          id === concurrencyId && applyCb();
+        });
       }
 
       // unlisten for void return
@@ -248,7 +252,7 @@ function matchGlob(id, glob) {
 }
 
 var db = {};
-function registerExecution(context, execId) {
+function registerOrdererdExecution(context, execId, concurrencyId) {
   var id = context.rule.id;
 
   if (db[id]) {
@@ -280,6 +284,9 @@ function registerExecution(context, execId) {
   };
 
   context.on('CONSEQUENCE_END', updateActive);
-  context.on('CANCEL_CONSEQUENCE', clearStore); // important when debouncing
+  context.on('REMOVE_RULE', clearStore);
+  context.on('CANCEL_CONSEQUENCE', function (id) {
+    id === concurrencyId && clearStore();
+  }); // important when debouncing
   return store;
 }
