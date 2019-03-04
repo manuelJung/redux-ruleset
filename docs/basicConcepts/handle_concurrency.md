@@ -48,6 +48,32 @@ There are many more concurrency patterns.
 |SWITCH| as soon as the second consequence dispatches (or triggers an effect) the first one will be canceled|
 |ORDERED| if second rule dispatches (or triggers an effect) before first rule, it waits with the dispatch, until the first one dispatches|
 
+##### debounce and throttle
+
+For debouncing or throttling a rule's consequence you have seperate keys available:
+
+```javascript
+import {addRule} from 'redux-ruleset'
+
+addRule({
+  ...,
+  // wait 300 ms until the rule was executed last, then only execute the last call
+  debounce: 300,
+  concurrency: 'SWITCH',
+  consequence: () => /* do stuff */
+})
+
+addRule({
+  ...,
+  // wait 300 ms until the rule was executed first, then only execute the last call
+  throttle: 300,
+  concurrency: 'SWITCH',
+  consequence: () => /* do stuff */
+})
+```
+
+Also you will have bigger time-windows with debounce and throttle, it is recommended to always set a concurrency since there can be a race-condition between the called consequences (but most of them are already canceled by debounce or throttle)
+
 ##### refining concurrency
 
 Let's say we have an index `staticBlocks` where we store all our cms, we fetch from the server. This includes an action `FETCH_STATIC_BLOCK_REQUEST`, that triggers an fetch. 
@@ -76,7 +102,7 @@ addRule({
 })
 ```
 
-In the above example we set a concurrency filter. The concurrency only matches for actions that resolve to the same concurrency filter. 
+In the above example we set a concurrency filter. The concurrency only matches for actions that resolve to the same concurrency filter. This is also true for debouncing or throttling. The concurrency filter branches the execution of your consequence
 
 ## Rule concurrency
 
