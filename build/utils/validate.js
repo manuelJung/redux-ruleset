@@ -12,9 +12,6 @@ function validate(rule, ruleContextList) {
   if (context && context.active) {
     throw new Error('found an active rule with same id "' + rule.id + '". Either you used the same id for multiple rules or you tried to add an already added rule');
   }
-  if (!rule.target) {
-    throw new Error('rules must have a target. Check your rule ' + rule.id);
-  }
   if (!rule.consequence) {
     throw new Error('rules must have a consequence. Check your rule ' + rule.id);
   }

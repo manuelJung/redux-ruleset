@@ -14,11 +14,13 @@ var callbacks = [];
 var i = void 0;
 
 function setStore(store) {
-  lazyStore = store;
-  callbacks.forEach(function (cb) {
-    return cb(store);
+  requestAnimationFrame(function () {
+    lazyStore = store;
+    callbacks.forEach(function (cb) {
+      return cb(store);
+    });
+    callbacks = [];
   });
-  callbacks = [];
 }
 
 function applyLazyStore(cb) {
