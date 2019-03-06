@@ -10,9 +10,9 @@
   * [Set rule lifetime](/docs/basicConcepts/rule_lifetime.md)
 * [Advanced Concepts](/docs/advancedConcepts/README.md)
   * [Manipulating actions](/docs/advancedConcepts/manipulating_actions.md)
-  * Nesting rules
-  * skip rules
-  * Handling streams
+  * [Nesting rules](/docs/advancedConcepts/nest_rules.md)
+  * [skip rules](/docs/advancedConcepts/skip_rules.md)
+  * [Handling streams](/docs/advancedConcepts/handle_streams.md)
   * Terminate rule (with sagas)
   * React to componente state changes
   * how it works
