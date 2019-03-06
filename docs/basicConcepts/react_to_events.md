@@ -1,6 +1,6 @@
 # React to Actions
 
-The main purpose of redux-ruleset is to react to dispatched actions. You can define the action type(s) a rule should react to with the `target` key. The rule will react to every action-type you define here. If you set the target to `'*'` the rule will react to ANY action. This is only recommended during development, because it can slow down your application. If you do not set the target, the consequence will be executed instantly and only once. If the rule was added before you create your store, the execution will be delayed until the store is available
+The main purpose of redux-ruleset is to react to dispatched actions. You can define the action type(s) a rule should react to with the `target` key. The rule will react to every action-type you define here. If you set the target to `'*'` the rule will react to ANY action.
 
 ```javascript
 import {addRule} from 'redux-ruleset'
@@ -23,12 +23,6 @@ addRule({
   id: 'LOGGER',
   target: '*', // rule will be executed for every action
   consequence: ({action}) => console.log(action)
-})
-
-addRule({
-  id: 'SAY_HI',
-  target: undefined, // rule will be executed instantly (or as soon as a store is available) and only once
-  consequence: () => console.log('hi')
 })
 ```
 
