@@ -54,8 +54,7 @@ export function addRule(rule:Rule, options?:AddRuleOptions={}):Rule{
   const add = (action?:Action) => {
     context.active = true
     ruleContextList[rule.id] = context
-    !rule.target && applyLazyStore(store => {consequence(context, undefined, store, null)})
-    rule.target && forEachTarget(rule.target, target => {
+    forEachTarget(rule.target, target => {
       if(!activeRules[position][target]) activeRules[position][target] = []
       const list = activeRules[position][target]
       if(list.length > 0) pushByZIndex(list, rule)

@@ -36,7 +36,7 @@ export type Saga<Logic> = (
 
 export type Rule = {
   id: string,
-  target?: '*' | string | string[],
+  target: '*' | string | string[],
   position?: Position,
   zIndex?: number,
   concurrency?: LogicConcurrency,

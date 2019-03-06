@@ -12,8 +12,11 @@ export default function validate (rule:Rule, ruleContextList:{[ruleId:string]: R
   if(!rule.consequence){
     throw new Error('rules must have a consequence. Check your rule '+rule.id)
   }
+  if(!rule.target){
+    throw new Error('rules must have a target. Check your rule '+rule.id)
+  }
   if(rule.addOnce && rule.addUntil){
-    throw new Error(`it does not make sense to for a rule to have a addOnce flag and a addUntil fn. Check your rule ${rule.id}`)
+    throw new Error(`it does not make sense for a rule to have a addOnce flag and a addUntil fn. Check your rule ${rule.id}`)
   }
   if(rule.debounce && rule.throttle){
     throw new Error('cannot set both: debounce and throttle. Check your rule '+rule.id)
