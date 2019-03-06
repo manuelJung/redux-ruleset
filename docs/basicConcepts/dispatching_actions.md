@@ -80,6 +80,22 @@ addRule({
 })
 ```
 
+Alternatively you can ask manually, if the rule is still running after an async step:
+
+```javascript
+addRule({
+  id: 'DO_SOME_STUFF',
+  consequence: async ({wasCanceled}) => {
+    const data = await fetchData()
+    if(wasCanceled()) {
+      return
+    }
+    doStuff(data)
+    doOtherStuff(data)
+  }
+})
+```
+
 ## Define execution position
 
 When a rule reacts to an action, you can define the exact position, when it should react. You have tree options:
