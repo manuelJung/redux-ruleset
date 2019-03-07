@@ -63,8 +63,12 @@ Next we identify, when we remove the rule, once added. As the `addUntil` method 
 
 Since we now have our time-window when the rule is active, we check when the rule should be invoked. As the combination of `target` and `condition` tells us, the rule should be invoked whenever the user navigates and the target pages requires a login.
 
-So what happens? First we throw away the navigation-action (due to `position` INSTEAD). It won't reach any further rule or middleware and doesn't get dispatched. Within the consequence we return a action that navigates the user to the login-page. Well, you might ask yourself why this action doesn't get picked up by the rule since it has the same action type (LOCATION_CHANGE) it listens to. Please read the chapter [manipulate actions](/docs/advancedConcepts/manipulating_actions.md) if you don't know.
+So what happens? First we throw away the original navigation-action (due to `position` INSTEAD). It won't reach any further rule or middleware and doesn't get dispatched. Within the consequence we return a action that navigates the user to the login-page. Well, you might ask yourself why this action doesn't get picked up by the rule since it has the same action type (LOCATION_CHANGE) it listens to. Please read the chapter [manipulate actions](/docs/advancedConcepts/manipulating_actions.md) if you don't know.
 
-Additionally we add another rule within the consequence. Here we we wait for the login-action to happen, so we can redirect to the original route the user wanted to visit (the one, that required a login). We only want to keep this rule as long as the user stayes on the login page. So we check in the `addUntil` generator function, whether the user navigates to another route and remove the inner rule if so.
+Additionally we add another rule within the consequence. Here we we wait for the login-action to happen, so we can redirect to the original route the user wanted to visit (the one, that required a login). We only want to keep this rule as long as the user stays on the login page. So we check in the `addUntil` generator function, whether the user navigates to another route and remove the inner rule if so.
 
-You might have wondered, why we use the consequence's `addRule` method instead of the global one. Well, this method is an overloaded version of the global `addRule` function. It has the ability to remove the inner rule, as soon as the outer rule will be removed.
+You might have wondered, why we use the consequence's `addRule` method instead of the global one. Well, this method is an overloaded version of the global `addRule` function. It has the ability to remove the inner rule, as soon as the outer rule will be removed. That can lead to really powerfull compositions.
+
+## Conclusion
+
+As you can see, nesting rules is a really powerfull feature to model any dataflow. Once learned such rules are extremly easy to read. But it requires a bit of training to know how to model such rule compositions. 
