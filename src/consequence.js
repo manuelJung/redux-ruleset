@@ -1,18 +1,15 @@
 // @flow
 import * as ruleDB from './ruleDB'
-import type {Rule,Action,Store,RuleContext} from './types'
+import type {Action,Store,RuleContext} from './types'
 import * as devTools from './utils/devTools'
 
 let executionId = 1
-let i
 
 let nextExecutionId:number|null = null
 export function getRuleExecutionId(){
   const id = nextExecutionId
   return id
 }
-
-const orderedListeners = {}
 
 type ReturnType = {
   resolved: boolean,

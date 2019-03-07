@@ -4,7 +4,6 @@ import type {Store} from '../types'
 let lazyStore:Store|null = null
 
 let callbacks:Function[] = []
-let i
 
 export function setStore(store:Store){
   lazyStore = store
