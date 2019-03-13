@@ -14,7 +14,7 @@
   * [skip rules](/docs/advancedConcepts/skip_rules.md)
   * [Handling streams](/docs/advancedConcepts/handle_streams.md)
   * Terminate rule (with sagas)
-  * React to componente state changes
+  * [React to component state changes](/docs/advancedConcepts/handle_state_change.md)
   * how it works
   * devtools
   * putting all together
