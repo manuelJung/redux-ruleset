@@ -15,7 +15,7 @@
   * [Handling streams](/docs/advancedConcepts/handle_streams.md)
   * Terminate rule (with sagas)
   * [React to component state changes](/docs/advancedConcepts/handle_state_change.md)
-  * how it works
+  * [How it works](/docs/advancedConcepts/how_it_works.md)
   * devtools
   * putting all together
 * Recipies
