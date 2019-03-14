@@ -13,7 +13,7 @@
   * [Nesting rules](/docs/advancedConcepts/nest_rules.md)
   * [skip rules](/docs/advancedConcepts/skip_rules.md)
   * [Handling streams](/docs/advancedConcepts/handle_streams.md)
-  * Terminate rule (with sagas)
+  * [Cancel rules](/docs/advancedConcepts/cancel_rules.md)
   * [React to component state changes](/docs/advancedConcepts/handle_state_change.md)
   * [How it works](/docs/advancedConcepts/how_it_works.md)
   * devtools
