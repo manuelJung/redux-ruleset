@@ -16,7 +16,7 @@
   * [Cancel rules](/docs/advancedConcepts/cancel_rules.md)
   * [React to component state changes](/docs/advancedConcepts/handle_state_change.md)
   * [How it works](/docs/advancedConcepts/how_it_works.md)
-  * devtools
+  * [Devtools](/docs/advancedConcepts/devtools.md)
   * putting all together
 * Recipies
   * [Hold back action](/docs/recipies/hold_back_action.md)
