@@ -17,7 +17,7 @@
   * [React to component state changes](/docs/advancedConcepts/handle_state_change.md)
   * [How it works](/docs/advancedConcepts/how_it_works.md)
   * [Devtools](/docs/advancedConcepts/devtools.md)
-  * putting all together
+  * [Putting all together](/docs/advancedConcepts/putting_all_together.md)
 * Recipies
   * [Hold back action](/docs/recipies/hold_back_action.md)
   * [Hydrate state](/docs/recipies/hydrate_state.md)
