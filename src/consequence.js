@@ -139,6 +139,7 @@ export default function consequence (context:RuleContext, action?:Action, store:
   // position:INSTEAD can extend the action if type is equal
   if(action && typeof result === 'object' && result.type && rule.position === 'INSTEAD' && result.type === action.type){
     const action:Action = (result:any)
+    unlisten(context, execId, cancel, concurrency)
     return {resolved: true, action}
   }
 
