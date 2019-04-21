@@ -34,7 +34,7 @@
   * concurrencyFilter
   * debounce
   * throttle
-  * zIndex
+  * weight
   * position
   * id
   * addOnce

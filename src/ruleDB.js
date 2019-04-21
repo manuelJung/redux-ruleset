@@ -53,7 +53,7 @@ export function addRule(rule:Rule, options?:AddRuleOptions={}):Rule{
     forEachTarget(rule.target, target => {
       if(!activeRules[position][target]) activeRules[position][target] = []
       const list = activeRules[position][target]
-      if(list.length > 0) pushByZIndex(list, rule)
+      if(list.length > 0) pushByWeight(list, rule)
       else list.push(rule)
     })
     addUntil(action)
@@ -170,16 +170,16 @@ function forEachTarget(target:'*' | string | string[], cb:(target:string)=>mixed
   }
 }
 
-function pushByZIndex(list:Rule[], rule:Rule):void{
-  if(!rule.zIndex) {
+function pushByWeight(list:Rule[], rule:Rule):void{
+  if(!rule.weight) {
     list.unshift(rule)
     return
   }
   const index = list.reduce((p,n,i) => {
-    if(typeof n.zIndex !== 'number' || typeof rule.zIndex !== 'number'){
+    if(typeof n.weight !== 'number' || typeof rule.weight !== 'number'){
       return p
     }
-    if(rule.zIndex > n.zIndex) return i+1
+    if(rule.weight > n.weight) return i+1
     else return p
   }, 0)
   list.splice(index,0,rule)

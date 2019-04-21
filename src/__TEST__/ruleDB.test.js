@@ -50,10 +50,10 @@ describe('add rules', () => {
     expect(activeRules.AFTER.TYPE_1).toContain(rule)
     expect(activeRules.AFTER.TYPE_2).toContain(rule)
   })
-  test('if multiple rules are attached to one action type, they should be ordered by their zIndex', () => {
-    const rule1 = ruleDB.addRule(createRule('zIndex-1', 'ORDERED', {zIndex:0}))
-    const rule2 = ruleDB.addRule(createRule('zIndex-2', 'ORDERED', {zIndex:2}))
-    const rule3 = ruleDB.addRule(createRule('zIndex-3', 'ORDERED', {zIndex:1}))
+  test('if multiple rules are attached to one action type, they should be ordered by their weight', () => {
+    const rule1 = ruleDB.addRule(createRule('weight-1', 'ORDERED', {weight:0}))
+    const rule2 = ruleDB.addRule(createRule('weight-2', 'ORDERED', {weight:2}))
+    const rule3 = ruleDB.addRule(createRule('weight-3', 'ORDERED', {weight:1}))
     const activeRules = ruleDB.getPrivatesForTesting('activeRules')
     expect(activeRules.AFTER.ORDERED[0]).toBe(rule1)
     expect(activeRules.AFTER.ORDERED[1]).toBe(rule3)

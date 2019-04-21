@@ -106,7 +106,7 @@ In the above example we set a concurrency filter. The concurrency only matches f
 
 ## Rule concurrency
 
-A rule concurrency happens, when two or more rules are attached to the same target and the same position. you can define the order of execution by setting a zIndex:
+A rule concurrency happens, when two or more rules are attached to the same target and the same position. you can define the order of execution by setting a weight:
 
 ```javascript
 import {addRule} from 'redux-ruleset'
@@ -114,14 +114,14 @@ import {addRule} from 'redux-ruleset'
 addRule({
   id: 'EVENT_1',
   target: 'ACTION',
-  zIndex: 2,
+  weight: 2,
   consequence: () => console.log('event 1')
 })
 
 addRule({
   id: 'EVENT_2',
   target: 'ACTION',
-  zIndex: 1,
+  weight: 1,
   consequence: () => console.log('event 2')
 })
 
@@ -131,4 +131,4 @@ dispatch({type: 'ACTION'})
 // --> event 1
 ```
 
-The zIndex only manages the execution order of `consequences`. Everything else remains untouched. But that is ok, since the only place where the outer world can be changed is inside a consequence. If no rule has an zIndex, later added rules will be executed first. 
+The weight only manages the execution order of `consequences`. Everything else remains untouched. But that is ok, since the only place where the outer world can be changed is inside a consequence. If no rule has an weight, later added rules will be executed first. 

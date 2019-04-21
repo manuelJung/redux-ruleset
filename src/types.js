@@ -38,7 +38,7 @@ export type Rule = {
   id: string,
   target: '*' | string | string[],
   position?: Position,
-  zIndex?: number,
+  weight?: number,
   concurrency?: LogicConcurrency,
   debounce?: number,
   throttle?: number,
