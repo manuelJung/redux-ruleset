@@ -7,7 +7,7 @@ One of the hardest things in javascript is, how to handle concurrency. There are
 
 ## Consequence concurrency
 
-Concurrency happens everytime you do an async task. Everytime you fetch data, concurrency can be a problem. Most of the time we don't handle it properly, because it requires to much code for something, that maybe won't happen ever. But when a concurrency related problem happens, you have a problem. It can be really hard to debug, and won't happen evertime you try. So redux-ruleset tries to help you with a very simple api, to handle concurrency. A rule has a special key `concurrency` where you can set your concurrency logic:
+Concurrency happens everytime you do an async task. Everytime you fetch data, concurrency can be a problem. Most of the time we don't handle it properly, because it requires too much code for something, that maybe won't happen ever. But when a concurrency related problem happens, you have a problem. It can be really hard to debug, and won't happen evertime you try. So redux-ruleset tries to help you with a very simple api to handle concurrency. A rule has a special key `concurrency` where you can set your concurrency logic:
 
 ```javascript
 import {addRule} from 'redux-ruleset'
@@ -44,7 +44,7 @@ There are many more concurrency patterns.
 |DEFAULT| no logic will be applied. default behaviour. |
 |FIRST| as long as a consequence is running (did not resolve) no other consequence can start|
 |LAST| as soon as the second consequence starts to execute, all previous consequences are canceled|
-|ONCE| the consequence can only be called once during the lifetime of a rule. Only usefull when it comes to rule-nesting|
+|ONCE| the consequence can only be called once during the lifetime of a rule. Only usefull when it comes to [rule-nesting](../advancedConcepts/nest_rules.md)|
 |SWITCH| as soon as the second consequence dispatches (or triggers an effect) the first one will be canceled|
 |ORDERED| if second rule dispatches (or triggers an effect) before first rule, it waits with the dispatch, until the first one dispatches|
 
@@ -102,7 +102,7 @@ addRule({
 })
 ```
 
-In the above example we set a concurrency filter. The concurrency only matches for actions that resolve to the same concurrency filter. This is also true for debouncing or throttling. The concurrency filter branches the execution of your consequence
+In the above example we set a concurrency filter. The concurrency only matches for actions that resolve to the same concurrency filter. This is also true for debouncing or throttling. The concurrency-filter flag branches the execution of your consequence
 
 ## Rule concurrency
 

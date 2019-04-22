@@ -1,7 +1,7 @@
 
 # Introduction
 
-I'm developing react-redux apps since day one, and I've seen a lot of different redux-apps. The flux pattern is the right step in frontend-development and has many advantages over a MVC-architecture. But is does not really define, where you should handle your business logic. Logic like state hydration from url or handling fallbacks. So we tend to handle this logic in our react-components. Most likely in so called container-components. And these containers quickly became very complex. Likewise, we created a lot of duplicate code, because react-components cannnot interact with sibling containers. So very powerful redux-middlewares were born like redux-saga or redux-observable. With these awesome middlewares we were able to model komplex dataflows. But these middlewares are limited:
+I'm developing react-redux apps since day one, and I've seen a lot of different redux-apps. The flux pattern is the right step in frontend-development and has many advantages over a classical MVC-architecture. But it does not really define where you should handle your business logic. Logic like state hydration from url or handling fallbacks. So we tend to handle this logic in our react-components. Most likely in so called container-components. And these containers quickly became very complex. Likewise, we created a lot of duplicate code, because react-components cannnot interact with sibling containers. So very powerful redux-middlewares were born like redux-saga or redux-observable. With these awesome middlewares we were able to model complex dataflows. But these middlewares are limited:
 
 - What if we want to extend an action or cancel it
 - Adding new funktionality can be really tricky, once you build your data-pipeline

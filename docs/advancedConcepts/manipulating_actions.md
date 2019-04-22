@@ -16,7 +16,7 @@ addRule({
 })
 ```
 
-That is a powerful technique, to manipulate any action. This is useful in many situations, such as when another rule should skip this action (next chapter) or you want to add additional information:
+That is a powerful technique, to manipulate any action. This is useful in many situations, such as when another rule should [skip this action](./skip_rules.md) or you want to add additional information:
 
 ```javascript
 import {addRule} from 'redux-ruleset``

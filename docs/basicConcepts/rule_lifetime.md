@@ -1,6 +1,6 @@
 # Set rule lifetime
 
-you don't want each rule to be active all the time. Let's say we want to develop a ping-pong game. We only want our game-logic to be active when the game has started. To manage this, redux-ruleset provides a key to manage, when a rule should be active (`addWhen`) and when it should be removed (`addUntil`). Both are generator functions:
+You don't want each rule to be active all the time. Let's say we want to develop a ping-pong game. We only want our game-logic to be active when the game has started. To manage this, redux-ruleset provides a key to manage when a rule should be active (`addWhen`) and when it should be removed (`addUntil`). Both are generator functions:
 
 
 ```javascript
