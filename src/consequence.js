@@ -8,6 +8,7 @@ let executionId = 1
 let nextExecutionId:number|null = null
 export function getRuleExecutionId(){
   const id = nextExecutionId
+  nextExecutionId = null
   return id
 }
 
