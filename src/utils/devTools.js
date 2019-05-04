@@ -1,10 +1,17 @@
 // @flow
 import type {Rule, Action, LogicAdd, LogicRemove} from '../types'
 
+export type RegisterRuleEvent = {
+  type: 'REGISTER_RULE',
+  timestamp: number,
+  rule: Rule,
+  parentRuleId: string | null
+}
+
 export type AddRuleEvent = {
   type: 'ADD_RULE',
   timestamp: number,
-  rule: Rule,
+  ruleId: string,
   parentRuleId: string | null
 }
 
@@ -100,20 +107,44 @@ export type Event = AddRuleEvent
 | ExecSagaEndEvent 
 | YieldSagaEvent
 | DispatchActionEvent
+| RegisterRuleEvent
 
 const events:Event[] = []
+let listeners = []
 
-if(process.env.NODE_ENV === 'development') window.__getRulesetEvents = () => events
+if(process.env.NODE_ENV === 'development') {
+  window.__addRulesetEventListener = (cb:Function,sendPrevEvents?:boolean) => {
+    if(sendPrevEvents) events.forEach(e => cb(e))
+    listeners.push(cb)
+    return () => { listeners = listeners.filter(fn => fn !== cb) }
+  }
+  window.__getRulesetEvents = () => events
+}
 
 function dispatch<E:*>(event:E):E{
   events.push(event)
+  listeners.forEach(l => l(event))
   return event
 }
 
-export const addRule = (rule:Rule, parentRuleId:string|null):AddRuleEvent => dispatch({
+export const registerRule = (rule:Rule, parentRuleId:string|null):RegisterRuleEvent => dispatch({
+  type: 'REGISTER_RULE',
+  timestamp: Date.now(),
+  rule: (() => {
+    let result = {}
+    for(let key in rule){
+      if(typeof rule[key] !== 'function') result[key] = rule[key]
+      else result[key] = rule[key].toString()
+    }
+    return result
+  })(),
+  parentRuleId
+})
+
+export const addRule = (ruleId:string, parentRuleId:string|null):AddRuleEvent => dispatch({
   type: 'ADD_RULE',
   timestamp: Date.now(),
-  rule,
+  ruleId,
   parentRuleId
 })
 

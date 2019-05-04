@@ -32,6 +32,7 @@ export const getPrivatesForTesting = (key:string) => ({activeRules, ruleContextL
 export function addRule(rule:Rule, options?:AddRuleOptions={}):Rule{
   if(process.env.NODE_ENV === 'development'){
     validate(rule, ruleContextList)
+    devTools.registerRule(rule, options.parentRuleId || null)
   }
   const {parentRuleId, forceAdd} = options
   const context = createContext(rule)
@@ -59,7 +60,7 @@ export function addRule(rule:Rule, options?:AddRuleOptions={}):Rule{
     addUntil(action)
     context.trigger('ADD_RULE')
     if(process.env.NODE_ENV === 'development'){
-      devTools.addRule(rule, options.parentRuleId || null)
+      devTools.addRule(rule.id, options.parentRuleId || null)
     }
   }
   const addWhen = () => rule.addWhen && saga.createSaga(context, rule.addWhen, undefined, ({logic, action, actionExecId}) => {
