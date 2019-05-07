@@ -14,12 +14,6 @@ var _saga = require('./saga');
 
 var saga = _interopRequireWildcard(_saga);
 
-var _consequence = require('./consequence');
-
-var _consequence2 = _interopRequireDefault(_consequence);
-
-var _lazyStore = require('./utils/lazyStore');
-
 var _laterEvents = require('./utils/laterEvents');
 
 var _devTools = require('./utils/devTools');
@@ -45,8 +39,6 @@ var activeRules = {
 };
 
 
-var i = void 0;
-
 var ruleContextList = {};
 
 var contextListeners = [];
@@ -57,41 +49,46 @@ var getPrivatesForTesting = exports.getPrivatesForTesting = function getPrivates
 
 function addRule(rule) {
   var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-
-  if (process.env.NODE_ENV === 'development') {
-    (0, _validate2.default)(rule, ruleContextList);
-  }
   var parentRuleId = options.parentRuleId,
       forceAdd = options.forceAdd;
 
+  var parentContext = parentRuleId && ruleContextList[parentRuleId];
+
+  // if sub-rule has add-until that is invoked when parent add-until is invoked
+  // and return RECREATE_RULE or READD_RULE the rule should not be added
+  if (parentContext && !parentContext.active) {
+    return rule;
+  }
+  if (process.env.NODE_ENV === 'development') {
+    (0, _validate2.default)(rule, ruleContextList);
+    devTools.registerRule(rule, parentRuleId || null);
+  }
+
   var context = createContext(rule);
   var position = rule.position || 'AFTER';
+
   if (contextListeners.length && !getRuleContext(rule)) {
-    for (var _i = 0; _i < contextListeners.length; _i++) {
-      contextListeners[_i](context);
+    for (var i = 0; i < contextListeners.length; i++) {
+      contextListeners[i](context);
     }
   }
 
-  if (parentRuleId) {
-    var parentContext = ruleContextList[parentRuleId];
+  if (parentContext) {
     parentContext.childRules.push(rule);
   }
 
   var add = function add(action) {
     context.active = true;
     ruleContextList[rule.id] = context;
-    !rule.target && (0, _lazyStore.applyLazyStore)(function (store) {
-      (0, _consequence2.default)(context, undefined, store, null);
-    });
-    rule.target && forEachTarget(rule.target, function (target) {
+    forEachTarget(rule.target, function (target) {
       if (!activeRules[position][target]) activeRules[position][target] = [];
       var list = activeRules[position][target];
-      if (list.length > 0) pushByZIndex(list, rule);else list.push(rule);
+      if (list.length > 0) pushByWeight(list, rule);else list.push(rule);
     });
     addUntil(action);
     context.trigger('ADD_RULE');
     if (process.env.NODE_ENV === 'development') {
-      devTools.addRule(rule, options.parentRuleId || null);
+      devTools.addRule(rule.id, options.parentRuleId || null);
     }
   };
   var addWhen = function addWhen() {
@@ -113,7 +110,11 @@ function addRule(rule) {
         case 'ABORT':
           break;
         default:
-          throw new Error('invalid return type for addWhen saga (' + rule.id + ')');
+          {
+            if (process.env.NODE_ENV === 'development') {
+              throw new Error('invalid return type "' + String(logic) + '" for addWhen saga (' + rule.id + ')');
+            }
+          }
       }
     });
   };
@@ -150,7 +151,11 @@ function addRule(rule) {
         case 'ABORT':
           break;
         default:
-          throw new Error('invalid return type for addUntil saga (' + rule.id + ')');
+          {
+            if (process.env.NODE_ENV === 'development') {
+              throw new Error('invalid return type "' + String(logic) + '" for addUntil saga (' + rule.id + ')');
+            }
+          }
       }
     });
   };
@@ -161,12 +166,13 @@ function addRule(rule) {
 
 function removeRule(rule, removedByParent) {
   var context = ruleContextList[rule.id];
+  if (!context.active) return;
   var position = rule.position || 'AFTER';
 
   // remove child rules before parent rule (logical order)
   if (context.childRules.length) {
-    for (var _i2 = 0; _i2 < context.childRules.length; _i2++) {
-      removeRule(context.childRules[_i2], true);
+    for (var i = 0; i < context.childRules.length; i++) {
+      removeRule(context.childRules[i], true);
     }
   }
   context.active = false;
@@ -183,13 +189,13 @@ function forEachRuleContext(position, actionType, cb) {
   var globalRules = activeRules[position].global;
   var boundRules = activeRules[position][actionType];
   if (globalRules) {
-    for (var _i3 = 0; _i3 < globalRules.length; _i3++) {
-      cb(ruleContextList[globalRules[_i3].id]);
+    for (var i = 0; i < globalRules.length; i++) {
+      cb(ruleContextList[globalRules[i].id]);
     }
   }
   if (boundRules) {
-    for (var _i4 = 0; _i4 < boundRules.length; _i4++) {
-      cb(ruleContextList[boundRules[_i4].id]);
+    for (var _i = 0; _i < boundRules.length; _i++) {
+      cb(ruleContextList[boundRules[_i].id]);
     }
   }
 }
@@ -227,8 +233,8 @@ function createContext(rule) {
     },
     trigger: function trigger(e, payload) {
       if (!listeners[e]) return;
-      for (var _i5 = 0; _i5 < listeners[e].length; _i5++) {
-        var cb = listeners[e][_i5];
+      for (var i = 0; i < listeners[e].length; i++) {
+        var cb = listeners[e][i];
         cb(payload);
       }
     }
@@ -239,22 +245,22 @@ function forEachTarget(target, cb) {
   if (typeof target === 'string') {
     if (target === '*') cb('global');else cb(target);
   } else {
-    for (var _i6 = 0; _i6 < target.length; _i6++) {
-      cb(target[_i6]);
+    for (var i = 0; i < target.length; i++) {
+      cb(target[i]);
     }
   }
 }
 
-function pushByZIndex(list, rule) {
-  if (!rule.zIndex) {
+function pushByWeight(list, rule) {
+  if (!rule.weight) {
     list.unshift(rule);
     return;
   }
   var index = list.reduce(function (p, n, i) {
-    if (typeof n.zIndex !== 'number' || typeof rule.zIndex !== 'number') {
+    if (typeof n.weight !== 'number' || typeof rule.weight !== 'number') {
       return p;
     }
-    if (rule.zIndex > n.zIndex) return i + 1;else return p;
+    if (rule.weight > n.weight) return i + 1;else return p;
   }, 0);
   list.splice(index, 0, rule);
 }

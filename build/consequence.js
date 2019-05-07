@@ -32,15 +32,13 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var executionId = 1;
-var i = void 0;
 
 var nextExecutionId = null;
 function getRuleExecutionId() {
   var id = nextExecutionId;
+  nextExecutionId = null;
   return id;
 }
-
-var orderedListeners = {};
 
 function consequence(context, action, store, actionExecId) {
   var execId = executionId++;
@@ -127,10 +125,9 @@ function consequence(context, action, store, actionExecId) {
       return result;
     });return action;
   };
-  var addRule = function addRule(rule, parentRuleId) {
+  var addRule = function addRule(rule) {
     effect(function () {
-      context.childRules.push(rule);
-      return parentRuleId ? ruleDB.addRule(rule) : ruleDB.addRule(rule, { parentRuleId: context.rule.id });
+      ruleDB.addRule(rule, { parentRuleId: context.rule.id });
     });return rule;
   };
   var removeRule = function removeRule(rule) {
@@ -180,6 +177,7 @@ function consequence(context, action, store, actionExecId) {
   // position:INSTEAD can extend the action if type is equal
   if (action && (typeof result === 'undefined' ? 'undefined' : (0, _typeof3.default)(result)) === 'object' && result.type && rule.position === 'INSTEAD' && result.type === action.type) {
     var _action = result;
+    unlisten(context, execId, cancel, concurrency);
     return { resolved: true, action: _action };
   }
 

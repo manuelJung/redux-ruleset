@@ -3,22 +3,57 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+
+
 var events = [];
 
-if (process.env.NODE_ENV === 'development') window.__getRulesetEvents = function () {
-  return events;
-};
+var listeners = [];
+
+if (process.env.NODE_ENV === 'development') {
+  window.__addRulesetEventListener = function (cb, sendPrevEvents) {
+    if (sendPrevEvents) events.forEach(function (e) {
+      return cb(e);
+    });
+    listeners.push(cb);
+    return function () {
+      listeners = listeners.filter(function (fn) {
+        return fn !== cb;
+      });
+    };
+  };
+  window.__getRulesetEvents = function () {
+    return events;
+  };
+}
 
 function dispatch(event) {
   events.push(event);
+  listeners.forEach(function (l) {
+    return l(event);
+  });
   return event;
 }
 
-var addRule = exports.addRule = function addRule(rule, parentRuleId) {
+var registerRule = exports.registerRule = function registerRule(rule, parentRuleId) {
+  return dispatch({
+    type: 'REGISTER_RULE',
+    timestamp: Date.now(),
+    rule: function () {
+      var result = {};
+      for (var key in rule) {
+        if (typeof rule[key] !== 'function') result[key] = rule[key];else result[key] = rule[key].toString();
+      }
+      return result;
+    }(),
+    parentRuleId: parentRuleId
+  });
+};
+
+var addRule = exports.addRule = function addRule(ruleId, parentRuleId) {
   return dispatch({
     type: 'ADD_RULE',
     timestamp: Date.now(),
-    rule: rule,
+    ruleId: ruleId,
     parentRuleId: parentRuleId
   });
 };

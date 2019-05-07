@@ -30,21 +30,29 @@ const contextListeners = []
 export const getPrivatesForTesting = (key:string) => ({activeRules, ruleContextList, contextListeners})[key]
 
 export function addRule(rule:Rule, options?:AddRuleOptions={}):Rule{
+  const {parentRuleId, forceAdd} = options
+  const parentContext = parentRuleId && ruleContextList[parentRuleId]
+
+  // if sub-rule has add-until that is invoked when parent add-until is invoked
+  // and return RECREATE_RULE or READD_RULE the rule should not be added
+  if(parentContext && !parentContext.active){
+    return rule
+  }
   if(process.env.NODE_ENV === 'development'){
     validate(rule, ruleContextList)
-    devTools.registerRule(rule, options.parentRuleId || null)
+    devTools.registerRule(rule, parentRuleId || null)
   }
-  const {parentRuleId, forceAdd} = options
+
   const context = createContext(rule)
   const position = rule.position || 'AFTER'
+
   if(contextListeners.length && !getRuleContext(rule)) {
     for(let i=0;i<contextListeners.length;i++){
       contextListeners[i](context)
     }
   }
 
-  if(parentRuleId){
-    const parentContext = ruleContextList[parentRuleId]
+  if(parentContext){
     parentContext.childRules.push(rule)
   }
 
@@ -70,7 +78,11 @@ export function addRule(rule:Rule, options?:AddRuleOptions={}):Rule{
       case 'REAPPLY_ADD_WHEN': addCallback(actionExecId, addWhen); break
       case 'CANCELED':
       case 'ABORT': break
-      default: throw new Error(`invalid return type for addWhen saga (${rule.id})`)
+      default: {
+        if(process.env.NODE_ENV === 'development'){
+          throw new Error(`invalid return type "${String(logic)}" for addWhen saga (${rule.id})`)
+        }
+      }
     }
   })
   const addUntil = (action?:Action) => rule.addUntil && saga.createSaga(context, rule.addUntil, action, ({logic, action, actionExecId}) => {
@@ -84,7 +96,11 @@ export function addRule(rule:Rule, options?:AddRuleOptions={}):Rule{
       case 'READD_RULE_BEFORE': removeRule(rule); addRule(rule, {parentRuleId, forceAdd:true}); break
       case 'CANCELED':
       case 'ABORT': break
-      default: throw new Error(`invalid return type for addUntil saga (${rule.id})`)
+      default: {
+        if(process.env.NODE_ENV === 'development'){
+          throw new Error(`invalid return type "${String(logic)}" for addUntil saga (${rule.id})`)
+        }
+      }
     }
   })
 
@@ -95,6 +111,7 @@ export function addRule(rule:Rule, options?:AddRuleOptions={}):Rule{
 
 export function removeRule(rule:Rule, removedByParent?: boolean){
   const context = ruleContextList[rule.id]
+  if(!context.active) return
   const position = rule.position || 'AFTER'
 
   // remove child rules before parent rule (logical order)

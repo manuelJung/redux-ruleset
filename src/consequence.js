@@ -94,9 +94,8 @@ export default function consequence (context:RuleContext, action?:Action, store:
     nextExecutionId = null
     return result
   }); return action}
-  const addRule = (rule, parentRuleId) => {effect(() => {
-    context.childRules.push(rule)
-    return parentRuleId ? ruleDB.addRule(rule) : ruleDB.addRule(rule, {parentRuleId:context.rule.id}) 
+  const addRule = rule => {effect(() => {
+    ruleDB.addRule(rule, {parentRuleId:context.rule.id})
   }); return rule}
   const removeRule = rule => {effect(() => ruleDB.removeRule(rule))}
 
