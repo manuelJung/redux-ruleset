@@ -1,6 +1,6 @@
 # Weight
 
-Rules are like little microservices that run in your app. They cannot interact with each other. But one exeption is the `weight` key. The `weight` defines the execution order in which the rules are processed that listen to the same action:
+Rules are like little microservices that run in your app. They cannot interact with each other. But one exeption is the `weight` key. The `weight` defines the execution order in which the rules are processed that listen to the same action type and the same [position](./position.md):
 
 ```javascript
 import {addRule} from 'redux-ruleset'
