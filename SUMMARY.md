@@ -30,7 +30,8 @@
     * [addWhen return](/docs/apiReference/saga_addWhen_return.md)
     * [addUntil return](/docs/apiReference/saga_addUntil_return.md)
   * [target](/docs/apiReference/target.md)
-  * condition
+  * [condition](/docs/apiReference/condition.md)
+  * concurrency
   * concurrencyFilter
   * debounce
   * throttle
