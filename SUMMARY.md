@@ -29,13 +29,13 @@
   * [addWhen/addUntil saga](/docs/apiReference/saga.md)
     * [addWhen return](/docs/apiReference/saga_addWhen_return.md)
     * [addUntil return](/docs/apiReference/saga_addUntil_return.md)
-  * target
+  * [target](/docs/apiReference/target.md)
   * condition
   * concurrencyFilter
   * debounce
   * throttle
-  * weight
-  * position
+  * [weight](/docs/apiReference/weight.md)
+  * [position](/docs/apiReference/position.md)
   * id
   * addOnce
   * delay
