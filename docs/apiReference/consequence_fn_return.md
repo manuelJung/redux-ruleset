@@ -1,6 +1,6 @@
 # consequence function return type
 
-`Consequences` can also return a function. When this happens the `consequence` will be active forever and cann only be canceled when the rule is removed or a concurrency event happens. The returned function will be called after the `consequence` was canceled.
+`Consequences` can also return a function. When this happens the `consequence` will be active forever and can only be canceled when the rule is removed (e.g by [addUntil](./saga_addUntil_return.md)) or a concurrency event happens. The returned function will be called after the `consequence` was canceled.
 
 This is very usefull when it comes to sockets. Let's say we have socket api (like firebase) that listens to the auth-state of the user:
 

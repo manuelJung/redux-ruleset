@@ -6,27 +6,27 @@ Rules are like little microservices that run in your app. They cannot interact w
 import {addRule} from 'redux-ruleset'
 
 addRule({
-  id: 'feature/LOGG_ONE',
-  target: 'LOGG',
+  id: 'feature/LOG_ONE',
+  target: 'LOG',
   weight: 2,
   consequence: () => console.log('ONE')
 })
 
 addRule({
-  id: 'feature/LOGG_TWO',
-  target: 'LOGG',
+  id: 'feature/LOG_TWO',
+  target: 'LOG',
   weight: 1,
   consequence: () => console.log('TWO')
 })
 
 addRule({
-  id: 'feature/LOGG_THREE',
-  target: 'LOGG',
+  id: 'feature/LOG_THREE',
+  target: 'LOG',
   weight: 3,
   consequence: () => console.log('THREE')
 })
 
-dispatch({type: 'LOGG'})
+dispatch({type: 'LOG'})
 // > TWO
 // > ONE
 // > THREE
