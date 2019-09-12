@@ -113,12 +113,14 @@ const events:Event[] = []
 let listeners = []
 
 if(process.env.NODE_ENV === 'development') {
-  window.__addRulesetEventListener = (cb:Function,sendPrevEvents?:boolean) => {
-    if(sendPrevEvents) events.forEach(e => cb(e))
-    listeners.push(cb)
-    return () => { listeners = listeners.filter(fn => fn !== cb) }
+  if(typeof window !== 'undefined'){
+    window.__addRulesetEventListener = (cb:Function,sendPrevEvents?:boolean) => {
+      if(sendPrevEvents) events.forEach(e => cb(e))
+      listeners.push(cb)
+      return () => { listeners = listeners.filter(fn => fn !== cb) }
+    }
+    window.__getRulesetEvents = () => events
   }
-  window.__getRulesetEvents = () => events
 }
 
 function dispatch<E:*>(event:E):E{

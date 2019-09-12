@@ -10,20 +10,22 @@ var events = [];
 var listeners = [];
 
 if (process.env.NODE_ENV === 'development') {
-  window.__addRulesetEventListener = function (cb, sendPrevEvents) {
-    if (sendPrevEvents) events.forEach(function (e) {
-      return cb(e);
-    });
-    listeners.push(cb);
-    return function () {
-      listeners = listeners.filter(function (fn) {
-        return fn !== cb;
+  if (typeof window !== 'undefined') {
+    window.__addRulesetEventListener = function (cb, sendPrevEvents) {
+      if (sendPrevEvents) events.forEach(function (e) {
+        return cb(e);
       });
+      listeners.push(cb);
+      return function () {
+        listeners = listeners.filter(function (fn) {
+          return fn !== cb;
+        });
+      };
     };
-  };
-  window.__getRulesetEvents = function () {
-    return events;
-  };
+    window.__getRulesetEvents = function () {
+      return events;
+    };
+  }
 }
 
 function dispatch(event) {
