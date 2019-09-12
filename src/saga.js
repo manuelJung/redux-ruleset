@@ -78,17 +78,19 @@ export function createSaga<Logic>(
       }
     }
     const nextAction = (target, cb) => {
-      const _addListener = () => addListener(target, (action, actionExecId) => {
-        const result = cb ? cb(action) : action // false or mixed
-        lastAction = action
-        if(process.env.NODE_ENV === 'development'){
-          const sagaType = saga === context.rule.addWhen ? 'ADD_WHEN' : 'ADD_UNTIL'
-          const ruleExecId = getRuleExecutionId()
-          devTools.yieldSaga(execId, context.rule.id, sagaType, action, ruleExecId, actionExecId, result ? 'RESOLVE' : 'REJECT')
-        }
-        if(result) next(iter, result, actionExecId)
-        else _addListener()
-      })
+      const _addListener = (newTarget?:string) => {
+        addListener(newTarget || target, (action, actionExecId) => {
+          const result = cb ? cb(action) : action // false or mixed
+          lastAction = action
+          if(process.env.NODE_ENV === 'development'){
+            const sagaType = saga === context.rule.addWhen ? 'ADD_WHEN' : 'ADD_UNTIL'
+            const ruleExecId = getRuleExecutionId()
+            devTools.yieldSaga(execId, context.rule.id, sagaType, action, ruleExecId, actionExecId, result ? 'RESOLVE' : 'REJECT')
+          }
+          if(result) next(iter, result, actionExecId)
+          else _addListener(action.type) // only re-add listener to single action
+        })
+      }
       _addListener()
     }
     const iter = gen(nextAction, boundStore.getState, action)

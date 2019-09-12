@@ -86,8 +86,8 @@ function createSaga(context, saga, action, cb, store) {
       }
     };
     var nextAction = function nextAction(target, cb) {
-      var _addListener = function _addListener() {
-        return addListener(target, function (action, actionExecId) {
+      var _addListener = function _addListener(newTarget) {
+        addListener(newTarget || target, function (action, actionExecId) {
           var result = cb ? cb(action) : action; // false or mixed
           lastAction = action;
           if (process.env.NODE_ENV === 'development') {
@@ -95,7 +95,7 @@ function createSaga(context, saga, action, cb, store) {
             var ruleExecId = (0, _consequence.getRuleExecutionId)();
             devTools.yieldSaga(execId, context.rule.id, _sagaType2, action, ruleExecId, actionExecId, result ? 'RESOLVE' : 'REJECT');
           }
-          if (result) next(iter, result, actionExecId);else _addListener();
+          if (result) next(iter, result, actionExecId);else _addListener(action.type); // only re-add listener to single action
         });
       };
       _addListener();
