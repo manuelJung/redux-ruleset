@@ -31,7 +31,7 @@
     * [addUntil return](/docs/apiReference/saga_addUntil_return.md)
   * [target](/docs/apiReference/target.md)
   * [condition](/docs/apiReference/condition.md)
-  * concurrency
+  * [concurrency](/docs/apiReference/concurrency.md)
   * concurrencyFilter
   * debounce
   * throttle
