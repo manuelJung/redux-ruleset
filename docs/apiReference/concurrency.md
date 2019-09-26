@@ -10,13 +10,12 @@ Fortunately redux-ruleset has a special key for you that can handle (nearly) all
 
 ```javascript
 addRule({
-  id: 'FETCH_PRODUCT',
-  target: 'products/FETCH_REQUEST',
+  id: 'FETCH_CART',
+  target: 'cart/FETCH_REQUEST',
   concurrency: 'FIRST', // as long as the the concurrency is running, no new concurrency will start
-  concurrencyFilter: action => action.meta.id, // the concurrency is only applied to actions with the same meta.id
-  consequence: ({action}) => api.fetchProduct(action.meta.id).then(
-    product => actions.fetchProductSuccess(action.meta.id, product),
-    error => actions.fetchProductFailure(action.meta.id, error)
+  consequence: () => api.fetchCart().then(
+    cart => actions.fetchCartSuccess(cart),
+    error => actions.fetchCartFailure(error)
   )
 })
 ```
@@ -51,7 +50,7 @@ dispatch({type: 'products/FETCH_REQUEST'}) // consequence gets invoked
 dispatch({type: 'products/FETCH_REQUEST'}) // consequence gets not invoked
 dispatch({type: 'products/FETCH_REQUEST'}) // consequence gets not invoked
 
-await next('products/FETCH_REQUEST')
+await next('products/FETCH_SUCCESS')
 
 dispatch({type: 'products/FETCH_REQUEST'}) // consequence gets invoked
 ```
@@ -75,7 +74,7 @@ dispatch({type: 'products/FETCH_REQUEST'}) // consequence gets invoked
 dispatch({type: 'products/FETCH_REQUEST'}) // consequence gets invoked and prev consequence gets cannceled
 dispatch({type: 'products/FETCH_REQUEST'}) // consequence gets invoked and prev consequence gets cannceled
 
-await next('products/FETCH_REQUEST')
+await next('products/FETCH_SUCCESS')
 
 dispatch({type: 'products/FETCH_REQUEST'}) // consequence gets invoked
 ```
@@ -99,7 +98,7 @@ dispatch({type: 'products/FETCH_REQUEST'}) // consequence gets invoked
 dispatch({type: 'products/FETCH_REQUEST'}) // consequence gets not invoked
 dispatch({type: 'products/FETCH_REQUEST'}) // consequence gets not invoked
 
-await next('products/FETCH_REQUEST')
+await next('products/FETCH_SUCCESS')
 
 dispatch({type: 'products/FETCH_REQUEST'}) // consequence gets not invoked
 ```

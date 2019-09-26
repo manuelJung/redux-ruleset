@@ -32,7 +32,7 @@
   * [target](/docs/apiReference/target.md)
   * [condition](/docs/apiReference/condition.md)
   * [concurrency](/docs/apiReference/concurrency.md)
-  * concurrencyFilter
+  * [concurrencyFilter](/docs/apiReference/concurrencyFilter.md)
   * debounce
   * throttle
   * [weight](/docs/apiReference/weight.md)
