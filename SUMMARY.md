@@ -33,7 +33,7 @@
   * [condition](/docs/apiReference/condition.md)
   * [concurrency](/docs/apiReference/concurrency.md)
   * [concurrencyFilter](/docs/apiReference/concurrencyFilter.md)
-  * debounce
+  * [debounce](/docs/apiReference/debounce.md)
   * throttle
   * [weight](/docs/apiReference/weight.md)
   * [position](/docs/apiReference/position.md)

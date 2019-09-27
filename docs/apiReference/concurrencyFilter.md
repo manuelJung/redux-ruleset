@@ -20,6 +20,6 @@ dispatch({type: 'products/FETCH_REQUEST', meta: {id:'1'}}) // consequence gets n
 dispatch({type: 'products/FETCH_REQUEST', meta: {id:'2'}}) // consequence gets executed
 ```
 
-The *concurrencyFilter* is always a function that recives the current action the rules gets executed on (target). It has to return a string. Based on this string seperate branches of the rule will be created. That means that only executions within the same branch can cancel each other and cannot affect execution of another branch.
+The *concurrencyFilter* is always a function that recives the current action the rules gets executed on (target). It has to return a string. Based on this string seperate branches of the rule will be created. That means that only executions within the same branch can cancel each other and cannot affect execution of another branch. That also means that [debounce](./debounce.md) and [throttle](./throttle.md) can only affect a single branch
 
 As the name says, the concurrency will only be applied to executions that have the same concurrencyFilter
