@@ -16,13 +16,13 @@ or
 $ yarn add redux-ruleset
 ```
 
-and in you create your redux store, add the middleware:
+and when you create your redux store, add the middleware:
 
 ```javascript
 import {applyMiddleware, compose, createStore} from 'redux'
 import {middleware as ruleMiddleware} from 'redux-ruleset'
 
-const middlewares = [reuleMiddleware]
+const middlewares = [ruleMiddleware]
 const enhancers = []
 
 const store = createStore(
@@ -34,6 +34,13 @@ const store = createStore(
   )
 )
 ```
+
+## Documentation
+
+- Introduction (TODO)
+- Basic Concepts (TODO)
+- Advanced Concepts (TODO)
+- API Refference (TODO)
 
 ### Usage Example
 
@@ -60,7 +67,7 @@ import {addRule} from 'redux-ruleset'
 addRule({
   id: 'FETCH_USER', // name of your rule (unique)
   target: 'FETCH_USER_REQUEST', // the action type the rule listens to
-  concurrency: 'FIRST', // as long as api.fetchUser did not resolve the rule won't be executed again
+  concurrency: 'FIRST', // as long as api.fetchUser did not resolve, the rule won't be executed again
   consequence: () => api.fetchUser().then(
     user => ({ type: 'FETCH_USER_SUCCESS', payload: user }), // dispatch success
     error => ({ type: 'FETCHUSER_FAILURE', payload: error }) // dispatch error
@@ -84,11 +91,10 @@ addRule({
   },
   consequence: () => ({ type: 'PONG' }) // dispatch a PONG for every PING
 })
+
+dispatch({type: 'PING'}) // nothing happens
+dispatch({type: 'START_GAME'})
+dispatch({type: 'PING'}) // => dispatch({type: 'PONG'})
+dispatch({type: 'STOP_GAME'})
+dispatch({type: 'PING'}) // nothing happens
 ```
-
-## Documentation
-
-- Introduction (TODO)
-- Basic Concepts (TODO)
-- Advanced Concepts (TODO)
-- API Refference (TODO)
