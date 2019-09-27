@@ -39,5 +39,5 @@
   * [position](/docs/apiReference/position.md)
   * [id](/docs/apiReference/id.md)
   * [addOnce](/docs/apiReference/add_once.md)
-  * delay
+  * [delay](/docs/apiReference/delay.md)
   
