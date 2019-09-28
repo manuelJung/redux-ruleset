@@ -1,0 +1,755 @@
+
+<!DOCTYPE HTML>
+<html lang="" >
+    <head>
+        <meta charset="UTF-8">
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <title>addUntil return · GitBook</title>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="description" content="">
+        <meta name="generator" content="GitBook 3.2.3">
+        
+        
+        
+    
+    <link rel="stylesheet" href="../../gitbook/style.css">
+
+    
+            
+                
+                <link rel="stylesheet" href="../../gitbook/gitbook-plugin-highlight/website.css">
+                
+            
+                
+                <link rel="stylesheet" href="../../gitbook/gitbook-plugin-search/search.css">
+                
+            
+                
+                <link rel="stylesheet" href="../../gitbook/gitbook-plugin-fontsettings/website.css">
+                
+            
+        
+
+    
+
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+
+        
+    
+    
+    <meta name="HandheldFriendly" content="true"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <link rel="apple-touch-icon-precomposed" sizes="152x152" href="../../gitbook/images/apple-touch-icon-precomposed-152.png">
+    <link rel="shortcut icon" href="../../gitbook/images/favicon.ico" type="image/x-icon">
+
+    
+    <link rel="next" href="target.html" />
+    
+    
+    <link rel="prev" href="saga_addWhen_return.html" />
+    
+
+    </head>
+    <body>
+        
+<div class="book">
+    <div class="book-summary">
+        
+            
+            
+                <nav role="navigation">
+                
+
+
+<ul class="summary">
+    
+    
+
+    
+
+    
+        
+        
+    
+        <li class="chapter " data-level="1.1" data-path="../../">
+            
+                <a href="../../">
+            
+                    
+                    Readme
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2" data-path="../introduction/">
+            
+                <a href="../introduction/">
+            
+                    
+                    Introduction
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3" data-path="../basicConcepts/">
+            
+                <a href="../basicConcepts/">
+            
+                    
+                    Basic Concepts
+            
+                </a>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.3.1" data-path="../basicConcepts/rule_definition.html">
+            
+                <a href="../basicConcepts/rule_definition.html">
+            
+                    
+                    What is a rule
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3.2" data-path="../basicConcepts/react_to_events.html">
+            
+                <a href="../basicConcepts/react_to_events.html">
+            
+                    
+                    React to actions
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3.3" data-path="../basicConcepts/dispatching_actions.html">
+            
+                <a href="../basicConcepts/dispatching_actions.html">
+            
+                    
+                    Dispatching actions
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3.4" data-path="../basicConcepts/handle_concurrency.html">
+            
+                <a href="../basicConcepts/handle_concurrency.html">
+            
+                    
+                    Handle concurrency
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3.5" data-path="../basicConcepts/rule_lifetime.html">
+            
+                <a href="../basicConcepts/rule_lifetime.html">
+            
+                    
+                    Set rule lifetime
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4" data-path="../advancedConcepts/">
+            
+                <a href="../advancedConcepts/">
+            
+                    
+                    Advanced Concepts
+            
+                </a>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.4.1" data-path="../advancedConcepts/manipulating_actions.html">
+            
+                <a href="../advancedConcepts/manipulating_actions.html">
+            
+                    
+                    Manipulating actions
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.2" data-path="../advancedConcepts/nest_rules.html">
+            
+                <a href="../advancedConcepts/nest_rules.html">
+            
+                    
+                    Nesting rules
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.3" data-path="../advancedConcepts/skip_rules.html">
+            
+                <a href="../advancedConcepts/skip_rules.html">
+            
+                    
+                    skip rules
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.4" data-path="../advancedConcepts/handle_streams.html">
+            
+                <a href="../advancedConcepts/handle_streams.html">
+            
+                    
+                    Handling streams
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.5" data-path="../advancedConcepts/cancel_rules.html">
+            
+                <a href="../advancedConcepts/cancel_rules.html">
+            
+                    
+                    Cancel rules
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.6" data-path="../advancedConcepts/handle_state_change.html">
+            
+                <a href="../advancedConcepts/handle_state_change.html">
+            
+                    
+                    React to component state changes
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.7" data-path="../advancedConcepts/how_it_works.html">
+            
+                <a href="../advancedConcepts/how_it_works.html">
+            
+                    
+                    How it works
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.8" data-path="../advancedConcepts/devtools.html">
+            
+                <a href="../advancedConcepts/devtools.html">
+            
+                    
+                    Devtools
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.9" data-path="../advancedConcepts/putting_all_together.html">
+            
+                <a href="../advancedConcepts/putting_all_together.html">
+            
+                    
+                    Putting all together
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.10" data-path="../recipies/hold_back_action.html">
+            
+                <a href="../recipies/hold_back_action.html">
+            
+                    
+                    Hold back action
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.11" data-path="../recipies/hydrate_state.html">
+            
+                <a href="../recipies/hydrate_state.html">
+            
+                    
+                    Hydrate state
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.5" data-path="../exports/">
+            
+                <a href="../exports/">
+            
+                    
+                    exports
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.6" data-path="./">
+            
+                <a href="./">
+            
+                    
+                    API reference
+            
+                </a>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.6.1" data-path="consequence.html">
+            
+                <a href="consequence.html">
+            
+                    
+                    consequence
+            
+                </a>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.6.1.1" data-path="consequence_action_return.html">
+            
+                <a href="consequence_action_return.html">
+            
+                    
+                    Action return
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.6.1.2" data-path="consequence_promise_return.html">
+            
+                <a href="consequence_promise_return.html">
+            
+                    
+                    Promise return
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.6.1.3" data-path="consequence_fn_return.html">
+            
+                <a href="consequence_fn_return.html">
+            
+                    
+                    Function return
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.6.2" data-path="saga.html">
+            
+                <a href="saga.html">
+            
+                    
+                    addWhen/addUntil saga
+            
+                </a>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.6.2.1" data-path="saga_addWhen_return.html">
+            
+                <a href="saga_addWhen_return.html">
+            
+                    
+                    addWhen return
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter active" data-level="1.6.2.2" data-path="saga_addUntil_return.html">
+            
+                <a href="saga_addUntil_return.html">
+            
+                    
+                    addUntil return
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.6.3" data-path="target.html">
+            
+                <a href="target.html">
+            
+                    
+                    target
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.6.4" data-path="condition.html">
+            
+                <a href="condition.html">
+            
+                    
+                    condition
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.6.5" data-path="concurrency.html">
+            
+                <a href="concurrency.html">
+            
+                    
+                    concurrency
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.6.6" data-path="concurrencyFilter.html">
+            
+                <a href="concurrencyFilter.html">
+            
+                    
+                    concurrencyFilter
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.6.7" data-path="debounce.html">
+            
+                <a href="debounce.html">
+            
+                    
+                    debounce
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.6.8" data-path="throttle.html">
+            
+                <a href="throttle.html">
+            
+                    
+                    throttle
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.6.9" data-path="weight.html">
+            
+                <a href="weight.html">
+            
+                    
+                    weight
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.6.10" data-path="position.html">
+            
+                <a href="position.html">
+            
+                    
+                    position
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.6.11" data-path="id.html">
+            
+                <a href="id.html">
+            
+                    
+                    id
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.6.12" data-path="add_once.html">
+            
+                <a href="add_once.html">
+            
+                    
+                    addOnce
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.6.13" data-path="delay.html">
+            
+                <a href="delay.html">
+            
+                    
+                    delay
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+
+    
+
+    <li class="divider"></li>
+
+    <li>
+        <a href="https://www.gitbook.com" target="blank" class="gitbook-link">
+            Published with GitBook
+        </a>
+    </li>
+</ul>
+
+
+                </nav>
+            
+        
+    </div>
+
+    <div class="book-body">
+        
+            <div class="body-inner">
+                
+                    
+
+<div class="book-header" role="navigation">
+    
+
+    <!-- Title -->
+    <h1>
+        <i class="fa fa-circle-o-notch fa-spin"></i>
+        <a href="../.." >addUntil return</a>
+    </h1>
+</div>
+
+
+
+
+                    <div class="page-wrapper" tabindex="-1" role="main">
+                        <div class="page-inner">
+                            
+                                <section class="normal markdown-section">
+                                
+                                <h1 id="saga-adduntil-return-types">Saga addUntil return types</h1>
+<p>When the rule is set to active (either by absence of <em>addWhen</em> saga or when it was added by <em>addWhen</em> saga) and a <em>addUntil</em> saga was defined, the saga begins. It can resolve one of the following strings:</p>
+<ul>
+<li><strong>RECREATE_RULE</strong>: All running executions will be canceled. When a <em>addWhen</em> saga exists the rule will be set to inactive and the <em>addWhen</em> saga starts</li>
+<li><strong>RECREATE_RULE_BEFORE</strong>: All running executions will be canceled. When a <em>addWhen</em> saga exists the rule will be set to inactive and the <em>addWhen</em> saga starts before the last yielded action happens (Sounds crazy, but you can <a href="../advancedConcepts/how_it_works">read how this works</a>).</li>
+<li><strong>REMOVE_RULE</strong>: The rule is set to inactive and will never be set to active again</li>
+<li><strong>REMOVE_RULE_BEFORE</strong> The rule is set to inactive and will never be set to active again before the last yielded action happens. If the rule has a target that is the same as the last yielded action it won&apos;t react to it</li>
+<li><strong>REAPPLY_ADD_UNTIL</strong>: The addUntil saga starts again</li>
+<li><strong>ABORT</strong>: The rule will stay active forever</li>
+<li><strong>READD_RULE</strong>: All running executions will be canceled. When a <em>addWhen</em> saga exists it won&apos;t be called (rule stays active)</li>
+<li><strong>READD_RULE_BEFORE</strong>: All running executions will be canceled before the last yielded action happens</li>
+</ul>
+
+                                
+                                </section>
+                            
+                        </div>
+                    </div>
+                
+            </div>
+
+            
+                
+                <a href="saga_addWhen_return.html" class="navigation navigation-prev " aria-label="Previous page: addWhen return">
+                    <i class="fa fa-angle-left"></i>
+                </a>
+                
+                
+                <a href="target.html" class="navigation navigation-next " aria-label="Next page: target">
+                    <i class="fa fa-angle-right"></i>
+                </a>
+                
+            
+        
+    </div>
+
+    <script>
+        var gitbook = gitbook || [];
+        gitbook.push(function() {
+            gitbook.page.hasChanged({"page":{"title":"addUntil return","level":"1.6.2.2","depth":3,"next":{"title":"target","level":"1.6.3","depth":2,"path":"docs/apiReference/target.md","ref":"docs/apiReference/target.md","articles":[]},"previous":{"title":"addWhen return","level":"1.6.2.1","depth":3,"path":"docs/apiReference/saga_addWhen_return.md","ref":"docs/apiReference/saga_addWhen_return.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":[],"pluginsConfig":{"highlight":{},"search":{"maxIndexSize":1000000},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"docs/apiReference/saga_addUntil_return.md","mtime":"2019-07-18T21:22:56.928Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2019-09-28T19:22:53.699Z"},"basePath":"../..","book":{"language":""}});
+        });
+    </script>
+</div>
+
+        
+    <script src="../../gitbook/gitbook.js"></script>
+    <script src="../../gitbook/theme.js"></script>
+    
+        
+        <script src="../../gitbook/gitbook-plugin-search/lunr.min.js"></script>
+        
+    
+        
+        <script src="../../gitbook/gitbook-plugin-search/search.js"></script>
+        
+    
+        
+        <script src="../../gitbook/gitbook-plugin-lunr/lunr.min.js"></script>
+        
+    
+        
+        <script src="../../gitbook/gitbook-plugin-lunr/search-lunr.js"></script>
+        
+    
+        
+        <script src="../../gitbook/gitbook-plugin-sharing/buttons.js"></script>
+        
+    
+        
+        <script src="../../gitbook/gitbook-plugin-fontsettings/buttons.js"></script>
+        
+    
+
+    </body>
+</html>
+

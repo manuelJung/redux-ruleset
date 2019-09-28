@@ -1,0 +1,867 @@
+
+<!DOCTYPE HTML>
+<html lang="" >
+    <head>
+        <meta charset="UTF-8">
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <title>Dispatching actions · GitBook</title>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="description" content="">
+        <meta name="generator" content="GitBook 3.2.3">
+        
+        
+        
+    
+    <link rel="stylesheet" href="../../gitbook/style.css">
+
+    
+            
+                
+                <link rel="stylesheet" href="../../gitbook/gitbook-plugin-highlight/website.css">
+                
+            
+                
+                <link rel="stylesheet" href="../../gitbook/gitbook-plugin-search/search.css">
+                
+            
+                
+                <link rel="stylesheet" href="../../gitbook/gitbook-plugin-fontsettings/website.css">
+                
+            
+        
+
+    
+
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+
+        
+    
+    
+    <meta name="HandheldFriendly" content="true"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <link rel="apple-touch-icon-precomposed" sizes="152x152" href="../../gitbook/images/apple-touch-icon-precomposed-152.png">
+    <link rel="shortcut icon" href="../../gitbook/images/favicon.ico" type="image/x-icon">
+
+    
+    <link rel="next" href="handle_concurrency.html" />
+    
+    
+    <link rel="prev" href="react_to_events.html" />
+    
+
+    </head>
+    <body>
+        
+<div class="book">
+    <div class="book-summary">
+        
+            
+            
+                <nav role="navigation">
+                
+
+
+<ul class="summary">
+    
+    
+
+    
+
+    
+        
+        
+    
+        <li class="chapter " data-level="1.1" data-path="../../">
+            
+                <a href="../../">
+            
+                    
+                    Readme
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2" data-path="../introduction/">
+            
+                <a href="../introduction/">
+            
+                    
+                    Introduction
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3" data-path="./">
+            
+                <a href="./">
+            
+                    
+                    Basic Concepts
+            
+                </a>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.3.1" data-path="rule_definition.html">
+            
+                <a href="rule_definition.html">
+            
+                    
+                    What is a rule
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3.2" data-path="react_to_events.html">
+            
+                <a href="react_to_events.html">
+            
+                    
+                    React to actions
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter active" data-level="1.3.3" data-path="dispatching_actions.html">
+            
+                <a href="dispatching_actions.html">
+            
+                    
+                    Dispatching actions
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3.4" data-path="handle_concurrency.html">
+            
+                <a href="handle_concurrency.html">
+            
+                    
+                    Handle concurrency
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3.5" data-path="rule_lifetime.html">
+            
+                <a href="rule_lifetime.html">
+            
+                    
+                    Set rule lifetime
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4" data-path="../advancedConcepts/">
+            
+                <a href="../advancedConcepts/">
+            
+                    
+                    Advanced Concepts
+            
+                </a>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.4.1" data-path="../advancedConcepts/manipulating_actions.html">
+            
+                <a href="../advancedConcepts/manipulating_actions.html">
+            
+                    
+                    Manipulating actions
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.2" data-path="../advancedConcepts/nest_rules.html">
+            
+                <a href="../advancedConcepts/nest_rules.html">
+            
+                    
+                    Nesting rules
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.3" data-path="../advancedConcepts/skip_rules.html">
+            
+                <a href="../advancedConcepts/skip_rules.html">
+            
+                    
+                    skip rules
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.4" data-path="../advancedConcepts/handle_streams.html">
+            
+                <a href="../advancedConcepts/handle_streams.html">
+            
+                    
+                    Handling streams
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.5" data-path="../advancedConcepts/cancel_rules.html">
+            
+                <a href="../advancedConcepts/cancel_rules.html">
+            
+                    
+                    Cancel rules
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.6" data-path="../advancedConcepts/handle_state_change.html">
+            
+                <a href="../advancedConcepts/handle_state_change.html">
+            
+                    
+                    React to component state changes
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.7" data-path="../advancedConcepts/how_it_works.html">
+            
+                <a href="../advancedConcepts/how_it_works.html">
+            
+                    
+                    How it works
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.8" data-path="../advancedConcepts/devtools.html">
+            
+                <a href="../advancedConcepts/devtools.html">
+            
+                    
+                    Devtools
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.9" data-path="../advancedConcepts/putting_all_together.html">
+            
+                <a href="../advancedConcepts/putting_all_together.html">
+            
+                    
+                    Putting all together
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.10" data-path="../recipies/hold_back_action.html">
+            
+                <a href="../recipies/hold_back_action.html">
+            
+                    
+                    Hold back action
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.11" data-path="../recipies/hydrate_state.html">
+            
+                <a href="../recipies/hydrate_state.html">
+            
+                    
+                    Hydrate state
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.5" data-path="../exports/">
+            
+                <a href="../exports/">
+            
+                    
+                    exports
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.6" data-path="../apiReference/">
+            
+                <a href="../apiReference/">
+            
+                    
+                    API reference
+            
+                </a>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.6.1" data-path="../apiReference/consequence.html">
+            
+                <a href="../apiReference/consequence.html">
+            
+                    
+                    consequence
+            
+                </a>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.6.1.1" data-path="../apiReference/consequence_action_return.html">
+            
+                <a href="../apiReference/consequence_action_return.html">
+            
+                    
+                    Action return
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.6.1.2" data-path="../apiReference/consequence_promise_return.html">
+            
+                <a href="../apiReference/consequence_promise_return.html">
+            
+                    
+                    Promise return
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.6.1.3" data-path="../apiReference/consequence_fn_return.html">
+            
+                <a href="../apiReference/consequence_fn_return.html">
+            
+                    
+                    Function return
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.6.2" data-path="../apiReference/saga.html">
+            
+                <a href="../apiReference/saga.html">
+            
+                    
+                    addWhen/addUntil saga
+            
+                </a>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.6.2.1" data-path="../apiReference/saga_addWhen_return.html">
+            
+                <a href="../apiReference/saga_addWhen_return.html">
+            
+                    
+                    addWhen return
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.6.2.2" data-path="../apiReference/saga_addUntil_return.html">
+            
+                <a href="../apiReference/saga_addUntil_return.html">
+            
+                    
+                    addUntil return
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.6.3" data-path="../apiReference/target.html">
+            
+                <a href="../apiReference/target.html">
+            
+                    
+                    target
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.6.4" data-path="../apiReference/condition.html">
+            
+                <a href="../apiReference/condition.html">
+            
+                    
+                    condition
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.6.5" data-path="../apiReference/concurrency.html">
+            
+                <a href="../apiReference/concurrency.html">
+            
+                    
+                    concurrency
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.6.6" data-path="../apiReference/concurrencyFilter.html">
+            
+                <a href="../apiReference/concurrencyFilter.html">
+            
+                    
+                    concurrencyFilter
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.6.7" data-path="../apiReference/debounce.html">
+            
+                <a href="../apiReference/debounce.html">
+            
+                    
+                    debounce
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.6.8" data-path="../apiReference/throttle.html">
+            
+                <a href="../apiReference/throttle.html">
+            
+                    
+                    throttle
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.6.9" data-path="../apiReference/weight.html">
+            
+                <a href="../apiReference/weight.html">
+            
+                    
+                    weight
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.6.10" data-path="../apiReference/position.html">
+            
+                <a href="../apiReference/position.html">
+            
+                    
+                    position
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.6.11" data-path="../apiReference/id.html">
+            
+                <a href="../apiReference/id.html">
+            
+                    
+                    id
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.6.12" data-path="../apiReference/add_once.html">
+            
+                <a href="../apiReference/add_once.html">
+            
+                    
+                    addOnce
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.6.13" data-path="../apiReference/delay.html">
+            
+                <a href="../apiReference/delay.html">
+            
+                    
+                    delay
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+
+    
+
+    <li class="divider"></li>
+
+    <li>
+        <a href="https://www.gitbook.com" target="blank" class="gitbook-link">
+            Published with GitBook
+        </a>
+    </li>
+</ul>
+
+
+                </nav>
+            
+        
+    </div>
+
+    <div class="book-body">
+        
+            <div class="body-inner">
+                
+                    
+
+<div class="book-header" role="navigation">
+    
+
+    <!-- Title -->
+    <h1>
+        <i class="fa fa-circle-o-notch fa-spin"></i>
+        <a href="../.." >Dispatching actions</a>
+    </h1>
+</div>
+
+
+
+
+                    <div class="page-wrapper" tabindex="-1" role="main">
+                        <div class="page-inner">
+                            
+                                <section class="normal markdown-section">
+                                
+                                <h1 id="dispatching-actions-and-effects">Dispatching Actions and Effects</h1>
+<h2 id="dispatching-actions">Dispatching actions</h2>
+<p>Dispatching actions is only possible within a rule consequence and can be done by several ways. When you return an action it will be dispatched automtically. The same applies to promises, that return an action. Furthermore a dispatch method is passed in the arguments of the consequence.</p>
+<pre><code class="lang-javascript"><span class="hljs-keyword">import</span> {addRule} <span class="hljs-keyword">from</span> <span class="hljs-string">&apos;redux-ruleset&apos;</span>
+
+addRule({
+  id: <span class="hljs-string">&apos;ACTION_RETURN&apos;</span>,
+  consequence: ({dispatch}) =&gt; {
+    // dispatch an action
+    dispatch({type: <span class="hljs-string">&apos;ACTION_1&apos;</span>})
+    // when returning an action it will be dispatched
+    return {type: <span class="hljs-string">&apos;ACTION_2&apos;</span>}
+  }
+})
+
+addRule({
+  id: <span class="hljs-string">&apos;PROMISE_RETURN&apos;</span>,
+  consequence: () =&gt; {
+    return Promise.resolve().then(
+      // Promise-wrapped actions are also dispatched
+      () =&gt; ({type: <span class="hljs-string">&apos;ACTION_1&apos;</span>})
+    )
+  }
+})
+</code></pre>
+<p>The dispatch method you get is not the original store&apos;s dispatch. It is wrapped in an function that can be canceled. As soon a the consequence is canceled (e.g the rule was removed), nothing will happen, when you call the dispatch method. Read more about this in the section <a href="handle_concurrency.html">handle concurrency</a>. </p>
+<h2 id="effects">Effects</h2>
+<p>By the word <code>effect</code> we understand anything, that changes the world outside of the rule. When you update your url, change a global variable or write to local storage. Everything is an effect. Even dispatching an action (from the rule&apos;s perspective). Within the the consequence we provide a helper, to wrap all your effects:</p>
+<pre><code class="lang-javascript"><span class="hljs-keyword">import</span> {addRule} <span class="hljs-keyword">from</span> <span class="hljs-string">&apos;redux-ruleset&apos;</span>
+
+type effect = (fn:Function) =&gt; void
+
+addRule({
+  id: <span class="hljs-string">&apos;SAVE_STATE&apos;</span>,
+  target: <span class="hljs-string">&apos;*&apos;</span> // react to any action,
+  consequence: ({effect, getState}) =&gt; {
+    effect(() =&gt; {
+      const state = getState()
+      window.localStorage.setItem(<span class="hljs-string">&apos;redux-state&apos;</span>, state)
+    })
+  }
+})
+</code></pre>
+<p>This is important for cancelation. When a running consequence is canceled, everything inside an effect won&apos;t be executed anymore. Indeed, the provided dispatch method is wrapped inside an effect. The consequence continues, when it was canceled, but anything inside an effect won&apos;t happen anymore. This also means that you have wrapp each asynchronouse step inside an effect: </p>
+<pre><code class="lang-javascript"><span class="hljs-keyword">import</span> {addRule} <span class="hljs-keyword">from</span> <span class="hljs-string">&apos;redux-ruleset&apos;</span>
+
+// WRONG
+addRule({
+  id: <span class="hljs-string">&apos;DO_SOME_STUFF&apos;</span>,
+  consequence: async ({effect}) =&gt; {
+    effect(() =&gt; {
+      const data = await fetchData()
+      // will be callled, even if the consequence was canceled during fetchData()
+      doStuff(data)
+      doOtherStuff(data)
+    })
+  }
+})
+
+// CORRECT
+addRule({
+  id: <span class="hljs-string">&apos;DO_SOME_STUFF&apos;</span>,
+  consequence: async ({effect}) =&gt; {
+    const data = await fetchData()
+    effect(() =&gt; doStuff(data))
+    effect(() =&gt; doOtherStuff(data))
+  }
+})
+</code></pre>
+<p>Alternatively you can ask manually, if the rule is still running after an async step:</p>
+<pre><code class="lang-javascript">addRule({
+  id: <span class="hljs-string">&apos;DO_SOME_STUFF&apos;</span>,
+  consequence: <span class="hljs-keyword">async</span> ({wasCanceled}) =&gt; {
+    <span class="hljs-keyword">const</span> data = <span class="hljs-keyword">await</span> fetchData()
+    <span class="hljs-keyword">if</span>(wasCanceled()) {
+      <span class="hljs-keyword">return</span>
+    }
+    doStuff(data)
+    doOtherStuff(data)
+  }
+})
+</code></pre>
+<h2 id="define-execution-position">Define execution position</h2>
+<p>When a rule reacts to an action, you can define the exact position, when it should react. You have tree options:</p>
+<ul>
+<li><strong>AFTER</strong>: the consequence (and condition) will becalled after the action was dispatched. This is the default behaviour</li>
+<li><strong>BEFORE</strong>: the rule&apos;s consequence (and condition) will be called before the action was dispatched. This is very usefull, when you want access the state before it is changed by the action</li>
+<li><strong>INSTEAD</strong>: The original action will be completely thrown away (it won&apos;t reach any other rule or middleware and won&apos;t be dispatched). Instead the consequence will be executed. </li>
+</ul>
+<pre><code class="lang-javascript"><span class="hljs-keyword">import</span> {addRule} <span class="hljs-keyword">from</span> <span class="hljs-string">&apos;redux-ruleset&apos;</span>
+
+// EXAMPLE: INSTEAD
+
+/**
+Given the user completes the registration form
+and clicks on the sign-up button
+When not all required fields have been completed
+Then an action TRIGGER_MISSING_FIELDS_ALERT should be dispatched
+*/
+addRule({
+  id: <span class="hljs-string">&apos;ALERT_MISSING_FIELDS&apos;</span>,
+  target: <span class="hljs-string">&apos;SIGN_UP_REQUEST&apos;</span>,
+  position: <span class="hljs-string">&apos;INSTEAD&apos;</span>,
+  condtion: action =&gt; {
+    const fields = actions.payload
+    if(!fields.name || !field.password){
+      // user forgot to set name or password
+      return true
+    }
+  },
+  consequence: ({action}) =&gt; {
+    const fields = actions.payload
+    return {
+      type: <span class="hljs-string">&apos;TRIGGER_MISSING_FIELDS_ALERT&apos;</span>,
+      payload: {
+        username: !fields.name,
+        password: !fields.password
+      }
+    }
+  }
+})
+</code></pre>
+<p>In the above example we listen to the SIGN_UP_REQUEST action (is dispatched, when user clicks on sign-up button). Everytime this action is dispatched, we check in the rule condition, if the user has completed all required fields.
+If not, we throw away the SIGN_UP_REQUEST action (no other rule can react to it anymore). Instead we dispatch another action, that tells the UI to hilight all missing fields</p>
+
+                                
+                                </section>
+                            
+                        </div>
+                    </div>
+                
+            </div>
+
+            
+                
+                <a href="react_to_events.html" class="navigation navigation-prev " aria-label="Previous page: React to actions">
+                    <i class="fa fa-angle-left"></i>
+                </a>
+                
+                
+                <a href="handle_concurrency.html" class="navigation navigation-next " aria-label="Next page: Handle concurrency">
+                    <i class="fa fa-angle-right"></i>
+                </a>
+                
+            
+        
+    </div>
+
+    <script>
+        var gitbook = gitbook || [];
+        gitbook.push(function() {
+            gitbook.page.hasChanged({"page":{"title":"Dispatching actions","level":"1.3.3","depth":2,"next":{"title":"Handle concurrency","level":"1.3.4","depth":2,"path":"docs/basicConcepts/handle_concurrency.md","ref":"docs/basicConcepts/handle_concurrency.md","articles":[]},"previous":{"title":"React to actions","level":"1.3.2","depth":2,"path":"docs/basicConcepts/react_to_events.md","ref":"docs/basicConcepts/react_to_events.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":[],"pluginsConfig":{"highlight":{},"search":{"maxIndexSize":1000000},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"docs/basicConcepts/dispatching_actions.md","mtime":"2019-03-06T19:42:16.926Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2019-09-28T19:22:53.699Z"},"basePath":"../..","book":{"language":""}});
+        });
+    </script>
+</div>
+
+        
+    <script src="../../gitbook/gitbook.js"></script>
+    <script src="../../gitbook/theme.js"></script>
+    
+        
+        <script src="../../gitbook/gitbook-plugin-search/lunr.min.js"></script>
+        
+    
+        
+        <script src="../../gitbook/gitbook-plugin-search/search.js"></script>
+        
+    
+        
+        <script src="../../gitbook/gitbook-plugin-lunr/lunr.min.js"></script>
+        
+    
+        
+        <script src="../../gitbook/gitbook-plugin-lunr/search-lunr.js"></script>
+        
+    
+        
+        <script src="../../gitbook/gitbook-plugin-sharing/buttons.js"></script>
+        
+    
+        
+        <script src="../../gitbook/gitbook-plugin-fontsettings/buttons.js"></script>
+        
+    
+
+    </body>
+</html>
+

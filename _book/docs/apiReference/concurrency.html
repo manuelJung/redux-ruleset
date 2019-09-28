@@ -1,0 +1,872 @@
+
+<!DOCTYPE HTML>
+<html lang="" >
+    <head>
+        <meta charset="UTF-8">
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <title>concurrency · GitBook</title>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="description" content="">
+        <meta name="generator" content="GitBook 3.2.3">
+        
+        
+        
+    
+    <link rel="stylesheet" href="../../gitbook/style.css">
+
+    
+            
+                
+                <link rel="stylesheet" href="../../gitbook/gitbook-plugin-highlight/website.css">
+                
+            
+                
+                <link rel="stylesheet" href="../../gitbook/gitbook-plugin-search/search.css">
+                
+            
+                
+                <link rel="stylesheet" href="../../gitbook/gitbook-plugin-fontsettings/website.css">
+                
+            
+        
+
+    
+
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+
+        
+    
+    
+    <meta name="HandheldFriendly" content="true"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <link rel="apple-touch-icon-precomposed" sizes="152x152" href="../../gitbook/images/apple-touch-icon-precomposed-152.png">
+    <link rel="shortcut icon" href="../../gitbook/images/favicon.ico" type="image/x-icon">
+
+    
+    <link rel="next" href="concurrencyFilter.html" />
+    
+    
+    <link rel="prev" href="condition.html" />
+    
+
+    </head>
+    <body>
+        
+<div class="book">
+    <div class="book-summary">
+        
+            
+            
+                <nav role="navigation">
+                
+
+
+<ul class="summary">
+    
+    
+
+    
+
+    
+        
+        
+    
+        <li class="chapter " data-level="1.1" data-path="../../">
+            
+                <a href="../../">
+            
+                    
+                    Readme
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2" data-path="../introduction/">
+            
+                <a href="../introduction/">
+            
+                    
+                    Introduction
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3" data-path="../basicConcepts/">
+            
+                <a href="../basicConcepts/">
+            
+                    
+                    Basic Concepts
+            
+                </a>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.3.1" data-path="../basicConcepts/rule_definition.html">
+            
+                <a href="../basicConcepts/rule_definition.html">
+            
+                    
+                    What is a rule
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3.2" data-path="../basicConcepts/react_to_events.html">
+            
+                <a href="../basicConcepts/react_to_events.html">
+            
+                    
+                    React to actions
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3.3" data-path="../basicConcepts/dispatching_actions.html">
+            
+                <a href="../basicConcepts/dispatching_actions.html">
+            
+                    
+                    Dispatching actions
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3.4" data-path="../basicConcepts/handle_concurrency.html">
+            
+                <a href="../basicConcepts/handle_concurrency.html">
+            
+                    
+                    Handle concurrency
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3.5" data-path="../basicConcepts/rule_lifetime.html">
+            
+                <a href="../basicConcepts/rule_lifetime.html">
+            
+                    
+                    Set rule lifetime
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4" data-path="../advancedConcepts/">
+            
+                <a href="../advancedConcepts/">
+            
+                    
+                    Advanced Concepts
+            
+                </a>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.4.1" data-path="../advancedConcepts/manipulating_actions.html">
+            
+                <a href="../advancedConcepts/manipulating_actions.html">
+            
+                    
+                    Manipulating actions
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.2" data-path="../advancedConcepts/nest_rules.html">
+            
+                <a href="../advancedConcepts/nest_rules.html">
+            
+                    
+                    Nesting rules
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.3" data-path="../advancedConcepts/skip_rules.html">
+            
+                <a href="../advancedConcepts/skip_rules.html">
+            
+                    
+                    skip rules
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.4" data-path="../advancedConcepts/handle_streams.html">
+            
+                <a href="../advancedConcepts/handle_streams.html">
+            
+                    
+                    Handling streams
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.5" data-path="../advancedConcepts/cancel_rules.html">
+            
+                <a href="../advancedConcepts/cancel_rules.html">
+            
+                    
+                    Cancel rules
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.6" data-path="../advancedConcepts/handle_state_change.html">
+            
+                <a href="../advancedConcepts/handle_state_change.html">
+            
+                    
+                    React to component state changes
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.7" data-path="../advancedConcepts/how_it_works.html">
+            
+                <a href="../advancedConcepts/how_it_works.html">
+            
+                    
+                    How it works
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.8" data-path="../advancedConcepts/devtools.html">
+            
+                <a href="../advancedConcepts/devtools.html">
+            
+                    
+                    Devtools
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.9" data-path="../advancedConcepts/putting_all_together.html">
+            
+                <a href="../advancedConcepts/putting_all_together.html">
+            
+                    
+                    Putting all together
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.10" data-path="../recipies/hold_back_action.html">
+            
+                <a href="../recipies/hold_back_action.html">
+            
+                    
+                    Hold back action
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.11" data-path="../recipies/hydrate_state.html">
+            
+                <a href="../recipies/hydrate_state.html">
+            
+                    
+                    Hydrate state
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.5" data-path="../exports/">
+            
+                <a href="../exports/">
+            
+                    
+                    exports
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.6" data-path="./">
+            
+                <a href="./">
+            
+                    
+                    API reference
+            
+                </a>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.6.1" data-path="consequence.html">
+            
+                <a href="consequence.html">
+            
+                    
+                    consequence
+            
+                </a>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.6.1.1" data-path="consequence_action_return.html">
+            
+                <a href="consequence_action_return.html">
+            
+                    
+                    Action return
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.6.1.2" data-path="consequence_promise_return.html">
+            
+                <a href="consequence_promise_return.html">
+            
+                    
+                    Promise return
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.6.1.3" data-path="consequence_fn_return.html">
+            
+                <a href="consequence_fn_return.html">
+            
+                    
+                    Function return
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.6.2" data-path="saga.html">
+            
+                <a href="saga.html">
+            
+                    
+                    addWhen/addUntil saga
+            
+                </a>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.6.2.1" data-path="saga_addWhen_return.html">
+            
+                <a href="saga_addWhen_return.html">
+            
+                    
+                    addWhen return
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.6.2.2" data-path="saga_addUntil_return.html">
+            
+                <a href="saga_addUntil_return.html">
+            
+                    
+                    addUntil return
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.6.3" data-path="target.html">
+            
+                <a href="target.html">
+            
+                    
+                    target
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.6.4" data-path="condition.html">
+            
+                <a href="condition.html">
+            
+                    
+                    condition
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter active" data-level="1.6.5" data-path="concurrency.html">
+            
+                <a href="concurrency.html">
+            
+                    
+                    concurrency
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.6.6" data-path="concurrencyFilter.html">
+            
+                <a href="concurrencyFilter.html">
+            
+                    
+                    concurrencyFilter
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.6.7" data-path="debounce.html">
+            
+                <a href="debounce.html">
+            
+                    
+                    debounce
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.6.8" data-path="throttle.html">
+            
+                <a href="throttle.html">
+            
+                    
+                    throttle
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.6.9" data-path="weight.html">
+            
+                <a href="weight.html">
+            
+                    
+                    weight
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.6.10" data-path="position.html">
+            
+                <a href="position.html">
+            
+                    
+                    position
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.6.11" data-path="id.html">
+            
+                <a href="id.html">
+            
+                    
+                    id
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.6.12" data-path="add_once.html">
+            
+                <a href="add_once.html">
+            
+                    
+                    addOnce
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.6.13" data-path="delay.html">
+            
+                <a href="delay.html">
+            
+                    
+                    delay
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+
+    
+
+    <li class="divider"></li>
+
+    <li>
+        <a href="https://www.gitbook.com" target="blank" class="gitbook-link">
+            Published with GitBook
+        </a>
+    </li>
+</ul>
+
+
+                </nav>
+            
+        
+    </div>
+
+    <div class="book-body">
+        
+            <div class="body-inner">
+                
+                    
+
+<div class="book-header" role="navigation">
+    
+
+    <!-- Title -->
+    <h1>
+        <i class="fa fa-circle-o-notch fa-spin"></i>
+        <a href="../.." >concurrency</a>
+    </h1>
+</div>
+
+
+
+
+                    <div class="page-wrapper" tabindex="-1" role="main">
+                        <div class="page-inner">
+                            
+                                <section class="normal markdown-section">
+                                
+                                <h1 id="concurrency">Concurrency</h1>
+<p>As soon as something in javascript becomes asynchronous, things can get really complicated. 
+The reason for this is that we always have to deal with concurrency. Generally we have to deal with two types of concurrency:</p>
+<ul>
+<li><strong>Concurrency between rules</strong>: You can define the execution order by giving the rule a weight. See the <a href="weight.html">weight</a> section for this</li>
+<li><strong>Concurrency between consequences</strong>: A rule&apos;s <a href="consequence.html">consequence</a> can be executed before the last execution has finished. </li>
+</ul>
+<p>Fortunately redux-ruleset has a special key for you that can handle (nearly) all types of concurrency in a very easy way:</p>
+<pre><code class="lang-javascript">addRule({
+  id: <span class="hljs-string">&apos;FETCH_CART&apos;</span>,
+  target: <span class="hljs-string">&apos;cart/FETCH_REQUEST&apos;</span>,
+  concurrency: <span class="hljs-string">&apos;FIRST&apos;</span>, <span class="hljs-comment">// as long as the the concurrency is running, no new concurrency will start</span>
+  consequence: () =&gt; api.fetchCart().then(
+    cart =&gt; actions.fetchCartSuccess(cart),
+    error =&gt; actions.fetchCartFailure(error)
+  )
+})
+</code></pre>
+<p>The <em>concurrency</em> defines what should happen when a new consequence should be invoked while the old one hasn&apos;t finished yet. You can choose beween the following options:</p>
+<ul>
+<li><a href="#default"><strong>DEFAULT</strong></a>: this is the default behaviour; consequences are executed in a uncontrolled way. If your consequence is async it should always implement a concurrency behaviour (there are no implications to performance)</li>
+<li><a href="#first"><strong>FIRST</strong></a>: As long as there is a running concurrency all future consequences won&apos;t be called</li>
+<li><a href="#last"><strong>LAST</strong></a>: As soon as a concurrency is called, all running concurrencies are instantly canceled</li>
+<li><a href="#once"><strong>ONCE</strong></a>: Same as FIRST, but even when the first concurrency is canceled no other concurrency will get called ever</li>
+<li><a href="#switch"><strong>SWITCH</strong></a>: All concurrencies are normally called. As soon as a later called concurrency dispatches (or send a event) all previous concurrencies are canceled</li>
+<li><a href="#ordered"><strong>ORDERED</strong></a>: All consequences dispatch in the order they are innvoked</li>
+</ul>
+<h3 id="default">DEFAULT</h3>
+<p>As long as your consequences are totally synchonous you do not have to set a concurrency logic. Then the DEFAULT logic will be applied that calls the consequences just as you would expect</p>
+<h3 id="first">FIRST</h3>
+<pre><code class="lang-javascript">addRule({
+  id: <span class="hljs-string">&apos;FETCH_PRODUCT&apos;</span>,
+  target: <span class="hljs-string">&apos;products/FETCH_REQUEST&apos;</span>,
+  concurrency: <span class="hljs-string">&apos;FIRST&apos;</span>,
+  connsequence: () =&gt; api.fetchProduct().then(
+    result =&gt; actions.fetchProductSuccess(result),
+    error =&gt; actions.fetchProductFailure(error)
+  )
+})
+
+dispatch({type: <span class="hljs-string">&apos;products/FETCH_REQUEST&apos;</span>}) <span class="hljs-comment">// consequence gets invoked</span>
+dispatch({type: <span class="hljs-string">&apos;products/FETCH_REQUEST&apos;</span>}) <span class="hljs-comment">// consequence gets not invoked</span>
+dispatch({type: <span class="hljs-string">&apos;products/FETCH_REQUEST&apos;</span>}) <span class="hljs-comment">// consequence gets not invoked</span>
+
+<span class="hljs-keyword">await</span> next(<span class="hljs-string">&apos;products/FETCH_SUCCESS&apos;</span>)
+
+dispatch({type: <span class="hljs-string">&apos;products/FETCH_REQUEST&apos;</span>}) <span class="hljs-comment">// consequence gets invoked</span>
+</code></pre>
+<p>As long as there is a running concurrency all future consequences won&apos;t be called. That can also be usefull when it comes to <a href="../advancedConcepts/handle_streams.html">streams</a> to keep only the first socket open</p>
+<h3 id="last">LAST</h3>
+<pre><code class="lang-javascript">addRule({
+  id: <span class="hljs-string">&apos;FETCH_PRODUCT&apos;</span>,
+  target: <span class="hljs-string">&apos;products/FETCH_REQUEST&apos;</span>,
+  concurrency: <span class="hljs-string">&apos;LAST&apos;</span>,
+  connsequence: () =&gt; api.fetchProduct().then(
+    result =&gt; actions.fetchProductSuccess(result),
+    error =&gt; actions.fetchProductFailure(error)
+  )
+})
+
+dispatch({type: <span class="hljs-string">&apos;products/FETCH_REQUEST&apos;</span>}) <span class="hljs-comment">// consequence gets invoked</span>
+dispatch({type: <span class="hljs-string">&apos;products/FETCH_REQUEST&apos;</span>}) <span class="hljs-comment">// consequence gets invoked and prev consequence gets cannceled</span>
+dispatch({type: <span class="hljs-string">&apos;products/FETCH_REQUEST&apos;</span>}) <span class="hljs-comment">// consequence gets invoked and prev consequence gets cannceled</span>
+
+<span class="hljs-keyword">await</span> next(<span class="hljs-string">&apos;products/FETCH_SUCCESS&apos;</span>)
+
+dispatch({type: <span class="hljs-string">&apos;products/FETCH_REQUEST&apos;</span>}) <span class="hljs-comment">// consequence gets invoked</span>
+</code></pre>
+<p>As soon as a concurrency is called, all running concurrencies are instantly canceled. That can also be usefull when it comes to <a href="../advancedConcepts/handle_streams.html">streams</a> to keep only the most recent one</p>
+<h3 id="once">ONCE</h3>
+<pre><code class="lang-javascript">addRule({
+  id: <span class="hljs-string">&apos;FETCH_PRODUCT&apos;</span>,
+  target: <span class="hljs-string">&apos;products/FETCH_REQUEST&apos;</span>,
+  concurrency: <span class="hljs-string">&apos;ONCE&apos;</span>,
+  connsequence: () =&gt; api.fetchProduct().then(
+    result =&gt; actions.fetchProductSuccess(result),
+    error =&gt; actions.fetchProductFailure(error)
+  )
+})
+
+dispatch({type: <span class="hljs-string">&apos;products/FETCH_REQUEST&apos;</span>}) <span class="hljs-comment">// consequence gets invoked</span>
+dispatch({type: <span class="hljs-string">&apos;products/FETCH_REQUEST&apos;</span>}) <span class="hljs-comment">// consequence gets not invoked</span>
+dispatch({type: <span class="hljs-string">&apos;products/FETCH_REQUEST&apos;</span>}) <span class="hljs-comment">// consequence gets not invoked</span>
+
+<span class="hljs-keyword">await</span> next(<span class="hljs-string">&apos;products/FETCH_SUCCESS&apos;</span>)
+
+dispatch({type: <span class="hljs-string">&apos;products/FETCH_REQUEST&apos;</span>}) <span class="hljs-comment">// consequence gets not invoked</span>
+</code></pre>
+<p>The rule will execute the consequence only once during the lifetime of the rule. When you <a href="saga_addUntil_return.html">recreate</a> the consequence can be executed again. </p>
+<h3 id="switch">SWITCH</h3>
+<pre><code class="lang-javascript">addRule({
+  id: <span class="hljs-string">&apos;FETCH_PRODUCT&apos;</span>,
+  target: <span class="hljs-string">&apos;products/FETCH_REQUEST&apos;</span>,
+  concurrency: <span class="hljs-string">&apos;SWITCH&apos;</span>,
+  connsequence: () =&gt; api.fetchProduct().then(
+    result =&gt; actions.fetchProductSuccess(result),
+    error =&gt; actions.fetchProductFailure(error)
+  )
+})
+
+dispatch({type: <span class="hljs-string">&apos;products/FETCH_REQUEST&apos;</span>}) <span class="hljs-comment">// E1: consequence gets invoked</span>
+dispatch({type: <span class="hljs-string">&apos;products/FETCH_REQUEST&apos;</span>}) <span class="hljs-comment">// E2: consequence gets invoked</span>
+dispatch({type: <span class="hljs-string">&apos;products/FETCH_REQUEST&apos;</span>}) <span class="hljs-comment">// E3: consequence gets invoked</span>
+dispatch({type: <span class="hljs-string">&apos;products/FETCH_REQUEST&apos;</span>}) <span class="hljs-comment">// E4: consequence gets invoked</span>
+
+<span class="hljs-comment">// fetchProduct resolves with the following order: E1 -&gt; E3 -&gt; E2 -&gt; E4</span>
+<span class="hljs-comment">// only E1, E3 and E4 map to fetchProductSuccess</span>
+</code></pre>
+<p>The rule executes the consequence everytime the target matches. However it is canceled (no dispatch gets invoked) when a later called consequence dispatches or resolves (or sends an <a href="../basicConcepts/dispatching_actions.html#effects">effect</a>). This is super usefull when you fetch data and only want to keep the last response (e.g you set a filter within a product-list). With the concurrency <em>SWITCH</em> you can be shure that a slow response won&apos;t override a faster one</p>
+<h3 id="ordered">ORDERED</h3>
+<pre><code class="lang-javascript">addRule({
+  id: <span class="hljs-string">&apos;FETCH_PRODUCT&apos;</span>,
+  target: <span class="hljs-string">&apos;products/FETCH_REQUEST&apos;</span>,
+  concurrency: <span class="hljs-string">&apos;ORDERED&apos;</span>,
+  connsequence: () =&gt; api.fetchProduct().then(
+    result =&gt; actions.fetchProductSuccess(result),
+    error =&gt; actions.fetchProductFailure(error)
+  )
+})
+
+dispatch({type: <span class="hljs-string">&apos;products/FETCH_REQUEST&apos;</span>}) <span class="hljs-comment">// E1: consequence gets invoked</span>
+dispatch({type: <span class="hljs-string">&apos;products/FETCH_REQUEST&apos;</span>}) <span class="hljs-comment">// E2: consequence gets invoked</span>
+dispatch({type: <span class="hljs-string">&apos;products/FETCH_REQUEST&apos;</span>}) <span class="hljs-comment">// E3: consequence gets invoked</span>
+dispatch({type: <span class="hljs-string">&apos;products/FETCH_REQUEST&apos;</span>}) <span class="hljs-comment">// E4: consequence gets invoked</span>
+
+<span class="hljs-comment">// fetchProduct resolves with the following order: E1 -&gt; E3 -&gt; E2 -&gt; E4</span>
+<span class="hljs-comment">// fetchProductSuccess will be called in the following order: E1 -&gt; E2 -&gt; E3 -&gt; E4</span>
+</code></pre>
+<p>With the consequence <em>ORDERED</em> you can be shure that a fast response won&apos;t get dispatched before a slow one. The rule will delay the dispatch of the fast one until the slow one gets dispatched. This is usefull when you need all data fetched, but in the right order</p>
+
+                                
+                                </section>
+                            
+                        </div>
+                    </div>
+                
+            </div>
+
+            
+                
+                <a href="condition.html" class="navigation navigation-prev " aria-label="Previous page: condition">
+                    <i class="fa fa-angle-left"></i>
+                </a>
+                
+                
+                <a href="concurrencyFilter.html" class="navigation navigation-next " aria-label="Next page: concurrencyFilter">
+                    <i class="fa fa-angle-right"></i>
+                </a>
+                
+            
+        
+    </div>
+
+    <script>
+        var gitbook = gitbook || [];
+        gitbook.push(function() {
+            gitbook.page.hasChanged({"page":{"title":"concurrency","level":"1.6.5","depth":2,"next":{"title":"concurrencyFilter","level":"1.6.6","depth":2,"path":"docs/apiReference/concurrencyFilter.md","ref":"docs/apiReference/concurrencyFilter.md","articles":[]},"previous":{"title":"condition","level":"1.6.4","depth":2,"path":"docs/apiReference/condition.md","ref":"docs/apiReference/condition.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":[],"pluginsConfig":{"highlight":{},"search":{"maxIndexSize":1000000},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"docs/apiReference/concurrency.md","mtime":"2019-09-26T20:55:00.989Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2019-09-28T19:22:53.699Z"},"basePath":"../..","book":{"language":""}});
+        });
+    </script>
+</div>
+
+        
+    <script src="../../gitbook/gitbook.js"></script>
+    <script src="../../gitbook/theme.js"></script>
+    
+        
+        <script src="../../gitbook/gitbook-plugin-search/lunr.min.js"></script>
+        
+    
+        
+        <script src="../../gitbook/gitbook-plugin-search/search.js"></script>
+        
+    
+        
+        <script src="../../gitbook/gitbook-plugin-lunr/lunr.min.js"></script>
+        
+    
+        
+        <script src="../../gitbook/gitbook-plugin-lunr/search-lunr.js"></script>
+        
+    
+        
+        <script src="../../gitbook/gitbook-plugin-sharing/buttons.js"></script>
+        
+    
+        
+        <script src="../../gitbook/gitbook-plugin-fontsettings/buttons.js"></script>
+        
+    
+
+    </body>
+</html>
+

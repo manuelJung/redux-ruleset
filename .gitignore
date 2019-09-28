@@ -1,3 +1,11 @@
 node_modules
-_book
+_book/build
+_book/src
+_book/.babelrc
+_book/.flowconfig
+_book/.gitignore
+_book/jest.config.js
+_book/package-lock.json
+_book/package.json
+_book/search_index.json
 .DS_Store
