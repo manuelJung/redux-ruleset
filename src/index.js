@@ -1,6 +1,6 @@
 // @flow
 import * as ruleDB from './ruleDB'
-import middleware from './middleware'
+import _middleware from './middleware'
 import dispatch from './dispatchEvent'
 import {applyLazyStore} from './utils/lazyStore'
 
@@ -34,4 +34,6 @@ export const skipRule = (ruleId:'*'|string|string[], action:Action) => {
   return newAction
 }
 
-export default middleware
+export const middleware = _middleware
+
+export default _middleware

@@ -9,6 +9,6 @@ I'm developing react-redux apps since day one, and I've seen a lot of different 
 
 So we model everything possible with our data-flow middlewares and everything else we do with our container components. At the end our business logic lives in two places: Containers and middleware. There is no true MVC-like controller that has access to anything.
 
-This middleware tries to takle all this things. It can react to redux-state changes, cancel actions, react to component state changes (or anything you like) and helps you to write cleaner components without business logic.
-All of this is done by defining small, totally encapsulated rules. Each rule is a little programm within your application and can manipulate your data-flow or other rules. You can precisely define the time-window a rule is active
+This middleware tries to takle these problems. It can react to redux-state changes, cancel actions, react to component state changes (or anything you like) and helps you to write cleaner components without business logic.
+All of this is done by defining small, totally encapsulated rules. Each rule is a little programm within your application and can manipulate your data-flow or other rules. You can also specify exactly in which time frame a rule is active
 

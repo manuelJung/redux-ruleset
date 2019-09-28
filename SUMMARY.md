@@ -21,6 +21,7 @@
 <!-- * Recipies
   * [Hold back action](/docs/recipies/hold_back_action.md)
   * [Hydrate state](/docs/recipies/hydrate_state.md) -->
++ [exports](/docs/exports/README.md)
 * [API reference](/docs/apiReference/README.md)
   * [consequence](/docs/apiReference/consequence.md)
     * [Action return](/docs/apiReference/consequence_action_return.md)

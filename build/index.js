@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.skipRule = exports.dispatchEvent = exports.removeRule = exports.addRule = undefined;
+exports.middleware = exports.skipRule = exports.dispatchEvent = exports.removeRule = exports.addRule = undefined;
 
 var _toConsumableArray2 = require('babel-runtime/helpers/toConsumableArray');
 
@@ -17,9 +17,9 @@ var _ruleDB = require('./ruleDB');
 
 var ruleDB = _interopRequireWildcard(_ruleDB);
 
-var _middleware = require('./middleware');
+var _middleware2 = require('./middleware');
 
-var _middleware2 = _interopRequireDefault(_middleware);
+var _middleware3 = _interopRequireDefault(_middleware2);
 
 var _dispatchEvent = require('./dispatchEvent');
 
@@ -64,4 +64,6 @@ var skipRule = exports.skipRule = function skipRule(ruleId, action) {
   return newAction;
 };
 
-exports.default = _middleware2.default;
+var middleware = exports.middleware = _middleware3.default;
+
+exports.default = _middleware3.default;
