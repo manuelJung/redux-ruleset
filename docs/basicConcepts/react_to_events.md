@@ -5,7 +5,7 @@ The main purpose of redux-ruleset is to react to dispatched actions. You can def
 ```javascript
 import {addRule} from 'redux-ruleset'
 
-type target = void | ActionType | ActionType[] | '*'
+type target = ActionType | ActionType[] | '*'
 
 addRule({
   id: 'PING_PONG',
@@ -26,9 +26,9 @@ addRule({
 })
 ```
 
-A rule will only be touched when the target matches. This is, because rules are stored in a map, where the key is it's target. This gives redux-ruleset a huge performance boost. Even if you add dozens of rules you won't come into performance problems, because only a few rules will get touched per action. 
+A rule will only be touched when the target matches. This is because rules are stored in a map, where the key is it's target. This gives redux-ruleset a huge performance boost. Even if you add dozens of rules you won't come into performance problems, because only a few rules will get touched per action. 
 
-In Addition, it's possible to add conditions, when a rule should be executed. When the `target` matches we can control with the `condition` key, whether the consequence should be applied or not.
+In addition, it's possible to add conditions, when a rule should be executed. When the `target` matches we can control with the `condition` key, whether the consequence should be applied or not.
 
 ```javascript
 import {addRule} from 'redux-ruleset'

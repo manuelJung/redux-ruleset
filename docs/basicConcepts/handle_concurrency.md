@@ -44,7 +44,7 @@ There are many more concurrency patterns.
 |DEFAULT| no logic will be applied. default behaviour. |
 |FIRST| as long as a consequence is running (did not resolve) no other consequence can start|
 |LAST| as soon as the second consequence starts to execute, all previous consequences are canceled|
-|ONCE| the consequence can only be called once during the lifetime of a rule. Only usefull when it comes to [rule-nesting](../advancedConcepts/nest_rules.md)|
+|ONCE| the consequence can only be called once during the lifetime of a rule. Only usefull when it comes to [rule-nesting](../advancedConcepts/nest_rules.md) or [data streams](../advancedConcepts/handle_streams.md)|
 |SWITCH| as soon as the second consequence dispatches (or triggers an effect) the first one will be canceled|
 |ORDERED| if second rule dispatches (or triggers an effect) before first rule, it waits with the dispatch, until the first one dispatches|
 
@@ -85,7 +85,7 @@ type Action = {
 }
 ```
 
-We don't want to fetch the same static block twice, but we want to fetch different static blocks in parallel. For this purpose we can refine the concurrency:
+We don't want to fetch the same static block twice, but we want to fetch different static blocks in parallel. For this purpose we can refine the concurrency with a `concurrencyFilter`:
 
 ```javascript
 import {addRule} from 'redux-ruleset'
