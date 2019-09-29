@@ -18,9 +18,6 @@
   * [How it works](/docs/advancedConcepts/how_it_works.md)
   * [Devtools](/docs/advancedConcepts/devtools.md)
   * [Putting all together](/docs/advancedConcepts/putting_all_together.md)
-<!-- * Recipies
-  * [Hold back action](/docs/recipies/hold_back_action.md)
-  * [Hydrate state](/docs/recipies/hydrate_state.md) -->
 + [exports](/docs/exports/README.md)
 * [API reference](/docs/apiReference/README.md)
   * [id](/docs/apiReference/id.md)
