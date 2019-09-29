@@ -16,11 +16,11 @@ The target is the action, the rule should react to. A rule can react to one, mul
 
 The consequence is the heart of a rule. Any task you want to perform is done within the consequence. There are several other keys available where you can manage concurrency, defining the lifetime of the rule or defining when a rule should be executed. A rule consists of serveral keys that work really well together. There is no overly complex concepts within this middleware. The basic usage of this module can be learned and fully understood within a few hours. But the real power comes from the different possible combinations of all rule-keys. And this can take quite a time to master and requires some practive.
 
-## Philosophy
+<!-- ## Philosophy -->
 
-*I highly suggest that you write rules that are toggleable. That means, that you should be able to turn of a rule without crashing the app. A rule should only target only one problem. If you follow this practices, you can write very clean modular software*
+*I highly suggest that you write rules that are toggleable. That means, that you should be able to turn of a rule without crashing the app. A rule should target only one problem. If you follow this practices, you can write very clean modular software*
 
-Imagine the following scenario: You have a blog that allows users to add comments when they are logged in. When they click on the send button a action `CREATE_COMMENT` gets dispatched. When the user is not logged in  an action `SHOW_LOGIN_MODAL` gets dispatched. How can you archive this?
+<!-- Imagine the following scenario: You have a blog that allows users to add comments when they are logged in. When they click on the send button a action `CREATE_COMMENT` gets dispatched. When the user is not logged in  an action `SHOW_LOGIN_MODAL` gets dispatched. How can you archive this?
 
 Normally you have a click-listener that checks if the user is logged in and dispatches one of these actions. The problem with this approach is, that you will have business logic in your callback and your listener has to know about your login-state.
 
@@ -40,4 +40,4 @@ addRule({
 })
 ```
 
-That way you you can totally encapsulate this variation. That way yu can build very clean data-flows. Your data-flow won't look like a tree any longer but more like a line. Whenever you detect a posssible variation you simply define a rule that encapsulates this problem
+That way you you can totally encapsulate this variation. That way yu can build very clean data-flows. Your data-flow won't look like a tree any longer but more like a line. Whenever you detect a posssible variation you simply define a rule that encapsulates this problem -->

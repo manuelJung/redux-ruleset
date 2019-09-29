@@ -11,7 +11,7 @@ Every action that goes through this middleware has to pass several steps. The fo
 
 <img src='../images/workflow.png'>
 
-**1)** The very first thing that happens is that we check if there is a active rule with `position`*INSTEAD* that reacts to the incomming action. If the rule's condition matches and the rule's consequence doesn't return an action with the first type we will skip everything else. Otherwise we will proceed with step 2. If there are multiple rules that could be executed only the first one will (all others will be skipped)
+**1)** The very first thing that happens is that we check if there is a active rule with `position`*INSTEAD* that reacts to the incomming action. If the rule's condition matches and the rule's consequence doesn't return an action with the same type we will skip everything else. Otherwise we will proceed with step 2. If there are multiple rules with position `INSTEAD` that could be executed only the first one will (all others will be skipped)
 
 **2)** We check if there are currently any pending sagas that react to the current action. If so we yield this action to these sagas
 
