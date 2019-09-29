@@ -39,7 +39,7 @@ const store = createStore(
 
 - [Basic Concepts](https://redux-ruleset.netlify.com/docs/basicconcepts/)
 - [Advanced Concepts](https://redux-ruleset.netlify.com/docs/advancedConcepts/)
-- [API Refference](https://redux-ruleset.netlify.com/docs/apiReference/)
+- [API Reference](https://redux-ruleset.netlify.com/docs/apiReference/)
 - [exports](https://redux-ruleset.netlify.com/docs/exports/)
 
 ### Usage Example
