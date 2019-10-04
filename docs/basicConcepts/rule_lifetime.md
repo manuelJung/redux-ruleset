@@ -21,9 +21,9 @@ addRule({
 })
 ```
 
-These generator functions (let's call them sagas) recive two arguments. The first is a callback, that will yield everytime a specific action was dispatched. The second one is the store's getState method. 
+These generator functions (let's call them sagas) recive two arguments. The first one is a callback that yields everytime a specific action is dispatched. The second one is the store's getState method. 
 
-An saga should always return an constant string, that describes what should happen. You will have several options to choose from. Each one applies a different logic. We will dive deep into this logics later. For now just remember the most two common logics:
+An saga should always return an constant string, that describes what should happen. You will have several options to choose from. Each one applies a different logic. We will dive deep into these logics later. For now just remember the most two common logics:
 
 - **ADD_RULE**: adds the rule after the last yielded action
 - **RECREATE_RULE**: removed the rule after the last yielded action and starts the whole rule live again (reapply addWhen saga)
@@ -42,7 +42,7 @@ addRule({
 
 Now our rule will be recreated whenever it is active and a STOP_GAME or LOCATION_CHANGE action was dispatched. If you want to react to ANY action, you can write `yield next('*')`. The next method will yield the next action, that will be dispatched. 
 
-The `next` method also accepts a second argument. That's a callback function that recieves the next action. If it returns a truthy value the `next` method will yield, otherwise not. Let's say in our game example we don't want to remove the rule when router event happens that points to the exact same pathname (e.g only a hash was added to url):
+The `next` method also accepts a second argument. That's a callback function that recieves the next action. If it returns a truthy value the `next` method will yield, otherwise not. Let's say in our game example we don't want to remove the rule when a router event happens that points to the exact same pathname (e.g only a hash was added to url):
 
 ```javascript
 addRule({
@@ -78,3 +78,5 @@ addRule({
   }
 })
 ```
+
+As you can see, there are several return types for sagas. Here you can read all return types for the [addUntil](../apiReference/saga_addUntil_return.md) and [addWhen](../apiReference/saga_addWhen_return.md) sagas.
