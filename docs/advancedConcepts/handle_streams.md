@@ -1,7 +1,7 @@
 # Handle streams
 
 As far as you've learned, `consequence` has two different return types: Actions or promise-wrapped actions Everything else won't get picked up. But there is a third return type: a function. This is a callback function that will be called whenever the consequence is canceled or the rule is removed.
-That's perfect for working with sockets or data-streams:
+That's perfect when working with sockets or data-streams:
 
 ```javascript
 import {addRule} from 'redux-ruleset'
@@ -23,7 +23,7 @@ addRule({
       dispatch({ type: 'SPAWN_MONSTER' })
     }, 1000)
 
-    // unlisten, when rule will be removed
+    // unlisten, when rule will be removed or consequence gets canceled
     return () => {
       clearInterval(intervalId)
     }

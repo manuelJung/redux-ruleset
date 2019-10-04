@@ -22,4 +22,4 @@ addRule({
 
 In the above example we wait for any *CANCEL_FETCH_DATA*. As soon as this action was dispatched, we remove the rule and re-add it instantly (so it can wait for the next *FETCH_DATA_REQUEST*). As soon as the rule is removed all running consequences are canceled. 
 
-The `addUntil` generator supports a lot of different return types that can all be used for cancelation. Read the api section for more information about the different return types
+The `addUntil` generator supports a lot of different return types that can all be used for cancelation. Read the [api section](../apiReference/saga_addUntil_return.md) for more information about the different return types
