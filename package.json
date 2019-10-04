@@ -1,7 +1,8 @@
 {
   "name": "redux-ruleset",
-  "version": "1.0.0",
-  "description": "",
+  "version": "1.0.1",
+  "description": "A redux-middleware for managing data-flows",
+  "keywords": ["react", "redux", "middleware", "data-flow"],
   "main": "build/index.js",
   "dependencies": {},
   "devDependencies": {
