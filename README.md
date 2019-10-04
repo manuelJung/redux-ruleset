@@ -1,6 +1,7 @@
 # redux-ruleset
 
-Redux-Ruleset is a zero-dependency redux-middleware that manages the business logic of your redux state. It is the counterpart of a controller in a classical MVP architecture. That includes managing side-effects and data-flows.
+Redux-Ruleset is a zero-dependency redux-middleware that manages the business logic of your redux state. It is the counterpart of a controller in a classical MVP architecture. That includes managing side-effects and data-flows. With small independent and easy to refactor rules you can model any data-flow you want.
+
 
 ## Getting Started
 
