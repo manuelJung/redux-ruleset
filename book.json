@@ -1,0 +1,18 @@
+{
+  "plugins": [
+      "analytics"
+  ],
+
+  "pluginsConfig": {
+      "analytics": {
+          "context": [
+            {
+              "vendor": "google",
+              "token": "UA-149429312-1",
+              "base": "https://redux-ruleset.netlify.com/"
+            }
+          ]
+      }
+  }
+}
+

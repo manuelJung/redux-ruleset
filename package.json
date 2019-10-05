@@ -22,7 +22,7 @@
   "scripts": {
     "test": "jest --watch",
     "build": "rm -rf build && babel src -d build --ignore __mocks__,__TEST__",
-    "gitbook:build": "gitbook build"
+    "gitbook:build": "gitbook install && gitbook build"
   },
   "author": "",
   "license": "ISC"
