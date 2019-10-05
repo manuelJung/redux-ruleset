@@ -1,6 +1,6 @@
 {
   "name": "redux-ruleset",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "A redux-middleware for managing data-flows",
   "keywords": ["react", "redux", "middleware", "data-flow"],
   "main": "build/index.js",
@@ -25,5 +25,5 @@
     "gitbook:build": "gitbook install && gitbook build"
   },
   "author": "",
-  "license": "ISC"
+  "license": "MIT"
 }
