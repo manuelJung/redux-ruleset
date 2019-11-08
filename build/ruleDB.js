@@ -50,7 +50,9 @@ var getPrivatesForTesting = exports.getPrivatesForTesting = function getPrivates
 function addRule(rule) {
   var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
   var parentRuleId = options.parentRuleId,
-      forceAdd = options.forceAdd;
+      forceAdd = options.forceAdd,
+      addWhenContext = options.addWhenContext,
+      addUntilContext = options.addUntilContext;
 
   var parentContext = parentRuleId && ruleContextList[parentRuleId];
 
@@ -64,7 +66,7 @@ function addRule(rule) {
     devTools.registerRule(rule, parentRuleId || null);
   }
 
-  var context = createContext(rule);
+  var context = createContext(rule, { addWhenContext: addWhenContext, addUntilContext: addUntilContext });
   var position = rule.position || 'AFTER';
 
   if (contextListeners.length && !getRuleContext(rule)) {
@@ -92,7 +94,7 @@ function addRule(rule) {
     }
   };
   var addWhen = function addWhen() {
-    return rule.addWhen && saga.createSaga(context, rule.addWhen, undefined, function (_ref) {
+    return rule.addWhen && saga.createSaga(context, rule.addWhen, function (_ref) {
       var logic = _ref.logic,
           action = _ref.action,
           actionExecId = _ref.actionExecId;
@@ -105,7 +107,9 @@ function addRule(rule) {
         case 'ADD_RULE_BEFORE':
           add(action);break;
         case 'REAPPLY_ADD_WHEN':
-          (0, _laterEvents.addCallback)(actionExecId, addWhen);break;
+          (0, _laterEvents.addCallback)(actionExecId, function () {
+            context.addWhenContext = {};addWhen();
+          });break;
         case 'CANCELED':
         case 'ABORT':
           break;
@@ -119,7 +123,7 @@ function addRule(rule) {
     });
   };
   var addUntil = function addUntil(action) {
-    return rule.addUntil && saga.createSaga(context, rule.addUntil, action, function (_ref2) {
+    return rule.addUntil && saga.createSaga(context, rule.addUntil, function (_ref2) {
       var logic = _ref2.logic,
           action = _ref2.action,
           actionExecId = _ref2.actionExecId;
@@ -143,10 +147,10 @@ function addRule(rule) {
           });break;
         case 'READD_RULE':
           (0, _laterEvents.addCallback)(actionExecId, function () {
-            removeRule(rule);addRule(rule, { parentRuleId: parentRuleId, forceAdd: true });
+            removeRule(rule);addRule(rule, { parentRuleId: parentRuleId, forceAdd: true, addWhenContext: context.addWhenContext });
           });break;
         case 'READD_RULE_BEFORE':
-          removeRule(rule);addRule(rule, { parentRuleId: parentRuleId, forceAdd: true });break;
+          removeRule(rule);addRule(rule, { parentRuleId: parentRuleId, forceAdd: true, addWhenContext: context.addWhenContext });break;
         case 'CANCELED':
         case 'ABORT':
           break;
@@ -210,7 +214,7 @@ function registerContextListener(cb) {
 
 // HELPERS
 
-function createContext(rule) {
+function createContext(rule, options) {
   var listeners = {};
   return {
     rule: rule,
@@ -218,6 +222,8 @@ function createContext(rule) {
     active: false,
     pendingSaga: false,
     sagaStep: 0,
+    addWhenContext: options.addWhenContext || {},
+    addUntilContext: options.addUntilContext || {},
     concurrency: {
       default: {
         running: 0,

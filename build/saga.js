@@ -53,16 +53,16 @@ function addListener(target, cb) {
   }
 }
 
-function createSaga(context, saga, action, cb, store) {
+function createSaga(context, saga, cb, store) {
   if (!store) {
     (0, _lazyStore.applyLazyStore)(function (store) {
-      return createSaga(context, saga, action, cb, store);
+      return createSaga(context, saga, cb, store);
     });
     return;
   }
   var execId = id++;
+  var sagaType = saga === context.rule.addWhen ? 'ADD_WHEN' : 'ADD_UNTIL';
   if (process.env.NODE_ENV === 'development') {
-    var sagaType = saga === context.rule.addWhen ? 'ADD_WHEN' : 'ADD_UNTIL';
     devTools.execSagaStart(execId, context.rule.id, sagaType);
   }
   context.pendingSaga = true;
@@ -100,7 +100,14 @@ function createSaga(context, saga, action, cb, store) {
       };
       _addListener();
     };
-    var iter = gen(nextAction, boundStore.getState, action);
+    var contextName = sagaType === 'ADD_WHEN' ? 'addWhenContext' : 'addUntilContext';
+    var setContext = function setContext(key, value) {
+      return context[contextName][key] = value;
+    };
+    var getContext = function getContext(key) {
+      return context.addUntilContext[key] || context.addWhenContext[key];
+    };
+    var iter = gen(nextAction, boundStore.getState, { setContext: setContext, getContext: getContext });
     cancel = function cancel() {
       iter.return('CANCELED');
       next(iter, undefined, 0);

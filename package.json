@@ -1,8 +1,13 @@
 {
   "name": "redux-ruleset",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "A redux-middleware for managing data-flows",
-  "keywords": ["react", "redux", "middleware", "data-flow"],
+  "keywords": [
+    "react",
+    "redux",
+    "middleware",
+    "data-flow"
+  ],
   "main": "build/index.js",
   "dependencies": {},
   "devDependencies": {
@@ -22,7 +27,8 @@
   "scripts": {
     "test": "jest --watch",
     "build": "rm -rf build && babel src -d build --ignore __mocks__,__TEST__",
-    "gitbook:build": "gitbook install && gitbook build"
+    "gitbook:build": "gitbook install && gitbook build",
+    "deploy": "npm run build && npm publish"
   },
   "author": "",
   "license": "MIT"

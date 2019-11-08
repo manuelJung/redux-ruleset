@@ -43,6 +43,15 @@ function getRuleExecutionId() {
 function consequence(context, action, store, actionExecId) {
   var execId = executionId++;
   var rule = context.rule;
+  var ctx = {
+    getContext: function getContext(key) {
+      return context.addUntilContext[key] || context.addWhenContext[key];
+    },
+    setContext: function setContext(key, value) {
+      throw new Error('consequences cannot set context');
+    }
+  };
+
   context.trigger('CONSEQUENCE_START', execId);
 
   var concurrencyId = rule.concurrencyFilter && action ? rule.concurrencyFilter(action) : 'default';
@@ -85,7 +94,7 @@ function consequence(context, action, store, actionExecId) {
     return skipConsequence();
   }
   // skip if rule condition does not match
-  if (rule.condition && !rule.condition(action, store.getState)) {
+  if (rule.condition && !rule.condition(action, store.getState, ctx)) {
     if (process.env.NODE_ENV === 'development') {
       devTools.execRuleEnd(rule.id, execId, actionExecId, concurrencyId, 'CONDITION_NOT_MATCH');
     }
@@ -154,7 +163,7 @@ function consequence(context, action, store, actionExecId) {
 
   concurrency.running++;
   var result = void 0;
-  var args = { dispatch: dispatch, getState: getState, action: action, addRule: addRule, removeRule: removeRule, effect: effect, wasCanceled: wasCanceled };
+  var args = { dispatch: dispatch, getState: getState, action: action, addRule: addRule, removeRule: removeRule, effect: effect, wasCanceled: wasCanceled, context: ctx };
 
   if (rule.throttle || rule.delay || rule.debounce) {
     result = new _promise2.default(function (resolve) {
