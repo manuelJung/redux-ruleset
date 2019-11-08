@@ -20,6 +20,11 @@ type ReturnType = {
 export default function consequence (context:RuleContext, action?:Action, store:Store, actionExecId:number|null):ReturnType{
   let execId = executionId++
   const rule = context.rule
+  const ctx = {
+    getContext: (key:string) => context.addUntilContext[key] || context.addWhenContext[key],
+    setContext: (key:string, value:mixed) => {throw new Error('consequences cannot set context')} 
+  }
+
   context.trigger('CONSEQUENCE_START', execId)
 
   const concurrencyId = rule.concurrencyFilter && action ? rule.concurrencyFilter(action) : 'default'
@@ -62,7 +67,7 @@ export default function consequence (context:RuleContext, action?:Action, store:
     return skipConsequence()
   }
   // skip if rule condition does not match
-  if(rule.condition && !rule.condition(action, store.getState)){
+  if(rule.condition && !rule.condition(action, store.getState, ctx)){
     if(process.env.NODE_ENV === 'development'){
       devTools.execRuleEnd(rule.id, execId, actionExecId, concurrencyId, 'CONDITION_NOT_MATCH')
     }
@@ -115,7 +120,7 @@ export default function consequence (context:RuleContext, action?:Action, store:
 
   concurrency.running++
   let result
-  const args = {dispatch, getState, action, addRule, removeRule, effect, wasCanceled}
+  const args = {dispatch, getState, action, addRule, removeRule, effect, wasCanceled, context:ctx}
 
   if(rule.throttle || rule.delay || rule.debounce){
     result = new Promise(resolve => {

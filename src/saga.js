@@ -44,17 +44,16 @@ function addListener(target, cb){
 export function createSaga<Logic>(
   context:RuleContext, 
   saga:Saga<Logic>, 
-  action?:Action, 
   cb:(result:{logic: Logic|void, action:Action|void, actionExecId:number}) => mixed,
   store?:Store
 ){
   if(!store) {
-    applyLazyStore(store => createSaga(context,saga,action,cb,store))
+    applyLazyStore(store => createSaga(context,saga,cb,store))
     return
   }
   const execId = id++
+  const sagaType = saga === context.rule.addWhen ? 'ADD_WHEN' : 'ADD_UNTIL'
   if(process.env.NODE_ENV === 'development'){
-    const sagaType = saga === context.rule.addWhen ? 'ADD_WHEN' : 'ADD_UNTIL'
     devTools.execSagaStart(execId, context.rule.id, sagaType)
   }
   context.pendingSaga = true
@@ -93,7 +92,10 @@ export function createSaga<Logic>(
       }
       _addListener()
     }
-    const iter = gen(nextAction, boundStore.getState, action)
+    const contextName = sagaType === 'ADD_WHEN' ? 'addWhenContext' : 'addUntilContext'
+    const setContext = (key:string, value:mixed) => context[contextName][key] = value
+    const getContext = (key:string) => context.addUntilContext[key] || context.addWhenContext[key]
+    const iter = gen(nextAction, boundStore.getState, {setContext, getContext})
     cancel = () => {
       iter.return('CANCELED')
       next(iter, undefined, 0)

@@ -26,6 +26,8 @@ const createContext = ():RuleContext => {
     active: false,
     pendingSaga: false,
     sagaStep: 0,
+    addWhenContext: {},
+    addUntilContext: {},
     concurrency: {
       default: {
         running: 0,
@@ -109,7 +111,7 @@ describe('skip rule', () => {
 
 describe('consequence injection', () => {
   beforeEach(initTest)
-  test('a dispatch, getState, action, addRule, removeRule, wasCanceled and efect fn should be injected', () => {
+  test('a dispatch, getState, action, addRule, removeRule, wasCanceled, getContext and effect fn should be injected', () => {
     consequence(context, action, store, 1)
     const args = context.rule.consequence.mock.calls[0][0]
     expect(args).toHaveProperty('dispatch')
@@ -119,6 +121,7 @@ describe('consequence injection', () => {
     expect(args).toHaveProperty('removeRule')
     expect(args).toHaveProperty('effect')
     expect(args).toHaveProperty('wasCanceled')
+    expect(args).toHaveProperty('context')
   })
 })
 
@@ -379,5 +382,27 @@ describe('concurrencyFilter', () => {
     await wait(5)
     consequence(context, action3, store, 3)
     expect(context.rule.consequence).toBeCalledTimes(3)
+  })
+})
+
+describe('context', () => {
+  beforeEach(initTest)
+  test('it should give the correct context', () => {
+    jest.spyOn(store, 'dispatch')
+    context.addWhenContext = { foo: 'bar' }
+    context.rule.consequence = ({context}) => {
+      const ctx = context.getContext('foo')
+      return { type: 'ONE', payload: ctx }
+    }
+    consequence(context, action, store, 1)
+    expect(store.dispatch).toBeCalledWith({type:'ONE', payload: 'bar'})
+  })
+  test('it should throw an error if consequence trys to set context', () => {
+    context.rule.consequence = ({context}) => {
+      expect(() => {
+        context.setContext('foo', 'bar')
+      }).toThrow()
+      return { type: 'ONE' }
+    }
   })
 })

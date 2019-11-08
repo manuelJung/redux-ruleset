@@ -13,11 +13,11 @@ import {addRule} from 'redux-ruleset'
 addRule({
   id: 'PING_PONG',
   target: 'PING',
-  addWhen: function* (next, getState){
+  addWhen: function* (next, getState, context){
     yield next('START_GAME') // wait for next action with type START_GAME
     return 'ADD_RULE' // set the rule to active
   },
-  addUntil: function* (next, getState){
+  addUntil: function* (next, getState, context){
     yield next('STOP_GAME') // wait for next action with type STOP_GAME
     return 'RECREATE_RULE' // remove the rule and reapply addWhen
   },
@@ -72,3 +72,8 @@ function*(next){
 ```
 
 As you can see the next yields whatever the second argument returns. If you return a falsy value it won't yield.
+
+
+### Context
+
+Each saga recieves the [context](../advancedConcepts/context.md) object as a third argument. Here you can add data that can be picked up in your consequence or condition

@@ -28,10 +28,15 @@ export type LogicConcurrency = 'DEFAULT' | 'FIRST' | 'LAST' | 'ONCE' | 'SWITCH' 
 
 export type ContextEvent = 'REMOVE_RULE' | 'ADD_RULE' | 'CANCEL_CONSEQUENCE' | 'CONSEQUENCE_START' | 'CONSEQUENCE_END'
 
+type CTX = {
+  setContext: (key:string, value:mixed) => mixed,
+  getContext: (key:string) => mixed
+}
+
 export type Saga<Logic> = (
   action: (cb?:(action:Action) => mixed) => mixed,
   getState: GetState,
-  action?: Action
+  context: CTX
 ) => Generator<any,Logic,mixed>
 
 export type Rule = {
@@ -44,14 +49,15 @@ export type Rule = {
   throttle?: number,
   delay?: number,
   concurrencyFilter?: (action:Action) => string,
-  condition?: (action?:Action, getState:GetState) => boolean,
+  condition?: (action?:Action, getState:GetState, context:CTX) => boolean,
   consequence: ({
     dispatch:Dispatch,
     getState:GetState, 
     action?:Action, 
     addRule:AddRule,
     removeRule:RemoveRule, 
-    effect: (()=>mixed)=>void
+    effect: (()=>mixed)=>void,
+    context: CTX
   }) => Action | Promise<Action> | Promise<void> | void | () => void,
   addOnce?: boolean,
   addWhen?: Saga<LogicAdd>,
@@ -63,6 +69,8 @@ export type RuleContext = {
   childRules: Rule[],
   active: boolean,
   pendingSaga:boolean,
+  addWhenContext:{[key:string]:mixed},
+  addUntilContext:{[key:string]:mixed},
   sagaStep: number,
   concurrency: {[concurrencyId:string]: {
     running: number,

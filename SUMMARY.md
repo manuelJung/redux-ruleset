@@ -15,6 +15,7 @@
   * [Handling streams](/docs/advancedConcepts/handle_streams.md)
   * [Cancel rules](/docs/advancedConcepts/cancel_rules.md)
   * [React to component state changes](/docs/advancedConcepts/handle_state_change.md)
+  * [Context - Communication within rule](/docs/advancedConcepts/context.md)
   * [How it works](/docs/advancedConcepts/how_it_works.md)
   * [Devtools](/docs/advancedConcepts/devtools.md)
   * [Putting all together](/docs/advancedConcepts/putting_all_together.md)

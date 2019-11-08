@@ -10,6 +10,9 @@ type Consequence = ({
   addRule: (rule:Rule) => Rule,
   removeRule: (rule:Rule) => void, 
   effect: (()=>mixed) => void
+  context: {
+    getContext: (key:string) => mixed
+  }
 }) => Action | Promise<Action> | Promise<void> | void | () => void
 ```
 

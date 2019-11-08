@@ -14,7 +14,9 @@ type ActiveRules = {
 
 type AddRuleOptions = {
   parentRuleId?:string,
-  forceAdd?:boolean
+  forceAdd?:boolean,
+  addWhenContext?:{[key:string]:mixed},
+  addUntilContext?:{[key:string]:mixed},
 }
 
 const activeRules:ActiveRules = {
@@ -30,7 +32,7 @@ const contextListeners = []
 export const getPrivatesForTesting = (key:string) => ({activeRules, ruleContextList, contextListeners})[key]
 
 export function addRule(rule:Rule, options?:AddRuleOptions={}):Rule{
-  const {parentRuleId, forceAdd} = options
+  const {parentRuleId, forceAdd, addWhenContext, addUntilContext} = options
   const parentContext = parentRuleId && ruleContextList[parentRuleId]
 
   // if sub-rule has add-until that is invoked when parent add-until is invoked
@@ -43,7 +45,7 @@ export function addRule(rule:Rule, options?:AddRuleOptions={}):Rule{
     devTools.registerRule(rule, parentRuleId || null)
   }
 
-  const context = createContext(rule)
+  const context = createContext(rule, {addWhenContext, addUntilContext})
   const position = rule.position || 'AFTER'
 
   if(contextListeners.length && !getRuleContext(rule)) {
@@ -71,11 +73,11 @@ export function addRule(rule:Rule, options?:AddRuleOptions={}):Rule{
       devTools.addRule(rule.id, options.parentRuleId || null)
     }
   }
-  const addWhen = () => rule.addWhen && saga.createSaga(context, rule.addWhen, undefined, ({logic, action, actionExecId}) => {
+  const addWhen = () => rule.addWhen && saga.createSaga(context, rule.addWhen, ({logic, action, actionExecId}) => {
     switch(logic){
       case 'ADD_RULE': addCallback(actionExecId, () => add(action)); break
       case 'ADD_RULE_BEFORE': add(action); break
-      case 'REAPPLY_ADD_WHEN': addCallback(actionExecId, addWhen); break
+      case 'REAPPLY_ADD_WHEN': addCallback(actionExecId, () => {context.addWhenContext={};addWhen()}); break
       case 'CANCELED':
       case 'ABORT': break
       default: {
@@ -85,15 +87,15 @@ export function addRule(rule:Rule, options?:AddRuleOptions={}):Rule{
       }
     }
   })
-  const addUntil = (action?:Action) => rule.addUntil && saga.createSaga(context, rule.addUntil, action, ({logic, action, actionExecId}) => {
+  const addUntil = (action?:Action) => rule.addUntil && saga.createSaga(context, rule.addUntil, ({logic, action, actionExecId}) => {
     switch(logic){
       case 'RECREATE_RULE': addCallback(actionExecId, () => {removeRule(rule); addRule(rule, {parentRuleId})}); break
       case 'RECREATE_RULE_BEFORE': removeRule(rule); addRule(rule, {parentRuleId}); break
       case 'REMOVE_RULE': addCallback(actionExecId, () => {removeRule(rule)}); break
       case 'REMOVE_RULE_BEFORE': removeRule(rule); break
       case 'REAPPLY_ADD_UNTIL': addCallback(actionExecId, () => addUntil(action)); break
-      case 'READD_RULE': addCallback(actionExecId, () => {removeRule(rule); addRule(rule, {parentRuleId, forceAdd:true})}); break
-      case 'READD_RULE_BEFORE': removeRule(rule); addRule(rule, {parentRuleId, forceAdd:true}); break
+      case 'READD_RULE': addCallback(actionExecId, () => {removeRule(rule); addRule(rule, {parentRuleId, forceAdd:true, addWhenContext:context.addWhenContext})}); break
+      case 'READD_RULE_BEFORE': removeRule(rule); addRule(rule, {parentRuleId, forceAdd:true, addWhenContext:context.addWhenContext}); break
       case 'CANCELED':
       case 'ABORT': break
       default: {
@@ -149,7 +151,7 @@ export function registerContextListener(cb:(context:RuleContext)=>void){
 
 // HELPERS
 
-function createContext(rule:Rule):RuleContext{
+function createContext(rule:Rule, options:*):RuleContext{
   const listeners = {}
   return {
     rule: rule,
@@ -157,6 +159,8 @@ function createContext(rule:Rule):RuleContext{
     active: false,
     pendingSaga: false,
     sagaStep: 0,
+    addWhenContext: options.addWhenContext || {},
+    addUntilContext: options.addUntilContext || {},
     concurrency: {
       default: {
         running: 0,
