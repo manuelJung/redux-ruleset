@@ -41,7 +41,6 @@ function getRuleExecutionId() {
 }
 
 function consequence(context, action, store, actionExecId) {
-  var execId = executionId++;
   var rule = context.rule;
   var ctx = {
     getContext: function getContext(key) {
@@ -52,8 +51,6 @@ function consequence(context, action, store, actionExecId) {
     }
   };
 
-  context.trigger('CONSEQUENCE_START', execId);
-
   var concurrencyId = rule.concurrencyFilter && action ? rule.concurrencyFilter(action) : 'default';
   if (!context.concurrency[concurrencyId]) {
     context.concurrency[concurrencyId] = {
@@ -62,6 +59,14 @@ function consequence(context, action, store, actionExecId) {
     };
   }
   var concurrency = context.concurrency[concurrencyId];
+
+  if (concurrency.running) {
+    if (rule.addOnce) return { resolved: false };
+  }
+
+  var execId = executionId++;
+
+  context.trigger('CONSEQUENCE_START', execId);
 
   if (process.env.NODE_ENV === 'development') {
     devTools.execRuleStart(rule.id, execId, actionExecId, concurrencyId);
@@ -84,7 +89,6 @@ function consequence(context, action, store, actionExecId) {
   if (concurrency.running) {
     if (rule.concurrency === 'ONCE') return skipConsequence();
     if (rule.concurrency === 'FIRST') return skipConsequence();
-    if (rule.addOnce) return skipConsequence();
     if (rule.concurrency === 'LAST') context.trigger('CANCEL_CONSEQUENCE', concurrencyId);
     if (rule.throttle) context.trigger('CANCEL_CONSEQUENCE', concurrencyId);
     if (rule.debounce) context.trigger('CANCEL_CONSEQUENCE', concurrencyId);
@@ -187,6 +191,9 @@ function consequence(context, action, store, actionExecId) {
   if (action && (typeof result === 'undefined' ? 'undefined' : (0, _typeof3.default)(result)) === 'object' && result.type && rule.position === 'INSTEAD' && result.type === action.type) {
     var _action = result;
     unlisten(context, execId, cancel, concurrency);
+    if (process.env.NODE_ENV === 'development') {
+      devTools.execRuleEnd(rule.id, execId, actionExecId, concurrencyId, 'RESOLVED');
+    }
     return { resolved: true, action: _action };
   }
 

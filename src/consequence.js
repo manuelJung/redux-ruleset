@@ -18,14 +18,11 @@ type ReturnType = {
 }
 
 export default function consequence (context:RuleContext, action?:Action, store:Store, actionExecId:number|null):ReturnType{
-  let execId = executionId++
   const rule = context.rule
   const ctx = {
     getContext: (key:string) => context.addUntilContext[key] || context.addWhenContext[key],
     setContext: (key:string, value:mixed) => {throw new Error('consequences cannot set context')} 
   }
-
-  context.trigger('CONSEQUENCE_START', execId)
 
   const concurrencyId = rule.concurrencyFilter && action ? rule.concurrencyFilter(action) : 'default'
   if(!context.concurrency[concurrencyId]){
@@ -35,6 +32,15 @@ export default function consequence (context:RuleContext, action?:Action, store:
     }
   }
   const concurrency = context.concurrency[concurrencyId]
+  
+  if(concurrency.running){
+    if(rule.addOnce) return {resolved:false}
+  }
+
+  let execId = executionId++
+
+  context.trigger('CONSEQUENCE_START', execId)
+
 
   if(process.env.NODE_ENV === 'development'){
     devTools.execRuleStart(rule.id, execId, actionExecId, concurrencyId)
@@ -57,7 +63,6 @@ export default function consequence (context:RuleContext, action?:Action, store:
   if(concurrency.running){
     if(rule.concurrency === 'ONCE') return skipConsequence()
     if(rule.concurrency === 'FIRST') return skipConsequence()
-    if(rule.addOnce) return skipConsequence()
     if(rule.concurrency === 'LAST') context.trigger('CANCEL_CONSEQUENCE', concurrencyId)
     if(rule.throttle) context.trigger('CANCEL_CONSEQUENCE', concurrencyId)
     if(rule.debounce) context.trigger('CANCEL_CONSEQUENCE', concurrencyId)
@@ -145,6 +150,9 @@ export default function consequence (context:RuleContext, action?:Action, store:
   if(action && typeof result === 'object' && result.type && rule.position === 'INSTEAD' && result.type === action.type){
     const action:Action = (result:any)
     unlisten(context, execId, cancel, concurrency)
+    if(process.env.NODE_ENV === 'development'){
+      devTools.execRuleEnd(rule.id, execId, actionExecId, concurrencyId, 'RESOLVED')
+    }
     return {resolved: true, action}
   }
 
