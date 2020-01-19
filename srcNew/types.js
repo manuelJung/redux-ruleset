@@ -52,8 +52,18 @@ export type Rule = {
   addUntil?: Saga<LogicRemove>,
 }
 
-export type RuleMeta = {
+export type RuleContext = {
   rule: Rule,
   active: boolean,
   runningSaga: null | 'addWhen' | 'addUntil'
+}
+
+export type ActionExecution = {
+  execId: number
+}
+
+export type RuleExecution = {
+  execId: number,
+  concurrencyId: string,
+  actionExecId: number
 }

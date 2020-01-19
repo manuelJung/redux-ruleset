@@ -11,6 +11,11 @@ const ReduxPlugin = {
       getState: store.getState
     }
   },
+  createConditionArgs({store}){
+    return {
+      getState: store.getState
+    }
+  },
   createConsequenceArgs(effect, {store}){
     return {
       getState: store.getState,

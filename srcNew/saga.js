@@ -11,9 +11,9 @@ export function yieldAction (actionExecution) {
   const globalList = listeners[GLOBAL_TYPE]
   const targetList = listeners[actionExecution.action.type]
   let i = 0
-  
-  for (i=0; i<globalList.length; i++) globalList[i](actionExecution)
-  for (i=0; i<targetList.length; i++) targetList[i](actionExecution)
+
+  if(globalList) for (i=0; i<globalList.length; i++) globalList[i](actionExecution)
+  if(targetList) for (i=0; i<targetList.length; i++) targetList[i](actionExecution)
 }
 
 function addActionListener (target, ruleContext, cb) {
@@ -33,6 +33,7 @@ function addActionListener (target, ruleContext, cb) {
 export function startSaga (sagaType, ruleContext, finCb, isReady) {
   if(!isReady){
     plugins.onSagaReady(() => startSaga(sagaType, ruleContext, finCb, true))
+    return
   }
   const sagaContext = {
     execId: sagaExecId++,
@@ -72,3 +73,5 @@ export function startSaga (sagaType, ruleContext, finCb, isReady) {
   const iter = saga(nextFn, plugins.createSagaArgs({context: ruleContext.context}))
   iterate(iter)
 }
+
+export const testing = {addActionListener, listeners}
