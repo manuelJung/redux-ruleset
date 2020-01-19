@@ -52,6 +52,9 @@ export default function registerRule (rule:t.Rule) {
           cb(...args)
         }
       }
+    },
+    clearOnce(event){
+      onceList[event] = []
     }
   }
 
@@ -61,6 +64,8 @@ export default function registerRule (rule:t.Rule) {
     runningSaga: null,
     events: events
   }
+
+  context.events.trigger('REGISTER_RULE')
 
   if(rule.addWhen) startAddWhen(context)
   else if(rule.addUntil) startAddUntil(context)

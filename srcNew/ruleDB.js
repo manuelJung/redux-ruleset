@@ -23,6 +23,8 @@ export const addRule = context => {
     if(!activeRules[position][targets[i]]) activeRules[position][targets[i]] = []
     activeRules[position][targets[i]].push(context) // TODO: push by weight
   }
+
+  context.events.trigger('ADD_RULE')
 }
 
 export const removeRule = context => {
@@ -42,6 +44,8 @@ export const removeRule = context => {
     if(!activeRules[position][targets[i]]) activeRules[position][targets[i]] = []
     activeRules[position][targets[i]] = activeRules[position][targets[i]].filter(item => item !== context) // TODO: better filtering
   }
+
+  context.events.trigger('REMOVE_RULE')
 }
 
 export const forEachRuleContext = (target, position, cb) => {
