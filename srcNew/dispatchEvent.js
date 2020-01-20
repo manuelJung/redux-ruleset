@@ -1,22 +1,30 @@
 // @flow
+import consequence, {getCurrentRuleExecId} from './consequence'
+
+let execId = 1
 
 export default function dispatchEvent (action, cb) {
-  let canceled = false
+  
+  const actionExecution = {
+    execId: execId++,
+    ruleExecId: getCurrentRuleExecId(),
+    canceled: false
+  }
 
   forEachRuleContext(action.type, 'INSTEAD', context => {
     if(canceled) return
     const [newCanceled, newAction] = consequence(action, context)
     action = newAction
-    canceled = newCanceled
+    actionExecution.canceled = newCanceled
   })
 
-  canceled || forEachRuleContext(action.type, 'BEFORE', context => {
+  actionExecution.canceled || forEachRuleContext(action.type, 'BEFORE', context => {
     consequence(action, context)
   })
 
-  canceled || cb(action)
+  actionExecution.canceled || cb(action)
 
-  canceled || forEachRuleContext(action.type, 'AFTER', context => {
+  actionExecution.canceled || forEachRuleContext(action.type, 'AFTER', context => {
     consequence(action, context)
   })
 }

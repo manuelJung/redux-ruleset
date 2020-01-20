@@ -2,7 +2,9 @@
 import * as t from './types'
 import * as plugins from './plugins'
 
-const execId = 1
+let execId = 1
+let wrappedExecIds = []
+export const getCurrentRuleExecId = () => wrappedExecIds[wrappedExecId.length-1] || null
 
 export default function consequence (actionExecution:t.ActionExecution, ruleContext:t.RuleContext) {
   const action = actionExecution.action
@@ -83,7 +85,9 @@ export default function consequence (actionExecution:t.ActionExecution, ruleCont
     //   return
     // }
     rule.concurrency === 'SWITCH' && ruleContext.events.trigger('CANCEL_CONSEQUENCE', ruleExecution, 'SWITCH')
+    wrappedExecIds.push(ruleExecution.execId)
     fn()
+    wrappedExecIds.pop()
   }
   const addRule = name => {}
   const removeRule = name => {}
