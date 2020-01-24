@@ -1,8 +1,7 @@
-// @flow
 
 let listener
 
-const ReduxPlugin = {
+export default {
   createSetup(cb){
     listener = store => cb({store})
   },
@@ -22,12 +21,12 @@ const ReduxPlugin = {
       dispatch: (...args) => effect(() => store.dispatch(...args))
     }
   },
-  onConsequenceReturn(action, {store}){
+  onConsequenceActionReturn(action, {store}){
     store.dispatch(action)
   }
 }
 
-const middleware = store => {
+export const middleware = store => {
   listener && listener(store)
-  return next => action => dispatchEvent(action, store, action => next(action))
+  return next => action => dispatchEvent(action, action => next(action))
 }

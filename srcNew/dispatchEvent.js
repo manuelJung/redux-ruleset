@@ -3,7 +3,7 @@ import consequence, {getCurrentRuleExecId} from './consequence'
 
 let execId = 1
 
-export default function dispatchEvent (action, cb) {
+export default function dispatchEvent (action, cb=()=>null) {
   
   const actionExecution = {
     execId: execId++,
