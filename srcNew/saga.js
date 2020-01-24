@@ -69,8 +69,15 @@ export function startSaga (sagaType, ruleContext, finCb, isReady) {
   ruleContext.events.trigger('SAGA_START', sagaType)
   ruleContext.events.once('REMOVE_RULE', cancel)
 
+  const context = {
+    setContext: (name, value) => ruleContext.publicContext[sagaType][name] = value,
+    getContext: (name:string) => ruleContext.publicContext.addUntil[name] 
+    || ruleContext.publicContext.addWhen[name]
+    || ruleContext.publicContext.global[name]
+  }
+
   const saga = ruleContext.rule[sagaType]
-  const iter = saga(nextFn, plugins.createSagaArgs({context: ruleContext.context}))
+  const iter = saga(nextFn, plugins.createSagaArgs({context}))
   iterate(iter)
 }
 

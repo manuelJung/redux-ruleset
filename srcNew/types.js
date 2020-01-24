@@ -55,7 +55,18 @@ export type Rule = {
 export type RuleContext = {
   rule: Rule,
   active: boolean,
-  runningSaga: null | 'addWhen' | 'addUntil'
+  runningSaga: null | 'addWhen' | 'addUntil',
+  publicContext: {
+    global: {},
+    addWhen: {},
+    addUntil: {}
+  },
+  events: {
+    once: (event:string, cb:Function) => Function,
+    on: (event:string, cb:Function) => Function,
+    trigger: (event:string, ...args:any[]) => void,
+    clearOnce: (event:string) => void
+  }
 }
 
 export type ActionExecution = {

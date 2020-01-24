@@ -91,8 +91,14 @@ export default function consequence (actionExecution:t.ActionExecution, ruleCont
   }
   const addRule = name => {}
   const removeRule = name => {}
+  const context = {
+    addContext: () => {throw new Error('you cannot call addContext within a consequence. check rule '+ rule.id)},
+    getContext: (name:string) => ruleContext.publicContext.addUntil[name] 
+    || ruleContext.publicContext.addWhen[name]
+    || ruleContext.publicContext.global[name]
+  }
 
-  const consequenceArgs = plugins.createConsequenceArgs({addRule, removeRule, effect, wasCanceled, context:ruleContext.context})
+  const consequenceArgs = plugins.createConsequenceArgs({addRule, removeRule, effect, wasCanceled, context})
 
   if(rule.throttle || rule.delay || rule.debounce){
     result = new Promise(resolve => {

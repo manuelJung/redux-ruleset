@@ -62,8 +62,19 @@ export default function registerRule (rule:t.Rule) {
     rule: rule,
     active: !rule.addWhen,
     runningSaga: null,
-    events: events
+    events: events,
+    publicContext: {
+      global: {},
+      addWhen: {},
+      addUntil: {}
+    }
   }
+
+  events.on('SAGA_END', (_,type) => {
+    if(type === 'addWhen'){
+      //TODO: clear public context
+    }
+  })
 
   context.events.trigger('REGISTER_RULE')
 
