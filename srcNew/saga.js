@@ -1,5 +1,5 @@
 // @flow
-import * as plugins from './plugins'
+import * as setup from './setup'
 import {removeItem} from './utils'
 
 const listeners = {}
@@ -30,9 +30,16 @@ function addActionListener (target, ruleContext, cb) {
   }
 }
 
+function yieldFn (target, condition, ruleContext, onYield) {
+  addActionListener(target, ruleContext, actionExecution => {
+    const result = condition ? condition(actionExecution.action) : actionExecution.action
+    if(result) onYield(result)
+  })
+}
+
 export function startSaga (sagaType, ruleContext, finCb, isReady) {
   if(!isReady){
-    plugins.onSagaReady(() => startSaga(sagaType, ruleContext, finCb, true))
+    setup.onSetupFinished(() => startSaga(sagaType, ruleContext, finCb, true))
     return
   }
   const sagaContext = {
@@ -49,10 +56,8 @@ export function startSaga (sagaType, ruleContext, finCb, isReady) {
     }
   }
 
-  const nextFn = (target, cb) => {
-    addActionListener(target, ruleContext, actionExecution => {
-      const result = cb ? cb(actionExecution.action) : actionExecution.action
-      if(!result) return
+  const nextFn = (target, condition) => {
+    yieldFn(target, condition, ruleContext, result => {
       ruleContext.events.trigger('SAGA_YIELD', result, sagaType)
       iterate(iter, result, actionExecution)
     })
@@ -77,7 +82,7 @@ export function startSaga (sagaType, ruleContext, finCb, isReady) {
   }
 
   const saga = ruleContext.rule[sagaType]
-  const iter = saga(nextFn, plugins.createSagaArgs({context}))
+  const iter = saga(nextFn, setup.createSagaArgs({context}))
   iterate(iter)
 }
 
