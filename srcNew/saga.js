@@ -35,7 +35,7 @@ function addActionListener (target, ruleContext, cb) {
 function yieldFn (target, condition, ruleContext, onYield) {
   addActionListener(target, ruleContext, actionExecution => {
     const result = condition ? condition(actionExecution.action) : actionExecution.action
-    if(result) onYield(result, actionExecution)
+    if(result) onYield(result)
   })
 }
 
@@ -88,4 +88,4 @@ export function startSaga (sagaType, ruleContext, finCb, isReady) {
   iterate(iter)
 }
 
-export const testing = {addActionListener, listeners}
+export const testing = {addActionListener, listeners, yieldFn}

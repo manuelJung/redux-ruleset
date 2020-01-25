@@ -61,7 +61,7 @@ describe('addActionListener', () => {
   })
 })
 
-describe.only('startSaga-fn', () => {
+describe('startSaga-fn', () => {
   beforeEach(initTest)
 
   test('does not run when plugins do not send ready event', () => undefined)
@@ -141,7 +141,7 @@ describe.only('startSaga-fn', () => {
     expect(ruleContext.runningSaga).toEqual(null)
   })
 
-  test.only('returns "CANCELED" when rule gets removed', () => {
+  test('returns "CANCELED" when rule gets removed', () => {
     ruleContext.rule.addWhen = function* (next) {
       yield next('MY_TYPE')
       return 'ADD_RULE'
@@ -154,14 +154,40 @@ describe.only('startSaga-fn', () => {
   })
 })
 
-describe('yield-fn', () => {
+describe.only('yield-fn', () => {
   beforeEach(initTest)
 
-  test('yield only for matched action', () => undefined)
+  test('yield only for matched action', () => {
+    const callback1 = jest.fn()
+    const callback2 = jest.fn()
+    saga.testing.yieldFn('MY_TYPE', null, ruleContext, callback1)
+    saga.testing.yieldFn('MY_OTHER_TYPE', null, ruleContext, callback2)
+    saga.yieldAction({action:{type:'MY_TYPE'}})
 
-  test('yield the matched action when no condition is given', () => undefined)
+    expect(callback1).toBeCalledTimes(1)
+    expect(callback2).not.toBeCalled()
+  })
 
-  test('yield only when condition returns truthy value', () => undefined)
+  test('yield the matched action when no condition is given', () => {
+    const callback = jest.fn()
+    saga.testing.yieldFn('MY_TYPE', null, ruleContext, callback)
+    saga.yieldAction({action:{type:'MY_TYPE'}})
+    expect(callback).toBeCalledWith({type:'MY_TYPE'})
+  })
 
-  test('yield the return value of condition', () => undefined)
+  test('yield only when condition returns truthy value', () => {
+    const callback = jest.fn()
+    const condition = () => false
+    saga.testing.yieldFn('MY_TYPE', condition, ruleContext, callback)
+    saga.yieldAction({action:{type:'MY_TYPE'}})
+    expect(callback).not.toBeCalled()
+  })
+
+  test('yield the return value of condition', () => {
+    const callback = jest.fn()
+    const condition = action => action.type
+    saga.testing.yieldFn('MY_TYPE', condition, ruleContext, callback)
+    saga.yieldAction({action:{type:'MY_TYPE'}})
+    expect(callback).toBeCalledWith('MY_TYPE')
+  })
 })
