@@ -1,15 +1,16 @@
 import * as utils from './utils'
 
 // dependencies
-import * as setup from '../setup'
 
 let saga 
-let context
+let ruleContext
+let setup
 
 const initTest = () => {
   jest.resetModules()
   saga = require('../saga')
-  context = utils.createContext()
+  setup = require('../setup')
+  ruleContext = utils.createContext()
 
   // mock setup
   for(let key in setup) setup[key] = jest.fn()
@@ -34,34 +35,123 @@ describe('yieldAction', () => {
   })
 })
 
-describe.only('addActionListener', () => {
+describe('addActionListener', () => {
   beforeEach(initTest)
 
-  test('add callback to private listeners by target', () => undefined)
+  test('add callback to private listeners by target', () => {
+    let cb1 = () => null
+    let cb2 = () => null
+    saga.testing.addActionListener('MY_TARGET', ruleContext, cb1)
+    saga.testing.addActionListener(['MY_TARGET', 'MY_OTHER_TARGET'], ruleContext, cb2)
+
+    expect(saga.testing.listeners.MY_TARGET[0]).toEqual(cb1)
+    expect(saga.testing.listeners.MY_TARGET[1]).toEqual(cb2)
+    expect(saga.testing.listeners.MY_OTHER_TARGET[0]).toEqual(cb2)
+  })
   
-  test('remove callback from private listeners after saga yields', () => undefined)
+  test('remove callback from private listeners after saga yields', () => {
+    saga.testing.addActionListener('MY_TARGET', ruleContext, () => null)
+    saga.testing.addActionListener('MY_TARGET', ruleContext, () => null)
+
+    expect(saga.testing.listeners.MY_TARGET.length).toEqual(2)
+
+    ruleContext.events.trigger('SAGA_YIELD')
+
+    expect(saga.testing.listeners.MY_TARGET.length).toEqual(0)
+  })
 })
 
-describe('startSaga-fn', () => {
+describe.only('startSaga-fn', () => {
   beforeEach(initTest)
 
   test('does not run when plugins do not send ready event', () => undefined)
 
-  test('set running saga context for ruleContext when saga starts', () => undefined)
+  test('set running saga context for ruleContext when saga starts', () => {
+    ruleContext.rule.addWhen = function* (next) {
+      yield next('NOT_CALLED')
+    }
+    saga.startSaga('addWhen', ruleContext, () => null)
+    expect(ruleContext.runningSaga).toEqual({
+      execId: 1,
+      sagaType: 'addWhen'
+    })
+  })
 
-  test('trigger "SAGA_START" when saga starts', () => undefined)
+  test('trigger "SAGA_START" when saga starts', () => {
+    ruleContext.rule.addWhen = function* (next) {
+      yield next('NOT_CALLED')
+    }
+    saga.startSaga('addWhen', ruleContext, () => null)
+    expect(ruleContext.events.trigger).toBeCalledWith('SAGA_START', 'addWhen')
+  })
 
-  test('trigger "SAGA_END" when saga ends', () => undefined)
+  test('trigger "SAGA_END" when saga ends', () => {
+    ruleContext.rule.addWhen = function* (next) {
+      yield next('MY_TYPE')
+      return 'ADD_RULE'
+    }
+    saga.startSaga('addWhen', ruleContext, () => null)
+    expect(ruleContext.events.trigger).not.toBeCalledWith('SAGA_END', 'ADD_RULE', 'addWhen')
+    saga.yieldAction({action:{type:'MY_TYPE'}})
+    expect(ruleContext.events.trigger).toBeCalledWith('SAGA_END', 'ADD_RULE', 'addWhen')
+  })
 
-  test('trigger "SAGA_YIELD" when saga yields', () => undefined)
+  test('trigger "SAGA_YIELD" when saga yields', () => {
+    ruleContext.rule.addWhen = function* (next) {
+      yield next('MY_TYPE')
+      return 'ADD_RULE'
+    }
+    saga.startSaga('addWhen', ruleContext, () => null)
+    expect(ruleContext.events.trigger).not.toBeCalledWith('SAGA_YIELD', {type:'MY_TYPE'}, 'addWhen')
+    saga.yieldAction({action:{type:'MY_TYPE'}})
+    expect(ruleContext.events.trigger).toBeCalledWith('SAGA_YIELD', {type:'MY_TYPE'}, 'addWhen')
+  })
 
-  test('add plugin.sagaArgs as second arg for each saga', () => undefined)
+  test('add setup.sagaArgs as second arg for each saga', () => {
+    let sagaArgs
+    ruleContext.rule.addWhen = function* (next, args) {
+      sagaArgs = args
+      yield next('NOT_CALLED')
+    }
+    saga.startSaga('addWhen', ruleContext, () => null)
+    expect(sagaArgs).toEqual({sagaArg:'sagaArg'})
+  })
 
-  test('call callback after saga ends', () => undefined)
+  test('call callback after saga ends', () => {
+    ruleContext.rule.addWhen = function* (next) {
+      yield next('MY_TYPE')
+      return 'ADD_RULE'
+    }
+    const callback = jest.fn()
+    saga.startSaga('addWhen', ruleContext, callback)
+    saga.yieldAction({action:{type:'MY_TYPE'}})
+    
+    expect(callback).toBeCalledWith({logic:'ADD_RULE'})
+  })
 
-  test('remove running saga context for ruleContext after saga ends', () => undefined)
+  test('remove running saga context for ruleContext after saga ends', () => {
+    ruleContext.rule.addWhen = function* (next) {
+      yield next('MY_TYPE')
+      return 'ADD_RULE'
+    }
+    const callback = jest.fn()
+    saga.startSaga('addWhen', ruleContext, callback)
+    saga.yieldAction({action:{type:'MY_TYPE'}})
+    
+    expect(ruleContext.runningSaga).toEqual(null)
+  })
 
-  test('returns "CANCELED" when rule gets removed', () => undefined)
+  test.only('returns "CANCELED" when rule gets removed', () => {
+    ruleContext.rule.addWhen = function* (next) {
+      yield next('MY_TYPE')
+      return 'ADD_RULE'
+    }
+    const callback = jest.fn()
+    saga.startSaga('addWhen', ruleContext, callback)
+    ruleContext.events.trigger('REMOVE_RULE')
+    
+    expect(callback).toBeCalledWith({logic:'CANCELED'})
+  })
 })
 
 describe('yield-fn', () => {

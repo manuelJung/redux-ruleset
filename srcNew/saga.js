@@ -22,8 +22,10 @@ function addActionListener (target, ruleContext, cb) {
   else if(typeof target === 'string') targetList = [target]
   else targetList = target
 
+
   for (let i=0; i<targetList.length; i++) {
-    listeners[targetList[i]] = cb
+    if(!listeners[targetList[i]]) listeners[targetList[i]] = []
+    listeners[targetList[i]].push(cb)
     ruleContext.events.once('SAGA_YIELD', () => {
       removeItem(listeners[targetList[i]], cb)
     })
@@ -33,7 +35,7 @@ function addActionListener (target, ruleContext, cb) {
 function yieldFn (target, condition, ruleContext, onYield) {
   addActionListener(target, ruleContext, actionExecution => {
     const result = condition ? condition(actionExecution.action) : actionExecution.action
-    if(result) onYield(result)
+    if(result) onYield(result, actionExecution)
   })
 }
 
@@ -47,19 +49,19 @@ export function startSaga (sagaType, ruleContext, finCb, isReady) {
     sagaType: sagaType
   }
 
-  const iterate = (iter, payload, actionExecution) => {
+  const iterate = (iter, payload) => {
     const result = iter.next(payload)
     if(result.done){
-      ruleContext.runnnigSaga = null
+      ruleContext.runningSaga = null
       ruleContext.events.trigger('SAGA_END', result.value, sagaType)
-      finCb({ logic: result.value })
+      finCb({ logic: payload ? result.value : 'CANCELED' })
     }
   }
 
   const nextFn = (target, condition) => {
     yieldFn(target, condition, ruleContext, result => {
       ruleContext.events.trigger('SAGA_YIELD', result, sagaType)
-      iterate(iter, result, actionExecution)
+      iterate(iter, result)
     })
   }
 
