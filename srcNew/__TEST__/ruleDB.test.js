@@ -8,7 +8,7 @@ let ruleContext
 const initTest = () => {
   jest.resetModules()
   ruleDB = require('../ruleDB')
-  ruleContext = utils.createContext({}, {active:false})
+  ruleContext = utils.createContext({})
 }
 
 describe('addRule', () => {
@@ -20,24 +20,24 @@ describe('addRule', () => {
   })
 
   test('adds ruleContext by correct position', () => {
-    const ruleContext = utils.createContext({target:'MY_TYPE', position: 'BEFORE'}, {active:false})
+    const ruleContext = utils.createContext({target:'MY_TYPE', position: 'BEFORE'})
     ruleDB.addRule(ruleContext)
     expect(ruleDB.testing.activeRules['BEFORE']['MY_TYPE'][0]).toBe(ruleContext)
   })
 
   test('adds ruleContext for each rule-target', () => {
     // string target
-    const ruleContextString = utils.createContext({target:'MY_STRING_TYPE'}, {active:false})
+    const ruleContextString = utils.createContext({target:'MY_STRING_TYPE'})
     ruleDB.addRule(ruleContextString)
     expect(ruleDB.testing.activeRules['AFTER']['MY_STRING_TYPE'][0]).toBe(ruleContextString)
 
     // array target
-    const ruleContextArray = utils.createContext({target: ['MY_ARRAY_1_TYPE', 'MY_ARRAY_2_TYPE']}, {active:false})
+    const ruleContextArray = utils.createContext({target: ['MY_ARRAY_1_TYPE', 'MY_ARRAY_2_TYPE']})
     ruleDB.addRule(ruleContextArray)
     expect(ruleDB.testing.activeRules['AFTER']['MY_ARRAY_1_TYPE'][0]).toBe(ruleContextArray)
     expect(ruleDB.testing.activeRules['AFTER']['MY_ARRAY_2_TYPE'][0]).toBe(ruleContextArray)
     // glob target
-    const ruleContextGlob = utils.createContext({target: '*'}, {active:false})
+    const ruleContextGlob = utils.createContext({target: '*'})
     ruleDB.addRule(ruleContextGlob)
     expect(ruleDB.testing.activeRules['AFTER']['-global-'][0]).toBe(ruleContextGlob)
   })
@@ -49,10 +49,10 @@ describe('addRule', () => {
   })
 
   test('adds context by rule weight', () => {
-    const ruleContext1 = utils.createContext({weight:1, id:'RULE_1'}, {active:false})
-    const ruleContext2 = utils.createContext({weight:2, id:'RULE_2'}, {active:false})
-    const ruleContext3 = utils.createContext({weight:3, id:'RULE_3'}, {active:false})
-    const ruleContext4 = utils.createContext({weight:4, id:'RULE_4'}, {active:false})
+    const ruleContext1 = utils.createContext({weight:1, id:'RULE_1'})
+    const ruleContext2 = utils.createContext({weight:2, id:'RULE_2'})
+    const ruleContext3 = utils.createContext({weight:3, id:'RULE_3'})
+    const ruleContext4 = utils.createContext({weight:4, id:'RULE_4'})
     ruleDB.addRule(ruleContext1)
     ruleDB.addRule(ruleContext3)
     ruleDB.addRule(ruleContext2)
@@ -82,14 +82,14 @@ describe('removeRule', () => {
 
   test('removed rule contxt from each target', () => {
     // string target
-    const ruleContextString = utils.createContext({target:'MY_STRING_TYPE'}, {active:false})
+    const ruleContextString = utils.createContext({target:'MY_STRING_TYPE'})
     ruleDB.addRule(ruleContextString)
     expect(ruleDB.testing.activeRules['AFTER']['MY_STRING_TYPE'][0]).toBe(ruleContextString)
     ruleDB.removeRule(ruleContextString)
     expect(ruleDB.testing.activeRules['AFTER']['MY_STRING_TYPE'][0]).not.toBe(ruleContextString)
 
     // array target
-    const ruleContextArray = utils.createContext({target: ['MY_ARRAY_1_TYPE', 'MY_ARRAY_2_TYPE']}, {active:false})
+    const ruleContextArray = utils.createContext({target: ['MY_ARRAY_1_TYPE', 'MY_ARRAY_2_TYPE']})
     ruleDB.addRule(ruleContextArray)
     expect(ruleDB.testing.activeRules['AFTER']['MY_ARRAY_1_TYPE'][0]).toBe(ruleContextArray)
     expect(ruleDB.testing.activeRules['AFTER']['MY_ARRAY_2_TYPE'][0]).toBe(ruleContextArray)
@@ -98,7 +98,7 @@ describe('removeRule', () => {
     expect(ruleDB.testing.activeRules['AFTER']['MY_ARRAY_2_TYPE'][0]).not.toBe(ruleContextArray)
 
     // glob target
-    const ruleContextGlob = utils.createContext({target: '*'}, {active:false})
+    const ruleContextGlob = utils.createContext({target: '*'})
     ruleDB.addRule(ruleContextGlob)
     expect(ruleDB.testing.activeRules['AFTER']['-global-'][0]).toBe(ruleContextGlob)
     ruleDB.removeRule(ruleContextGlob)

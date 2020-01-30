@@ -38,7 +38,7 @@ export function createContext (ruleAlter={}, contextAlter={}) {
       target: 'TEST_TYPE',
       consequence: () => ({type:'RETURN_TYPE'})
     },
-    active: true,
+    active: false,
     runningSaga: null,
     events: events
   }
