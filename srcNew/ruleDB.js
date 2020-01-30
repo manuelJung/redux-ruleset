@@ -21,7 +21,7 @@ export const addRule = context => {
   // add context to activeRules by targets
   for(let i=0;i<targets.length;i++){
     if(!activeRules[position][targets[i]]) activeRules[position][targets[i]] = []
-    activeRules[position][targets[i]].push(context) // TODO: push by weight
+    pushByWeight(activeRules[position][targets[i]], context)
   }
 
   context.events.trigger('ADD_RULE')
@@ -56,3 +56,29 @@ export const forEachRuleContext = (target, position, cb) => {
   for (i=0; i<globalList.length; i++) cb(globalList[i])
   for (i=0; i<targetList.length; i++) cb(targetList[i])
 }
+
+function pushByWeight (list, ruleContext) {
+  if(!ruleContext.rule.weight || !list.length){
+    return list.unshift(ruleContext)
+  }
+  let i, prev, temp
+
+  for (i = 0; i < list.length; i++) {
+    if (prev) {
+      temp = list[i]
+      list[i] = prev
+      prev = temp
+    }
+    else if (!list[i].rule.weight) {
+      continue
+    }
+    else if (ruleContext.rule.weight >= list[i].rule.weight) {
+      prev = ruleContext
+    }
+  }
+
+  if(prev) list.push(prev)
+  else list.push(ruleContext)
+}
+
+export const testing = {activeRules}

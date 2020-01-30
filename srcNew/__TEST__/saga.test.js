@@ -154,7 +154,7 @@ describe('startSaga-fn', () => {
   })
 })
 
-describe.only('yield-fn', () => {
+describe('yield-fn', () => {
   beforeEach(initTest)
 
   test('yield only for matched action', () => {
