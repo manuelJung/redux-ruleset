@@ -50,6 +50,7 @@ export type Rule = {
   addOnce?: boolean,
   addWhen?: Saga<LogicAdd>,
   addUntil?: Saga<LogicRemove>,
+  childRules?: {[id:string]: Rule}
 }
 
 export type RuleContext = {
