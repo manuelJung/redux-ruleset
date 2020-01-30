@@ -8,7 +8,7 @@ let ruleContext
 const initTest = () => {
   jest.resetModules()
   ruleDB = require('../ruleDB')
-  ruleContext = utils.createContext({})
+  ruleContext = utils.createContext()
 }
 
 describe('addRule', () => {

@@ -53,7 +53,7 @@ export function createEventContainer () {
 export function createRuleContext (rule:Rule):RuleContext {
   return {
     rule: rule,
-    active: !rule.addWhen,
+    active: false,
     runningSaga: null,
     events: createEventContainer(),
     publicContext: {

@@ -139,7 +139,7 @@ describe('startAddWhen', () => {
   })
 
   test('recalls startAddWhen after action-execution for logic REAPPLY_ADD_WHEN', () => {
-    saga.startSaga = jest.fn((_,__,cb) => cb({logic:'REAPPLY_ADD_WHEN'}))
+    saga.startSaga = jest.fn().mockImplementationOnce((_,__,cb) => cb({logic:'REAPPLY_ADD_WHEN'}))
     registerRule.testing.startAddWhen(ruleContext)
     expect(saga.startSaga).toBeCalledTimes(1)
     globalEvents.default.trigger('END_ACTION_EXECUTION')
@@ -197,7 +197,7 @@ describe('startAddUntil', () => {
   })
 
   test('recall startAddUntil after action-execution for logic REAPPLY_ADD_UNTIL', () => {
-    saga.startSaga = jest.fn((_,__,cb) => cb({logic:'REAPPLY_ADD_UNTIL'}))
+    saga.startSaga = jest.fn().mockImplementationOnce((_,__,cb) => cb({logic:'REAPPLY_ADD_UNTIL'}))
     registerRule.testing.startAddUntil(ruleContext)
     expect(saga.startSaga).toBeCalledTimes(1)
     globalEvents.default.trigger('END_ACTION_EXECUTION')
