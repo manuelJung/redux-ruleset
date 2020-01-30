@@ -2,18 +2,18 @@
 import * as t from './types'
 import {removeItem, createRuleContext} from './utils'
 import {startSaga} from './saga'
-import {addRule} from './ruleDB'
+import {addRule, removeRule} from './ruleDB'
+import globalEvents from './globalEvents'
 
 const startAddWhen = context => startSaga('addWhen', context, result => {
-  debugger
-  switch(result.logic) {
-    case 'ADD_RULE': return context.events.once('END_ACTION_EXECUTION', () => addRule(context))
+  switch (result.logic) {
+    case 'ADD_RULE': return globalEvents.once('END_ACTION_EXECUTION', () => addRule(context))
     case 'ADD_RULE_BEFORE': return addRule(context)
-    case 'REAPPLY_ADD_WHEN': return context.events.once('END_ACTION_EXECUTION', () => startAddWhen(context))
+    case 'REAPPLY_ADD_WHEN': return globalEvents.once('END_ACTION_EXECUTION', () => startAddWhen(context))
     case 'CANCELED':
     case 'ABORT': return
     default: {
-      if(process.env.NODE_ENV === 'development'){
+      if(process.env.NODE_ENV !== 'production'){
         throw new Error(`invalid return type "${String(result.logic)}" for addWhen saga (${context.rule.id})`)
       }
     }
@@ -21,7 +21,38 @@ const startAddWhen = context => startSaga('addWhen', context, result => {
 })
 
 const startAddUntil = context => startSaga('addUntil', context, result => {
-
+  switch (result.logic) {
+    case 'REMOVE_RULE': return globalEvents.once('END_ACTION_EXECUTION', () => removeRule(context))
+    case 'REMOVE_RULE_BEFORE': return removeRule(context)
+    case 'RECREATE_RULE': return globalEvents.once('END_ACTION_EXECUTION', () => {
+      removeRule()
+      if(context.rule.addWhen) startAddWhen(context)
+      else startAddUntil(context)
+    })
+    case 'RECREATE_RULE_BEFORE': {
+      removeRule()
+      if(context.rule.addWhen) startAddWhen(context)
+      else startAddUntil(context)
+      return
+    }
+    case 'REAPPLY_ADD_UNTIL': return globalEvents.once('END_ACTION_EXECUTION', () => startAddUntil(context))
+    case 'READD_RULE': return globalEvents.once('END_ACTION_EXECUTION', () => {
+      removeRule()
+      startAddUntil(context)
+    })
+    case 'READD_RULE_BEFORE': {
+      removeRule()
+      startAddUntil(context)
+      return
+    }
+    case 'ABORT':
+    case 'CANCELED': return
+    default: {
+      if(process.env.NODE_ENV !== 'production'){
+        throw new Error(`invalid return type "${String(result.logic)}" for addUntil saga (${context.rule.id})`)
+      }
+    }
+  }
 })
 
 
@@ -42,8 +73,8 @@ export default function registerRule (rule:t.Rule) {
         ruleContext.publicContext.addUntil = {}
     }
   })
-
-  ruleContext.events.trigger('REGISTER_RULE')
+  
+  globalEvents.trigger('REGISTER_RULE', ruleContext)
 
   if(rule.addWhen) startAddWhen(ruleContext)
   else if(rule.addUntil) startAddUntil(ruleContext)
