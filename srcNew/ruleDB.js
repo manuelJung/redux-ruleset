@@ -72,8 +72,9 @@ function pushByWeight (list, ruleContext) {
     else if (!list[i].rule.weight) {
       continue
     }
-    else if (ruleContext.rule.weight >= list[i].rule.weight) {
-      prev = ruleContext
+    else if (ruleContext.rule.weight <= list[i].rule.weight) {
+      prev = list[i]
+      list[i] = ruleContext
     }
   }
 
