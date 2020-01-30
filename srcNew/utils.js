@@ -13,11 +13,11 @@ export function removeItem <Item:*>(list:Item[], item:Item) {
   if(j < i) list.pop()
 }
 
-export function createRuleContext (rule:Rule):RuleContext {
+export function createEventContainer () {
   const onceList = {}
   const onList = {}
   
-  const events = {
+  return {
     once(event, cb){
       if(!onceList[event]) onceList[event] = []
       onceList[event].push(cb)
@@ -48,12 +48,14 @@ export function createRuleContext (rule:Rule):RuleContext {
       onceList[event] = []
     }
   }
+}
 
+export function createRuleContext (rule:Rule):RuleContext {
   return {
     rule: rule,
     active: !rule.addWhen,
     runningSaga: null,
-    events: events,
+    events: createEventContainer(),
     publicContext: {
       global: {},
       addWhen: {},
