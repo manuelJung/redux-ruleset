@@ -71,7 +71,10 @@ export type RuleContext = {
 }
 
 export type ActionExecution = {
-  execId: number
+  execId: number,
+  ruleExecId: number | null,
+  canceled: boolean,
+  action: Object
 }
 
 export type RuleExecution = {

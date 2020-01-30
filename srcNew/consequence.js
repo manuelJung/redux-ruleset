@@ -1,10 +1,10 @@
 // @flow
 import * as t from './types'
-import * as plugins from './plugins'
+import * as setup from './setup'
 
 let execId = 1
 let wrappedExecIds = []
-export const getCurrentRuleExecId = () => wrappedExecIds[wrappedExecId.length-1] || null
+export const getCurrentRuleExecId = () => wrappedExecIds[wrappedExecIds.length-1] || null
 
 export default function consequence (actionExecution:t.ActionExecution, ruleContext:t.RuleContext) {
   const action = actionExecution.action
@@ -63,7 +63,7 @@ export default function consequence (actionExecution:t.ActionExecution, ruleCont
   }
   // skip if rule condition does not match
   if(rule.condition){
-    const conditionArgs = plugins.createConditionArgs({context: Object.assign({}, ruleContext.context, {
+    const conditionArgs = setup.createConditionArgs({context: Object.assign({}, ruleContext.context, {
       setContext: (key:string, value:mixed) => {throw new Error('consequences cannot set context')}
     })})
     if(!rule.condition(action, conditionArgs)){
@@ -98,7 +98,7 @@ export default function consequence (actionExecution:t.ActionExecution, ruleCont
     || ruleContext.publicContext.global[name]
   }
 
-  const consequenceArgs = plugins.createConsequenceArgs({addRule, removeRule, effect, wasCanceled, context})
+  const consequenceArgs = setup.createConsequenceArgs({addRule, removeRule, effect, wasCanceled, context})
 
   if(rule.throttle || rule.delay || rule.debounce){
     result = new Promise(resolve => {
@@ -129,13 +129,13 @@ export default function consequence (actionExecution:t.ActionExecution, ruleCont
   // position:INSTEAD can extend the action if type is equal
   if(typeof result === 'object' && result.type && rule.position === 'INSTEAD' && result.type === action.type){
     unlisten(ruleContext, ruleExecution, concurrency)
-    return {resolved: true, action:result}
+    return result
   }
 
   // dispatch returned action
   if(typeof result === 'object' && result.type){
     unlisten(ruleContext, ruleExecution, concurrency)
-    plugins.handleConsequenceReturn(result)
+    setup.handleConsequenceReturn(result)
   }
 
   // dispatch returned (promise-wrapped) action
@@ -144,7 +144,7 @@ export default function consequence (actionExecution:t.ActionExecution, ruleCont
       // if(rule.concurrency === 'ORDERED') effect(() => unlisten(context, execId, cancel, concurrency))
       // else unlisten(context, execId, cancel, concurrency)
       unlisten(ruleContext, ruleExecution, concurrency)
-      action && action.type && plugins.handleConsequenceReturn(action)
+      action && action.type && setup.handleConsequenceReturn(action)
     })
   }
 
@@ -167,7 +167,7 @@ export default function consequence (actionExecution:t.ActionExecution, ruleCont
     unlisten(ruleContext, ruleExecution, concurrency)
   }
 
-  return {resolved:true}
+  return null
 }
 
 function unlisten (ruleContext, ruleExecution, concurrency) {
