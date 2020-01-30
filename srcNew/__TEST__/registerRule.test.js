@@ -5,14 +5,19 @@ import * as utils from './utils'
 let registerRule 
 let rule
 let lastRuleContext // last created ruleContext from registerRule.default
+let ruleContext
 let saga
 let appUtils
+let ruleDB
 
 const initTest = () => {
   jest.resetModules()
   registerRule = require('../registerRule')
   saga = require('../saga')
+  ruleDB = require('../ruleDB')
+  ruleDB.addRule = jest.fn()
   appUtils = require('../utils')
+  ruleContext = utils.createContext()
   rule = {
     id: 'TEST_RULE',
     target: 'TEST_TYPE',
@@ -109,5 +114,33 @@ describe('registerRule', () => {
     ruleContext.events.trigger('SAGA_END', 'RECREATE_RULE_BEFORE', 'addUntil')
     expect(ruleContext.publicContext.addUntil).toEqual({})
     expect(ruleContext.publicContext.addWhen).toEqual({})
+  })
+})
+
+describe.only('startAddWhen', () => {
+  beforeEach(initTest)
+
+  test('add rule after action-execution for logic ADD_RULE', () => {
+    saga.startSaga = (_,__,cb) => cb({logic:'ADD_RULE'})
+    registerRule.testing.startAddWhen(ruleContext)
+    expect(ruleDB.addRule).not.toBeCalled()
+    ruleContext.events.trigger('END_ACTION_EXECUTION')
+    expect(ruleDB.addRule).toBeCalledWith(ruleContext)
+  })
+
+  test('add rule instantly for logic ADD_RULE_BEFORE', () => {
+    saga.startSaga = (_,__,cb) => cb({logic:'ADD_RULE_BEFORE'})
+    registerRule.testing.startAddWhen(ruleContext)
+    expect(ruleDB.addRule).toBeCalledWith(ruleContext)
+  })
+
+  test.skip('recalls startAddWhen after action-execution for logic REAPPLY_ADD_WHEN', () => {
+    // INFINIT LOOP
+    saga.startSaga = (_,__,cb) => cb({logic:'REAPPLY_ADD_WHEN'})
+    registerRule.testing.startAddWhen = jest.fn(registerRule.testing.startAddWhen)
+    registerRule.testing.startAddWhen(ruleContext)
+    expect(registerRule.testing.startAddWhen).toBeCalledTimes(1)
+    // ruleContext.events.trigger('END_ACTION_EXECUTION')
+    expect(registerRule.testing.startAddWhen).toBeCalledTimes(2)
   })
 })

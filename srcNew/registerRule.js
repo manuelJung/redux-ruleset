@@ -2,12 +2,14 @@
 import * as t from './types'
 import {removeItem, createRuleContext} from './utils'
 import {startSaga} from './saga'
+import {addRule} from './ruleDB'
 
 const startAddWhen = context => startSaga('addWhen', context, result => {
+  debugger
   switch(result.logic) {
-    case 'ADD_RULE': return context.once('END_ACTION_EXECUTION', () => ruleDB.addRule(context))
-    case 'ADD_RULE_BEFORE': return ruleDB.addRule(context)
-    case 'REAPPLY_ADD_WHEN': return context.once('END_ACTION_EXECUTION', () => startAddWhen(context))
+    case 'ADD_RULE': return context.events.once('END_ACTION_EXECUTION', () => addRule(context))
+    case 'ADD_RULE_BEFORE': return addRule(context)
+    case 'REAPPLY_ADD_WHEN': return context.events.once('END_ACTION_EXECUTION', () => startAddWhen(context))
     case 'CANCELED':
     case 'ABORT': return
     default: {
