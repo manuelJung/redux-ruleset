@@ -9,8 +9,15 @@ const activeRules = {
 const GLOBAL_TYPE = '-global-'
 
 export const addRule = context => {
-  context.active = true
   const position = context.rule.position || 'AFTER'
+  
+  // throw error if rule is already active
+  if(context.active){
+    if(process.env.NODE_ENV !== 'production'){
+      throw new Error('you tried to add an already added rule "'+context.rule.id+'"')
+    }
+    return
+  }
 
   // calculate targets
   let targets
@@ -24,6 +31,8 @@ export const addRule = context => {
     pushByWeight(activeRules[position][targets[i]], context)
   }
 
+  // activate rule
+  context.active = true
   context.events.trigger('ADD_RULE')
 }
 

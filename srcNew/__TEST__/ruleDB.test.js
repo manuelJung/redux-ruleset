@@ -8,37 +8,36 @@ let ruleContext
 const initTest = () => {
   jest.resetModules()
   ruleDB = require('../ruleDB')
-  ruleContext = utils.createContext()
+  ruleContext = utils.createContext({}, {active:false})
 }
 
 describe('addRule', () => {
   beforeEach(initTest)
 
   test('sets context to active', () => {
-    ruleContext.active = false
     ruleDB.addRule(ruleContext)
     expect(ruleContext.active).toBe(true)
   })
 
   test('adds ruleContext by correct position', () => {
-    const ruleContext = utils.createContext({target:'MY_TYPE', position: 'BEFORE'})
+    const ruleContext = utils.createContext({target:'MY_TYPE', position: 'BEFORE'}, {active:false})
     ruleDB.addRule(ruleContext)
     expect(ruleDB.testing.activeRules['BEFORE']['MY_TYPE'][0]).toBe(ruleContext)
   })
 
   test('adds ruleContext for each rule-target', () => {
     // string target
-    const ruleContextString = utils.createContext({target:'MY_STRING_TYPE'})
+    const ruleContextString = utils.createContext({target:'MY_STRING_TYPE'}, {active:false})
     ruleDB.addRule(ruleContextString)
     expect(ruleDB.testing.activeRules['AFTER']['MY_STRING_TYPE'][0]).toBe(ruleContextString)
 
     // array target
-    const ruleContextArray = utils.createContext({target: ['MY_ARRAY_1_TYPE', 'MY_ARRAY_2_TYPE']})
+    const ruleContextArray = utils.createContext({target: ['MY_ARRAY_1_TYPE', 'MY_ARRAY_2_TYPE']}, {active:false})
     ruleDB.addRule(ruleContextArray)
     expect(ruleDB.testing.activeRules['AFTER']['MY_ARRAY_1_TYPE'][0]).toBe(ruleContextArray)
     expect(ruleDB.testing.activeRules['AFTER']['MY_ARRAY_2_TYPE'][0]).toBe(ruleContextArray)
     // glob target
-    const ruleContextGlob = utils.createContext({target: '*'})
+    const ruleContextGlob = utils.createContext({target: '*'}, {active:false})
     ruleDB.addRule(ruleContextGlob)
     expect(ruleDB.testing.activeRules['AFTER']['-global-'][0]).toBe(ruleContextGlob)
   })
@@ -50,10 +49,10 @@ describe('addRule', () => {
   })
 
   test('adds context by rule weight', () => {
-    const ruleContext1 = utils.createContext({weight:1, id:'RULE_1'})
-    const ruleContext2 = utils.createContext({weight:2, id:'RULE_2'})
-    const ruleContext3 = utils.createContext({weight:3, id:'RULE_3'})
-    const ruleContext4 = utils.createContext({weight:4, id:'RULE_4'})
+    const ruleContext1 = utils.createContext({weight:1, id:'RULE_1'}, {active:false})
+    const ruleContext2 = utils.createContext({weight:2, id:'RULE_2'}, {active:false})
+    const ruleContext3 = utils.createContext({weight:3, id:'RULE_3'}, {active:false})
+    const ruleContext4 = utils.createContext({weight:4, id:'RULE_4'}, {active:false})
     ruleDB.addRule(ruleContext1)
     ruleDB.addRule(ruleContext3)
     ruleDB.addRule(ruleContext2)
@@ -62,6 +61,11 @@ describe('addRule', () => {
     expect(ruleDB.testing.activeRules['AFTER']['TEST_TYPE'][1]).toBe(ruleContext2)
     expect(ruleDB.testing.activeRules['AFTER']['TEST_TYPE'][2]).toBe(ruleContext3)
     expect(ruleDB.testing.activeRules['AFTER']['TEST_TYPE'][3]).toBe(ruleContext4)
+  })
+
+  test('throw an error when rule is already added', () => {
+    ruleDB.addRule(ruleContext)
+    expect(() => ruleDB.addRule(ruleContext)).toThrow()
   })
 })
 
@@ -78,14 +82,14 @@ describe('removeRule', () => {
 
   test('removed rule contxt from each target', () => {
     // string target
-    const ruleContextString = utils.createContext({target:'MY_STRING_TYPE'})
+    const ruleContextString = utils.createContext({target:'MY_STRING_TYPE'}, {active:false})
     ruleDB.addRule(ruleContextString)
     expect(ruleDB.testing.activeRules['AFTER']['MY_STRING_TYPE'][0]).toBe(ruleContextString)
     ruleDB.removeRule(ruleContextString)
     expect(ruleDB.testing.activeRules['AFTER']['MY_STRING_TYPE'][0]).not.toBe(ruleContextString)
 
     // array target
-    const ruleContextArray = utils.createContext({target: ['MY_ARRAY_1_TYPE', 'MY_ARRAY_2_TYPE']})
+    const ruleContextArray = utils.createContext({target: ['MY_ARRAY_1_TYPE', 'MY_ARRAY_2_TYPE']}, {active:false})
     ruleDB.addRule(ruleContextArray)
     expect(ruleDB.testing.activeRules['AFTER']['MY_ARRAY_1_TYPE'][0]).toBe(ruleContextArray)
     expect(ruleDB.testing.activeRules['AFTER']['MY_ARRAY_2_TYPE'][0]).toBe(ruleContextArray)
@@ -94,7 +98,7 @@ describe('removeRule', () => {
     expect(ruleDB.testing.activeRules['AFTER']['MY_ARRAY_2_TYPE'][0]).not.toBe(ruleContextArray)
 
     // glob target
-    const ruleContextGlob = utils.createContext({target: '*'})
+    const ruleContextGlob = utils.createContext({target: '*'}, {active:false})
     ruleDB.addRule(ruleContextGlob)
     expect(ruleDB.testing.activeRules['AFTER']['-global-'][0]).toBe(ruleContextGlob)
     ruleDB.removeRule(ruleContextGlob)
@@ -109,7 +113,7 @@ describe('removeRule', () => {
   test.skip('removes all activeChildRules', () => false)
 })
 
-describe.only('forEachRuleContext', () => {
+describe('forEachRuleContext', () => {
   beforeEach(initTest)
 
   test('call callback with each ruleContext that matches target and position', () => {
