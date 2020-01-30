@@ -27,9 +27,17 @@ export default function registerRule (rule:t.Rule) {
 
   const ruleContext = createRuleContext(rule)
 
-  ruleContext.events.on('SAGA_END', (_,type) => {
-    if(type === 'addWhen'){
-      //TODO: clear public context
+  // clear public context
+  ruleContext.events.on('SAGA_END', result => {
+    switch(result){
+      case 'RECREATE_RULE':
+      case 'REAPPLY_ADD_WHEN':
+      case 'RECREATE_RULE_BEFORE': 
+        ruleContext.publicContext.addWhen = {}
+      case 'READD_RULE':
+      case 'READD_RULE_BEFORE':
+      case 'REAPPLY_ADD_UNTIL': 
+        ruleContext.publicContext.addUntil = {}
     }
   })
 
