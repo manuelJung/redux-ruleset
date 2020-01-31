@@ -2,10 +2,31 @@
 import consequence, {getCurrentRuleExecId} from './consequence'
 import {forEachRuleContext} from './ruleDB'
 import globalEvents from './globalEvents'
+import {yieldAction} from './saga'
 
 let execId = 1
 
+const cycle = {
+  waiting: false,
+  step: 0
+}
+
 export default function dispatchEvent (action, cb=()=>null) {
+  cycle.step++
+
+  // detect endless recursive loops
+  if(process.env.NODE_ENV !== 'production'){
+    let next = fn => setTimeout(fn,1)
+    if(!cycle.waiting){
+      cycle.waiting = true
+      next(() => {
+        cycle.waiting = false
+        cycle.step = 0
+      })
+    }
+    if(cycle.step > 800) console.warn('detected endless cycle with action', action)
+    if(cycle.step > 810) throw new Error('detected endless cycle')
+  }
   
   const actionExecution = {
     execId: execId++,
@@ -28,6 +49,8 @@ export default function dispatchEvent (action, cb=()=>null) {
   })
 
   if (!actionExecution.canceled) {
+    yieldAction(actionExecution)
+
     forEachRuleContext(action.type, 'BEFORE', context => {
       consequence(actionExecution, context)
     })

@@ -151,19 +151,19 @@ export default function consequence (actionExecution:t.ActionExecution, ruleCont
    */
 
   // position:INSTEAD can extend the action if type is equal
-  if(typeof result === 'object' && result.type && rule.position === 'INSTEAD' && result.type === action.type){
+  if(typeof result === 'object' && result !== null && result.type && rule.position === 'INSTEAD' && result.type === action.type){
     unlisten()
     return result
   }
 
   // dispatch returned action
-  if(typeof result === 'object' && result.type){
+  if(typeof result === 'object' && result !== null && result.type){
     unlisten()
     setup.handleConsequenceReturn(result)
   }
 
   // dispatch returned (promise-wrapped) action
-  else if(typeof result === 'object' && result.then){
+  else if(typeof result === 'object' && result !== null && result.then){
     result.then(action => {
       // if(rule.concurrency === 'ORDERED') effect(() => unlisten(context, execId, cancel, concurrency))
       // else unlisten(context, execId, cancel, concurrency)
