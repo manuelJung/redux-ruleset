@@ -123,7 +123,7 @@ export default function consequence (actionExecution:t.ActionExecution, ruleCont
       concurrency.debounceTimeoutId = setTimeout(() => {
         concurrency.debounceTimeoutId = null
         if(canceled) return resolve()
-        const result = rule.consequence(args)
+        const result = rule.consequence(action, consequenceArgs)
         resolve(result)
       }, rule.throttle || rule.delay || rule.debounce)
     })

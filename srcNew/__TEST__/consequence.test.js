@@ -7,6 +7,8 @@ let ruleContext
 let setup
 let actionExecution
 
+const wait = ms => new Promise(resolve => setTimeout(() => resolve(), ms))
+
 const initTest = () => {
   jest.resetModules()
   consequence = require('../consequence')
@@ -128,5 +130,100 @@ describe('cancel consequence', () => {
     consequence.default(actionExecution, ruleContext)
     expect(ruleContext.events.trigger).toBeCalledWith('CONSEQUENCE_END', any, 'CANCELED')
     expect(callback).not.toBeCalled()
+  })
+})
+
+describe('return types', () => {
+  beforeEach(initTest)
+
+  test('return new action for position INSTEAD rules', () => {
+    ruleContext.rule.position = 'INSTEAD'
+    ruleContext.rule.consequence = () => ({type:'TEST_TYPE', foo:'bar'})
+    const result = consequence.default(actionExecution, ruleContext)
+    expect(result).toEqual({type:'TEST_TYPE', foo:'bar'})
+    expect(setup.handleConsequenceReturn).not.toBeCalled()
+  })
+
+  test('handle returned action', () => {
+    const result = consequence.default(actionExecution, ruleContext)
+    expect(result).toBe(null)
+    expect(setup.handleConsequenceReturn).toBeCalledWith({type:'RETURN_TYPE'})
+  })
+
+  test('handle returned promise (action)', async () => {
+    ruleContext.rule.consequence = () => Promise.resolve({type:'RETURN_TYPE'})
+    const result = consequence.default(actionExecution, ruleContext)
+    expect(result).toBe(null)
+    await Promise.resolve()
+    expect(expect(setup.handleConsequenceReturn).toBeCalledWith({type:'RETURN_TYPE'}))
+  })
+
+  test('call returned function after rule gets removed', () => {
+    const callback = jest.fn()
+    ruleContext.rule.consequence = () => callback
+    const result = consequence.default(actionExecution, ruleContext)
+    expect(result).toBe(null)
+    expect(callback).not.toBeCalled()
+    ruleContext.events.trigger('REMOVE_RULE')
+    expect(callback).toBeCalled()
+  })
+
+  test('call returned function after rule execution gets canceled', () => {
+    const callback = jest.fn()
+    ruleContext.rule.consequence = () => callback
+    const result = consequence.default(actionExecution, ruleContext)
+    expect(result).toBe(null)
+    expect(callback).not.toBeCalled()
+    ruleContext.events.trigger('CANCEL_CONSEQUENCE', {execId:100, concurrencyId:'default'})
+    expect(callback).toBeCalled()
+  })
+})
+
+describe('delay consequence', () => {
+  beforeEach(initTest)
+
+  test('throttle should work correctly', async () => {
+    ruleContext.rule.throttle = 10
+    ruleContext.rule.consequence = jest.fn()
+    consequence.default(actionExecution, ruleContext)
+    consequence.default(actionExecution, ruleContext)
+    expect(ruleContext.rule.consequence).not.toBeCalled()
+    await wait(5)
+    consequence.default(actionExecution, ruleContext)
+    expect(ruleContext.rule.consequence).not.toBeCalled()
+    await wait(15)
+    consequence.default(actionExecution, ruleContext)
+    consequence.default(actionExecution, ruleContext)
+    expect(ruleContext.rule.consequence).toBeCalledTimes(1)
+    await wait(15)
+    expect(ruleContext.rule.consequence).toBeCalledTimes(2)
+  })
+
+  test('debounce should work correctly', async () => {
+    ruleContext.rule.debounce = 10
+    ruleContext.rule.consequence = jest.fn()
+    consequence.default(actionExecution, ruleContext)
+    expect(ruleContext.rule.consequence).not.toBeCalled()
+    await wait(5)
+    consequence.default(actionExecution, ruleContext)
+    expect(ruleContext.rule.consequence).not.toBeCalled()
+    await wait(5)
+    consequence.default(actionExecution, ruleContext)
+    expect(ruleContext.rule.consequence).not.toBeCalled()
+    await wait(5)
+    consequence.default(actionExecution, ruleContext)
+    expect(ruleContext.rule.consequence).not.toBeCalled()
+    await wait(15)
+    expect(ruleContext.rule.consequence).toBeCalledTimes(1)
+    consequence.default(actionExecution, ruleContext)
+  })
+
+  test('delay should work correctly', async () => {
+    ruleContext.rule.delay = 5
+    consequence.default(actionExecution, ruleContext)
+    consequence.default(actionExecution, ruleContext)
+    expect(ruleContext.rule.consequence).not.toBeCalled()
+    await wait(10)
+    expect(ruleContext.rule.consequence).toBeCalledTimes(2)
   })
 })
