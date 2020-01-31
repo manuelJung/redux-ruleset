@@ -55,6 +55,7 @@ export default function dispatchEvent (action, cb=()=>null) {
       consequence(actionExecution, context)
     })
 
+    globalEvents.trigger('DISPATCH_ACTION', actionExecution)
     cb(action)
 
     forEachRuleContext(action.type, 'AFTER', context => {

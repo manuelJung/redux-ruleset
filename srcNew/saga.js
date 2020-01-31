@@ -53,14 +53,14 @@ export function startSaga (sagaType, ruleContext, finCb, isReady) {
     const result = iter.next(payload)
     if(result.done){
       ruleContext.runningSaga = null
-      ruleContext.events.trigger('SAGA_END', result.value, sagaType)
+      ruleContext.events.trigger('SAGA_END', sagaContext, result.value)
       finCb({ logic: payload ? result.value : 'CANCELED' })
     }
   }
 
   const nextFn = (target, condition) => {
     yieldFn(target, condition, ruleContext, result => {
-      ruleContext.events.trigger('SAGA_YIELD', result, sagaType)
+      ruleContext.events.trigger('SAGA_YIELD', sagaContext, result)
       iterate(iter, result)
     })
   }
@@ -73,7 +73,7 @@ export function startSaga (sagaType, ruleContext, finCb, isReady) {
 
   // let's start
   ruleContext.runningSaga = sagaContext
-  ruleContext.events.trigger('SAGA_START', sagaType)
+  ruleContext.events.trigger('SAGA_START', sagaContext)
   ruleContext.events.once('REMOVE_RULE', cancel)
 
   const context = {
