@@ -18,14 +18,19 @@ describe('basic', () => {
   beforeEach(initTest)
 
   test('dispatch returned action', () => {
-    // const rule = index.addRule({
-    //   id: 'UNIT_TEST',
-    //   target: 'PING',
-    //   consequence: jest.fn(() => ({type: 'PONG'}))
-    // })
+    const rule = index.addRule({
+      id: 'UNIT_TEST',
+      target: 'PING',
+      consequence: jest.fn(() => ({type: 'PONG'}))
+    })
 
     store.dispatch({type:'PING'})
+    const actions = store.getActions()
 
-    // expect(rule.consequence).toBeCalled()
+    expect(rule.consequence).toBeCalled()
+    expect(actions).toEqual([
+      {type: 'PING'},
+      {type: 'PONG'}
+    ])
   })
 })

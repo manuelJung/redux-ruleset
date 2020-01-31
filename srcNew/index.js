@@ -1,6 +1,7 @@
 // @flow
 import reduxPlugin, {middleware as _middleware} from './reduxPlugin'
 import setup from './setup'
+import registerRule from './registerRule'
 
 setup({plugin:reduxPlugin})
 

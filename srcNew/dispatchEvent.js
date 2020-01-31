@@ -19,7 +19,7 @@ export default function dispatchEvent (action, cb=()=>null) {
 
   forEachRuleContext(action.type, 'INSTEAD', context => {
     if(actionExecution.canceled) return
-    const newAction = consequence(action, context)
+    const newAction = consequence(actionExecution, context)
     if(newAction) {
       actionExecution.history.push({action, context})
       action = newAction
@@ -29,13 +29,13 @@ export default function dispatchEvent (action, cb=()=>null) {
 
   if (!actionExecution.canceled) {
     forEachRuleContext(action.type, 'BEFORE', context => {
-      consequence(action, context)
+      consequence(actionExecution, context)
     })
 
     cb(action)
 
     forEachRuleContext(action.type, 'AFTER', context => {
-      consequence(action, context)
+      consequence(actionExecution, context)
     })
   }
 
