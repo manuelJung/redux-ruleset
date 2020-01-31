@@ -49,7 +49,7 @@ export default function consequence (actionExecution:t.ActionExecution, ruleCont
     return {resolved:false}
   }
 
-  if(concurrency.running){
+  if(concurrency.running-1 > 0){
     // skip when concurrency matches
     if(rule.concurrency === 'ONCE') return endConsequence('SKIP')
     if(rule.concurrency === 'FIRST') return endConsequence('SKIP')
@@ -136,7 +136,7 @@ export default function consequence (actionExecution:t.ActionExecution, ruleCont
    * setup unlisten
    */
   function unlisten () {
-    concurrency.running--
+    rule.concurrency !== 'ONCE' && concurrency.running--
     ruleContext.events.trigger('CONSEQUENCE_END', ruleExecution, status || 'RESOLVED')
     offCancel()
     offRemoveRule()

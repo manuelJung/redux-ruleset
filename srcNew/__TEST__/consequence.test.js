@@ -227,3 +227,46 @@ describe('delay consequence', () => {
     expect(ruleContext.rule.consequence).toBeCalledTimes(2)
   })
 })
+
+describe('concurrency', () => {
+  beforeEach(() => {
+    initTest()
+  })
+
+  test.skip('ORDERED should execute consequence in order', () => {})
+
+  test('SWITCH cancels all previous running consequences as soon as the first effect resolves', async () => {
+    const callback = jest.fn()
+    ruleContext.rule.concurrency = 'SWITCH'
+    ruleContext.rule.consequence
+      .mockImplementationOnce(async (_, {effect}) => {
+        await wait(50)
+        effect(() => callback('ONE'))
+      })
+      .mockImplementationOnce(async (_, {effect}) => {
+        await wait(10)
+        effect(() => callback('TWO'))
+      })
+
+    consequence.default(actionExecution, ruleContext)
+    consequence.default(actionExecution, ruleContext)
+    await wait(20)
+    expect(ruleContext.events.trigger).not.toBeCalledWith('CONSEQUENCE_END', any, 'CANCELED')
+    expect(callback).toBeCalledWith('TWO')
+    await wait(50)
+    expect(callback).toBeCalledTimes(1)
+    expect(ruleContext.events.trigger).toBeCalledWith('CONSEQUENCE_END', any, 'CANCELED')
+  })
+
+  test('ONCE cancels all conseuquences except first one', () => {
+    const callback = jest.fn()
+    let i = 100
+    ruleContext.rule.concurrency = 'ONCE'
+    ruleContext.rule.consequence = (_,{effect}) => effect(() => callback(i++))
+    consequence.default(actionExecution, ruleContext)
+    consequence.default(actionExecution, ruleContext)
+    expect(callback).toBeCalledTimes(1)
+    expect(callback).toBeCalledWith(100)
+    expect(ruleContext.events.trigger).toBeCalledWith('CONSEQUENCE_END', any, 'SKIP')
+  })
+})
