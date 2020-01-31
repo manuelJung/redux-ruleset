@@ -49,6 +49,20 @@ describe('consequence', () => {
       {context:any}
     )
   })
+
+  test('throw error when accessing context.setContext (consequence)', () => {
+    ruleContext.rule.consequence = (_, {context}) => {
+      expect(() => context.setContext()).toThrow()
+    }
+    consequence.default(actionExecution, ruleContext)
+  })
+
+  test('throw error when accessing context.setContext (condition)', () => {
+    ruleContext.rule.condition = (_, {context}) => {
+      expect(() => context.setContext()).toThrow()
+    }
+    consequence.default(actionExecution, ruleContext)
+  })
 })
 
 describe('skip rule', () => {
@@ -325,5 +339,23 @@ describe('getCurrentRuleExecId', () => {
       expect(consequence.getCurrentRuleExecId()).toBe(null)
     }
     consequence.default(actionExecution, ruleContext)
+  })
+})
+
+describe('concurrencyFilter', () => {
+  beforeEach(initTest)
+
+  test('branch concurrency by given logic', () => {
+    const callback = jest.fn()
+    ruleContext.rule.concurrency = 'ONCE'
+    ruleContext.rule.concurrencyFilter = action => action.identifier
+    ruleContext.rule.consequence = callback
+    const actionExecutionA = { action: {type:'TEST_TYPE', identifier: 'A'} }
+    const actionExecutionB = { action: {type:'TEST_TYPE', identifier: 'B'} }
+    consequence.default(actionExecutionA, ruleContext)
+    consequence.default(actionExecutionB, ruleContext)
+    expect(callback).toBeCalledTimes(2)
+    expect(callback).toBeCalledWith({type:'TEST_TYPE', identifier: 'A'}, any)
+    expect(callback).toBeCalledWith({type:'TEST_TYPE', identifier: 'B'}, any)
   })
 })
