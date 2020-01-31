@@ -296,3 +296,34 @@ describe('concurrency', () => {
       .toBeCalledWith('CONSEQUENCE_END', expect.objectContaining({execId:2}), 'SKIP')
   })
 })
+
+describe('getCurrentRuleExecId', () => {
+  beforeEach(initTest)
+
+  test('returns null when called outside an effect', () => {
+    expect(consequence.getCurrentRuleExecId()).toBe(null)
+    consequence.default(actionExecution, ruleContext)
+    expect(consequence.getCurrentRuleExecId()).toBe(null)
+  })
+
+  test('returns the current execId inside an effect', () => {
+    const nestedRuleContext = utils.createContext()
+    nestedRuleContext.rule.consequence = (_, {effect}) => {
+      expect(consequence.getCurrentRuleExecId()).toBe(1)
+      effect(() => {
+        expect(consequence.getCurrentRuleExecId()).toBe(2)
+      })
+      expect(consequence.getCurrentRuleExecId()).toBe(1)
+    }
+    ruleContext.rule.consequence = (_, {effect}) => {
+      expect(consequence.getCurrentRuleExecId()).toBe(null)
+      effect(() => {
+        expect(consequence.getCurrentRuleExecId()).toBe(1)
+        consequence.default(actionExecution, nestedRuleContext)
+        expect(consequence.getCurrentRuleExecId()).toBe(1)
+      })
+      expect(consequence.getCurrentRuleExecId()).toBe(null)
+    }
+    consequence.default(actionExecution, ruleContext)
+  })
+})
