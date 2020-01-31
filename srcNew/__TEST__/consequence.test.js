@@ -258,7 +258,7 @@ describe('concurrency', () => {
     expect(ruleContext.events.trigger).toBeCalledWith('CONSEQUENCE_END', any, 'CANCELED')
   })
 
-  test('ONCE cancels all conseuquences except first one', () => {
+  test('ONCE cancels all consequences except first one', () => {
     const callback = jest.fn()
     let i = 100
     ruleContext.rule.concurrency = 'ONCE'
@@ -268,5 +268,31 @@ describe('concurrency', () => {
     expect(callback).toBeCalledTimes(1)
     expect(callback).toBeCalledWith(100)
     expect(ruleContext.events.trigger).toBeCalledWith('CONSEQUENCE_END', any, 'SKIP')
+  })
+
+  test('LAST cancels all previous running consequences', async () => {
+    ruleContext.rule.concurrency = 'LAST'
+    ruleContext.rule.consequence = () => wait(10)
+    consequence.default(actionExecution, ruleContext)
+    consequence.default(actionExecution, ruleContext)
+    await wait(15)
+    expect(ruleContext.events.trigger)
+      .toBeCalledWith('CONSEQUENCE_END', expect.objectContaining({execId:1}), 'CANCELED')
+
+    expect(ruleContext.events.trigger)
+      .toBeCalledWith('CONSEQUENCE_END', expect.objectContaining({execId:2}), 'RESOLVED')
+  })
+
+  test('FIRST allows only one running consequence in paralell', async () => {
+    ruleContext.rule.concurrency = 'FIRST'
+    ruleContext.rule.consequence = () => wait(10)
+    consequence.default(actionExecution, ruleContext)
+    consequence.default(actionExecution, ruleContext)
+    await wait(15)
+    expect(ruleContext.events.trigger)
+      .toBeCalledWith('CONSEQUENCE_END', expect.objectContaining({execId:1}), 'RESOLVED')
+
+    expect(ruleContext.events.trigger)
+      .toBeCalledWith('CONSEQUENCE_END', expect.objectContaining({execId:2}), 'SKIP')
   })
 })

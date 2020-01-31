@@ -73,6 +73,24 @@ export default function consequence (actionExecution:t.ActionExecution, ruleCont
   }
 
   /**
+   * setup cancelation
+   */
+
+  // later consequences can cancel this execution
+  const offCancel = ruleContext.events.on('CANCEL_CONSEQUENCE', newRuleExecution => {
+    if(newRuleExecution.concurrencyId !== ruleExecution.concurrencyId) return
+    if(newRuleExecution.execId === ruleExecution.execId) return
+    cancel()
+    status = 'CANCELED'
+  })
+
+  // cancel consequence when rule gets removed
+  const offRemoveRule = ruleContext.events.once('REMOVE_RULE', () => {
+    cancel()
+    status = 'REMOVED'
+  })
+
+  /**
    * Execute consequence
    */
   let result
@@ -101,20 +119,6 @@ export default function consequence (actionExecution:t.ActionExecution, ruleCont
   }
 
   const consequenceArgs = setup.createConsequenceArgs({addRule, removeRule, effect, wasCanceled, context})
-
-  // later consequences can cancel this execution
-  const offCancel = ruleContext.events.once('CANCEL_CONSEQUENCE', newRuleExecution => {
-    if(newRuleExecution.concurrencyId !== ruleExecution.concurrencyId) return
-    if(newRuleExecution.execId === ruleExecution.execId) return
-    cancel()
-    status = 'CANCELED'
-  })
-
-  // cancel consequence when rule gets removed
-  const offRemoveRule = ruleContext.events.once('REMOVE_RULE', () => {
-    cancel()
-    status = 'REMOVED'
-  })
 
   // run the thing
   if(rule.throttle || rule.delay || rule.debounce){
