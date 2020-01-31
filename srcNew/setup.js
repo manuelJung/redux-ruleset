@@ -11,7 +11,7 @@ let runningSetups = 0
 let consequenceReturnFn = () => null
 
 export default function setup({plugins}) {
-  if(process.env.NODE_ENV === 'development'){
+  if(process.env.NODE_ENV !== 'production'){
     if(called) throw new Error('you can setup redux-ruleset only once')
   }
   called = true
@@ -23,9 +23,11 @@ export default function setup({plugins}) {
     plugins[i].createSetup(args => {
       Object.assign(setupArgs, args)
       runningSetups--
-      if(runningSetups.length === 0) postSetup(plugins)
+      if(runningSetups === 0) postSetup(plugins)
     })
   }
+
+  if(runningSetups === 0) postSetup(plugins)
 }
 
 function postSetup(plugins) {
@@ -47,4 +49,24 @@ function postSetup(plugins) {
 export function onSetupFinished(cb){
   if(setupFinished) cb()
   else setupFinishedListeners.push(cb)
+}
+
+export function createConsequenceArgs(defaultArgs){
+  return Object.assign({}, defaultArgs, consequenceArgs)
+}
+
+export function handleConsequenceReturn(action){
+  consequenceReturnFn(action)
+}
+
+export function createConditionArgs(defaultArgs){
+  return Object.assign({}, defaultArgs, conditionArgs)
+}
+
+export function createSagaArgs(defaultArgs){
+  return Object.assign({}, defaultArgs, sagaArgs)
+}
+
+export const testing = {
+  getConsequenceReturnFn: () => consequenceReturnFn
 }
