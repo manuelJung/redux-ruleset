@@ -119,6 +119,11 @@ describe('registerRule', () => {
     expect(ruleContext.publicContext.addUntil).toEqual({})
     expect(ruleContext.publicContext.addWhen).toEqual({})
   })
+
+  test('throw error if rule is registered twice', () => {
+    registerRule.default(rule)
+    expect(() => registerRule.default(rule)).toThrow()
+  })
 })
 
 describe('startAddWhen', () => {

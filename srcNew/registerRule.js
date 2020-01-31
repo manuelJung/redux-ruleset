@@ -5,6 +5,8 @@ import {startSaga} from './saga'
 import {addRule, removeRule} from './ruleDB'
 import globalEvents from './globalEvents'
 
+const registeredDict = {}
+
 const startAddWhen = context => startSaga('addWhen', context, result => {
   switch (result.logic) {
     case 'ADD_RULE': return globalEvents.once('END_ACTION_EXECUTION', () => addRule(context))
@@ -57,6 +59,15 @@ const startAddUntil = context => startSaga('addUntil', context, result => {
 
 
 export default function registerRule (rule:t.Rule) {
+
+  // check if rule is already registered
+  if(registeredDict[rule.id]){
+    if(process.env.NODE_ENV !== 'production'){
+      throw new Error('the rule-id "'+rule.id+'" is already registered. Either you want to register the same rule twice or you have two rules with the same id')
+    }
+    return
+  }
+  registeredDict[rule.id] = true
 
   const ruleContext = createRuleContext(rule)
 
