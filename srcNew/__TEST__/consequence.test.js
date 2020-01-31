@@ -15,7 +15,7 @@ const initTest = () => {
   ruleContext = utils.createContext()
   actionExecution = { action: {type:'TEST_TYPE'} }
   setup = require('../setup')
-  setup.createConsequenceArgs = jest.fn(o => o)
+  setup.createConsequenceArgs = jest.fn((_,o) => o)
   setup.handleConsequenceReturn = jest.fn()
   setup.createConditionArgs = jest.fn(o => o)
 }

@@ -118,7 +118,7 @@ export default function consequence (actionExecution:t.ActionExecution, ruleCont
     || ruleContext.publicContext.global[name]
   }
 
-  const consequenceArgs = setup.createConsequenceArgs({addRule, removeRule, effect, wasCanceled, context})
+  const consequenceArgs = setup.createConsequenceArgs(effect, {addRule, removeRule, effect, wasCanceled, context})
 
   // run the thing
   if(rule.throttle || rule.delay || rule.debounce){

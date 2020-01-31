@@ -2,8 +2,7 @@ import * as utils from './utils'
 
 let setup
 let setupConfig
-let pluginA
-let pluginB
+let plugin
 
 const createSetupFactory = () => {
   const trigger = {call:()=>null}
@@ -16,9 +15,8 @@ const createSetupFactory = () => {
 const initTest = () => {
   jest.resetModules()
   setup = require('../setup')
-  pluginA = {}
-  pluginB = {}
-  setupConfig = { plugins: [pluginA, pluginB]}
+  plugin = {createSetup:cb=>cb()}
+  setupConfig = {plugin}
 }
 
 describe('setupFn', () => {
@@ -44,18 +42,13 @@ describe('setupFn', () => {
 
   test('waits until each plugin has finished setup before calling onSetupFinished', () => {
     const callback = jest.fn()
-    const [triggerA, createSetupA] = createSetupFactory()
-    const [triggerB, createSetupB] = createSetupFactory()
-    pluginA.createSetup = createSetupA
-    pluginB.createSetup = createSetupB
+    const [trigger, createSetup] = createSetupFactory()
+    plugin.createSetup = createSetup
     setup.onSetupFinished(callback)
     setup.default(setupConfig)
     expect(callback).not.toBeCalled()
-    triggerA.call()
-    expect(pluginA.createSetup).toBeCalled()
-    expect(callback).not.toBeCalled()
-    triggerB.call()
-    expect(pluginB.createSetup).toBeCalled()
+    trigger.call()
+    expect(plugin.createSetup).toBeCalled()
     expect(callback).toBeCalled()
   })
 })
@@ -64,83 +57,71 @@ describe('createConsequenceArgs', () => {
   beforeEach(initTest)
 
   test('recieves setup return as arguments', () => {
-    pluginA.createSetup = cb => cb({pluginA:'foo'})
-    pluginA.createConsequenceArgs = args => {
-      expect(args).toEqual({pluginA:'foo'})
+    plugin.createSetup = cb => cb({plugin:'foo'})
+    plugin.createConsequenceArgs = args => {
+      expect(args).toEqual({plugin:'foo'})
     }
     setup.default(setupConfig)
   })
 
   test('merges initial args with plugin args', () => {
-    pluginA.createConsequenceArgs = () => ({pluginA:'foo'})
-    pluginB.createConsequenceArgs = () => ({pluginB:'foo'})
+    plugin.createConsequenceArgs = () => ({plugin:'foo'})
     setup.default(setupConfig)
-    const args = setup.createConsequenceArgs({init:'bar'})
-    expect(args).toEqual({init:'bar', pluginA:'foo', pluginB:'foo'})
+    const args = setup.createConsequenceArgs(null, {init:'bar'})
+    expect(args).toEqual({init:'bar', plugin:'foo'})
   })
 })
 
 describe('createConditionArgs', () => {
   beforeEach(initTest)
 
-  test('recieves setup return as arguments', () => {
-    pluginA.createSetup = cb => cb({pluginA:'foo'})
-    pluginA.createConditionArgs = args => {
-      expect(args).toEqual({pluginA:'foo'})
+  test('recieves setup return as arguments (condition)', () => {
+    plugin.createSetup = cb => cb({plugin:'foo'})
+    plugin.createConditionArgs = args => {
+      expect(args).toEqual({plugin:'foo'})
     }
     setup.default(setupConfig)
   })
 
-  test('merges initial args with plugin args', () => {
-    pluginA.createConditionArgs = () => ({pluginA:'foo'})
-    pluginB.createConditionArgs = () => ({pluginB:'foo'})
+  test('merges initial args with plugin args (condition)', () => {
+    plugin.createConditionArgs = () => ({plugin:'foo'})
     setup.default(setupConfig)
     const args = setup.createConditionArgs({init:'bar'})
-    expect(args).toEqual({init:'bar', pluginA:'foo', pluginB:'foo'})
+    expect(args).toEqual({init:'bar', plugin:'foo'})
   })
 })
 
 describe('createSagaArgs', () => {
   beforeEach(initTest)
 
-  test('recieves setup return as arguments', () => {
-    pluginA.createSetup = cb => cb({pluginA:'foo'})
-    pluginA.createSagaArgs = args => {
-      expect(args).toEqual({pluginA:'foo'})
+  test('recieves setup return as arguments (saga)', () => {
+    plugin.createSetup = cb => cb({plugin:'foo'})
+    plugin.createSagaArgs = args => {
+      expect(args).toEqual({plugin:'foo'})
     }
     setup.default(setupConfig)
   })
 
-  test('merges initial args with plugin args', () => {
-    pluginA.createSagaArgs = () => ({pluginA:'foo'})
-    pluginB.createSagaArgs = () => ({pluginB:'foo'})
+  test('merges initial args with plugin args (saga)', () => {
+    plugin.createSagaArgs = () => ({plugin:'foo'})
     setup.default(setupConfig)
     const args = setup.createSagaArgs({init:'bar'})
-    expect(args).toEqual({init:'bar', pluginA:'foo', pluginB:'foo'})
+    expect(args).toEqual({init:'bar', plugin:'foo'})
   })
 })
 
 describe('handleConsequenceReturn', () => {
   beforeEach(initTest)
 
-  test('recieves setup return as arguments', () => {
-    pluginA.createSetup = cb => cb({pluginA:'foo'})
-    pluginA.onConsequenceReturn = (action, args) => {
-      expect(args).toEqual({pluginA:'foo'})
+  test('recieves setup return as arguments (return)', () => {
+    plugin.createSetup = cb => cb({plugin:'foo'})
+    plugin.onConsequenceReturn = (action, args) => {
+      expect(args).toEqual({plugin:'foo'})
       expect(action).toEqual({type:'TEST_TYPE'})
     }
     const returnFn = setup.testing.getConsequenceReturnFn
     setup.default(setupConfig)
     returnFn({type:'TEST_TYPE'})
-  })
-
-  test('calls last added onConsequenceReturn', () => {
-    pluginA.onConsequenceActionReturn = jest.fn()
-    pluginB.onConsequenceActionReturn = jest.fn()
-    setup.default(setupConfig)
-    setup.handleConsequenceReturn({type:'TEST_TYPE'})
-    expect(pluginA.onConsequenceActionReturn).not.toBeCalled()
-    expect(pluginB.onConsequenceActionReturn).toBeCalled()
   })
 })
 

@@ -1,5 +1,6 @@
 // @flow
 import reduxPlugin, {middleware as _middleware} from './reduxPlugin'
+import setup from './setup'
 
 setup({plugins:[reduxPlugin]})
 

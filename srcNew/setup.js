@@ -5,39 +5,28 @@ let setupFinishedListeners = []
 let called = false
 let sagaArgs = {}
 let conditionArgs = {}
-let consequenceArgs = {}
+let createConsequenceArgsFn = () => ({})
 let setupArgs = {}
 let runningSetups = 0
 let consequenceReturnFn = () => null
 
-export default function setup({plugins}) {
+export default function setup({plugin}) {
   if(process.env.NODE_ENV !== 'production'){
     if(called) throw new Error('you can setup redux-ruleset only once')
   }
   called = true
-  
-  // createSetup
-  for (let i=0;i<plugins.length;i++) {
-    if(!plugins[i].createSetup) continue
-    runningSetups++
-    plugins[i].createSetup(args => {
-      Object.assign(setupArgs, args)
-      runningSetups--
-      if(runningSetups === 0) postSetup(plugins)
-    })
-  }
 
-  if(runningSetups === 0) postSetup(plugins)
+  plugin.createSetup(args => {
+    Object.assign(setupArgs, args)
+    postSetup(plugin)
+  })
 }
 
-function postSetup(plugins) {
-  for (let i=0;i<plugins.length;i++) {
-    const plugin = plugins[i]
-    if(plugin.createSagaArgs) Object.assign(sagaArgs, plugin.createSagaArgs(setupArgs))
-    if(plugin.createConditionArgs) Object.assign(conditionArgs, plugin.createConditionArgs(setupArgs))
-    if(plugin.createConsequenceArgs) Object.assign(consequenceArgs, plugin.createConsequenceArgs(setupArgs))
-    if(plugin.onConsequenceActionReturn) consequenceReturnFn = result => plugin.onConsequenceActionReturn(result, setupArgs)
-  }
+function postSetup(plugin) {
+  if(plugin.createSagaArgs) Object.assign(sagaArgs, plugin.createSagaArgs(setupArgs))
+  if(plugin.createConditionArgs) Object.assign(conditionArgs, plugin.createConditionArgs(setupArgs))
+  if(plugin.createConsequenceArgs) createConsequenceArgsFn = plugin.createConsequenceArgs
+  if(plugin.onConsequenceActionReturn) consequenceReturnFn = result => plugin.onConsequenceActionReturn(result, setupArgs)
 
   setupFinished = true
   for(let j=0;j<setupFinishedListeners.length;j++){
@@ -51,8 +40,9 @@ export function onSetupFinished(cb){
   else setupFinishedListeners.push(cb)
 }
 
-export function createConsequenceArgs(defaultArgs){
-  return Object.assign({}, defaultArgs, consequenceArgs)
+export function createConsequenceArgs(effect, defaultArgs){
+  const args = createConsequenceArgsFn(effect, setupArgs)
+  return Object.assign({}, defaultArgs, args)
 }
 
 export function handleConsequenceReturn(action){
