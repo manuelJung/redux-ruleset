@@ -12,5 +12,6 @@ export function createContext (ruleAlter={}, contextAlter={}) {
   context.events.on = jest.fn(context.events.on)
   context.events.trigger = jest.fn(context.events.trigger)
   context.events.clearOnce = jest.fn(context.events.clearOnce)
+  context.rule.consequence = jest.fn(context.rule.consequence)
   return Object.assign(context, contextAlter)
 }

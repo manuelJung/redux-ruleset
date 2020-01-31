@@ -24,7 +24,8 @@ export default function consequence (actionExecution:t.ActionExecution, ruleCont
   // addOnce rules may not be removed when they return a promise
   // so we totally ignore all futher consequence executions until the rule is removed
   if(concurrency.running){
-    if(rule.addOnce) return {resolved:false}
+    // TODO: what happens when position === INSTEAD. will actionExecution be canceled=
+    if(rule.addOnce) return null
   }
 
   // setup ruleExecution
@@ -59,7 +60,7 @@ export default function consequence (actionExecution:t.ActionExecution, ruleCont
   }
   // skip if 'skipRule' condition matched
   if(action.meta && action.meta.skipRule && matchGlob(rule.id, action.meta.skipRule)){
-    return endConsequence()
+    return endConsequence('SKIP')
   }
   // skip if rule condition does not match
   if(rule.condition){
@@ -76,6 +77,7 @@ export default function consequence (actionExecution:t.ActionExecution, ruleCont
    */
   let result
   let canceled = false
+  let status
   const cancel = () => {canceled = true}
   const wasCanceled = () => canceled
   const effect = fn => {
@@ -100,6 +102,21 @@ export default function consequence (actionExecution:t.ActionExecution, ruleCont
 
   const consequenceArgs = setup.createConsequenceArgs({addRule, removeRule, effect, wasCanceled, context})
 
+  // later consequences can cancel this execution
+  const offCancel = ruleContext.events.once('CANCEL_CONSEQUENCE', newRuleExecution => {
+    if(newRuleExecution.concurrencyId !== ruleExecution.concurrencyId) return
+    if(newRuleExecution.execId === ruleExecution.execId) return
+    cancel()
+    status = 'CANCELED'
+  })
+
+  // cancel consequence when rule gets removed
+  const offRemoveRule = ruleContext.events.once('REMOVE_RULE', () => {
+    cancel()
+    status = 'REMOVED'
+  })
+
+  // run the thing
   if(rule.throttle || rule.delay || rule.debounce){
     result = new Promise(resolve => {
       if(rule.debounce && concurrency.debounceTimeoutId) clearTimeout(concurrency.debounceTimeoutId)
@@ -115,12 +132,15 @@ export default function consequence (actionExecution:t.ActionExecution, ruleCont
     result = rule.consequence(action, consequenceArgs)
   }
 
-  // later consequences can cancel this execution
-  ruleContext.events.once('CANCEL_CONSEQUENCE', newRuleExecution => {
-    if(newRuleExecution.concurrencyId !== ruleExecution.concurrencyId) return
-    if(newRuleExecution.execId === ruleExecution.execId) return
-    cancel()
-  })
+  /**
+   * setup unlisten
+   */
+  function unlisten () {
+    concurrency.running--
+    ruleContext.events.trigger('CONSEQUENCE_END', ruleExecution, status || 'RESOLVED')
+    offCancel()
+    offRemoveRule()
+  }
 
   /**
    * Handle return types
@@ -128,13 +148,13 @@ export default function consequence (actionExecution:t.ActionExecution, ruleCont
 
   // position:INSTEAD can extend the action if type is equal
   if(typeof result === 'object' && result.type && rule.position === 'INSTEAD' && result.type === action.type){
-    unlisten(ruleContext, ruleExecution, concurrency)
+    unlisten()
     return result
   }
 
   // dispatch returned action
   if(typeof result === 'object' && result.type){
-    unlisten(ruleContext, ruleExecution, concurrency)
+    unlisten()
     setup.handleConsequenceReturn(result)
   }
 
@@ -143,39 +163,33 @@ export default function consequence (actionExecution:t.ActionExecution, ruleCont
     result.then(action => {
       // if(rule.concurrency === 'ORDERED') effect(() => unlisten(context, execId, cancel, concurrency))
       // else unlisten(context, execId, cancel, concurrency)
-      unlisten(ruleContext, ruleExecution, concurrency)
+      unlisten()
       action && action.type && setup.handleConsequenceReturn(action)
     })
   }
 
   // register unlisten callback
   else if(typeof result === 'function'){
-    ruleContext.events.once('REMOVE_RULE', () => {
-      unlisten(ruleContext, ruleExecution, concurrency)
+    const offRemoveRule = ruleContext.events.once('REMOVE_RULE', () => {
+      offCancel()
+      unlisten()
       result()
     })
-    ruleContext.events.once('CANCEL_CONSEQUENCE', newRuleExecution => {
+    const offCancel = ruleContext.events.once('CANCEL_CONSEQUENCE', newRuleExecution => {
       if(newRuleExecution.concurrencyId !== ruleExecution.concurrencyId) return
       if(newRuleExecution.execId === ruleExecution.execId) return
-      unlisten(ruleContext, ruleExecution, concurrency)
+      offRemoveRule()
+      unlisten()
       result()
     })
   }
 
   // unlisten for void return
   else {
-    unlisten(ruleContext, ruleExecution, concurrency)
+    unlisten()
   }
 
   return null
-}
-
-function unlisten (ruleContext, ruleExecution, concurrency) {
-  concurrency.running--
-  ruleContext.events.trigger('CONSEQUENCE_END', ruleExecution, 'RESOLVED')
-  if(concurrency.running === 0){
-    ruleContext.events.clearOnce('CANCEL_CONSEQUENCE')
-  }
 }
 
 function matchGlob(id:string, glob:'*' | string | string[]):boolean{

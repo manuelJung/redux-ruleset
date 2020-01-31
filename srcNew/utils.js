@@ -56,6 +56,7 @@ export function createRuleContext (rule:Rule):RuleContext {
     active: false,
     runningSaga: null,
     events: createEventContainer(),
+    concurrency: {},
     publicContext: {
       global: {},
       addWhen: {},

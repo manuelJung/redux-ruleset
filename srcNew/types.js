@@ -80,5 +80,9 @@ export type ActionExecution = {
 export type RuleExecution = {
   execId: number,
   concurrencyId: string,
-  actionExecId: number
+  actionExecId: number,
+  concurrency: {[name:string]: {
+    running: number,
+    debounceTimeoutId: number | null,
+  }}
 }
