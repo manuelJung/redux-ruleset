@@ -87,6 +87,10 @@ export default function registerRule (rule:t.Rule) {
   
   globalEvents.trigger('REGISTER_RULE', ruleContext)
 
+  if(rule.addUntil){
+    ruleContext.events.on('ADD_RULE', () => startAddUntil(ruleContext))
+  }
+
   if(rule.addWhen) startAddWhen(ruleContext)
   else  {
     addRule(ruleContext)
