@@ -1,3 +1,4 @@
+import dispatchEvent from './dispatchEvent'
 
 let listener
 

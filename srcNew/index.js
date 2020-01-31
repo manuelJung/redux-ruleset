@@ -2,7 +2,7 @@
 import reduxPlugin, {middleware as _middleware} from './reduxPlugin'
 import setup from './setup'
 
-setup({plugins:[reduxPlugin]})
+setup({plugin:reduxPlugin})
 
 export {dispatchEvent} from './dispatchEvent'
 export const addRule = (rule:Rule) => registerRule(rule)
