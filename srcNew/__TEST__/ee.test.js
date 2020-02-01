@@ -293,4 +293,58 @@ describe('subRules', () => {
     expect(rule.consequence).toBeCalled()
     expect(rule.subRules.test.consequence).toBeCalled()
   })
+
+  test('subRules are removed when parent rule gets removed', () => {
+    index.addRule({
+      id: 'UNIT_TEST',
+      target: 'START',
+      concurrency: 'ONCE',
+      consequence: (_,{addRule}) => addRule('sub'),
+      addUntil: function*(next){
+        yield next('STOP')
+        return 'REMOVE_RULE'
+      },
+      subRules: {
+        sub: {
+          target: 'PING',
+          consequence: () => ({type:'PONG'})
+        }
+      }
+    })
+
+    store.dispatch({type:'PING'})
+    store.dispatch({type:'START'})
+    store.dispatch({type:'PING'})
+    store.dispatch({type:'STOP'})
+    store.dispatch({type:'PING'})
+
+    expect(store.getActions()).toEqual([
+      {type:'PING'},
+      {type:'START'},
+      {type:'PING'},
+      {type:'PONG'},
+      {type:'STOP'},
+      {type:'PING'}
+    ])
+  })
+
+  test('throw error when sub rule is added twice', () => {
+    const rule = index.addRule({
+      id: 'UNIT_TEST',
+      target: 'START',
+      consequence: jest.fn((_,{addRule}) => {
+        addRule('test')
+        expect(() => addRule('test')).toThrow('you tried to add an already added rule "UNIT_TEST::test"')
+      }),
+      subRules: {
+        test: {
+          target: 'PING',
+          consequence: () => null
+        }
+      }
+    })
+
+    store.dispatch(({type:'START'}))
+    expect(rule.consequence).toBeCalled()
+  })
 })

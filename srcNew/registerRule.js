@@ -126,6 +126,7 @@ export default function registerRule (rule:t.Rule, parentContext?:t.RuleContext,
   // activate
   if(rule.addWhen) startAddWhen(ruleContext)
   else {
+    debugger
     addRule(ruleContext)
     if(rule.addUntil) startAddUntil(ruleContext)
   }
