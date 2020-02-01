@@ -1,4 +1,5 @@
 // @flow
+import * as t from './types'
 import consequence, {getCurrentRuleExecId} from './consequence'
 import {forEachRuleContext} from './ruleDB'
 import globalEvents from './globalEvents'
@@ -11,7 +12,7 @@ const cycle = {
   step: 0
 }
 
-export default function dispatchEvent (action, cb=()=>null) {
+export default function dispatchEvent (action:t.Action, cb:Function=()=>null) {
   cycle.step++
 
   // detect endless recursive loops
@@ -43,6 +44,7 @@ export default function dispatchEvent (action, cb=()=>null) {
     const newAction = consequence(actionExecution, context)
     if(newAction) {
       actionExecution.history.push({action, context})
+      // $FlowFixMe
       action = newAction
     }
     else actionExecution.canceled = true

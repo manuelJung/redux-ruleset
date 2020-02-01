@@ -1,4 +1,3 @@
-// @flow
 import {createRuleContext} from '../utils'
 
 export function createContext (ruleAlter={}, contextAlter={}) {

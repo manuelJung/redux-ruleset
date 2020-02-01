@@ -48,7 +48,7 @@ export default function consequence (actionExecution:t.ActionExecution, ruleCont
   const endConsequence = (logic) => {
     concurrency.running--
     ruleContext.events.trigger('CONSEQUENCE_END', ruleExecution, logic)
-    return {resolved:false}
+    return null
   }
 
   if(concurrency.running-1 > 0){
@@ -66,10 +66,10 @@ export default function consequence (actionExecution:t.ActionExecution, ruleCont
   }
   // skip if rule condition does not match
   if(rule.condition){
-    const conditionArgs = setup.createConditionArgs({context: Object.assign({}, ruleContext.context, {
+    const conditionArgs = setup.createConditionArgs({context: Object.assign({}, ruleContext.publicContext, {
       setContext: (key:string, value:mixed) => {throw new Error('you cannot call setContext within condition. check rule '+ rule.id)}
     })})
-    if(!rule.condition(action, conditionArgs)){
+    if(rule.condition && !rule.condition(action, conditionArgs)){
       return endConsequence('CONDITION_NOT_MATCHED')
     }
   }
@@ -130,12 +130,14 @@ export default function consequence (actionExecution:t.ActionExecution, ruleCont
 
   // run the thing
   if(rule.throttle || rule.delay || rule.debounce){
+    // $FlowFixMe
     result = new Promise(resolve => {
       if(rule.debounce && concurrency.debounceTimeoutId) clearTimeout(concurrency.debounceTimeoutId)
       concurrency.debounceTimeoutId = setTimeout(() => {
         concurrency.debounceTimeoutId = null
         if(canceled) return resolve()
         const result = rule.consequence(action, consequenceArgs)
+        // $FlowFixMe
         resolve(result)
       }, rule.throttle || rule.delay || rule.debounce)
     })
@@ -167,11 +169,13 @@ export default function consequence (actionExecution:t.ActionExecution, ruleCont
   // dispatch returned action
   if(typeof result === 'object' && result !== null && result.type){
     unlisten()
+    // $FlowFixMe
     setup.handleConsequenceReturn(result)
   }
 
   // dispatch returned (promise-wrapped) action
-  else if(typeof result === 'object' && result !== null && result.then){
+  if(typeof result === 'object' && result !== null && result.then){
+    // $FlowFixMe
     result.then(action => {
       // if(rule.concurrency === 'ORDERED') effect(() => unlisten(context, execId, cancel, concurrency))
       // else unlisten(context, execId, cancel, concurrency)
@@ -185,6 +189,7 @@ export default function consequence (actionExecution:t.ActionExecution, ruleCont
     const offRemoveRule = ruleContext.events.once('REMOVE_RULE', () => {
       offCancel()
       unlisten()
+      // $FlowFixMe
       result()
     })
     const offCancel = ruleContext.events.once('CANCEL_CONSEQUENCE', newRuleExecution => {
@@ -192,6 +197,7 @@ export default function consequence (actionExecution:t.ActionExecution, ruleCont
       if(newRuleExecution.execId === ruleExecution.execId) return
       offRemoveRule()
       unlisten()
+      // $FlowFixMe
       result()
     })
   }

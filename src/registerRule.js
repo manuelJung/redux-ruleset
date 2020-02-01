@@ -7,14 +7,14 @@ import globalEvents from './globalEvents'
 
 const registeredDict = {}
 
-const startAddWhen = context => startSaga('addWhen', context, result => {
+const startAddWhen = (context:t.RuleContext) => startSaga('addWhen', context, result => {
   const add = () => {
     context.rule.addUntil && startAddUntil(context)
     addRule(context)
   }
   switch (result.logic) {
     case 'ADD_RULE': return globalEvents.once('END_ACTION_EXECUTION', add)
-    case 'ADD_RULE_BEFORE': return add(context)
+    case 'ADD_RULE_BEFORE': return add()
     case 'REAPPLY_ADD_WHEN': return globalEvents.once('END_ACTION_EXECUTION', () => startAddWhen(context))
     case 'CANCELED':
     case 'ABORT': return
@@ -26,7 +26,7 @@ const startAddWhen = context => startSaga('addWhen', context, result => {
   }
 })
 
-const startAddUntil = context => startSaga('addUntil', context, result => {
+const startAddUntil = (context:t.RuleContext) => startSaga('addUntil', context, result => {
   switch (result.logic) {
     case 'REMOVE_RULE': return globalEvents.once('END_ACTION_EXECUTION', () => removeRule(context))
     case 'REMOVE_RULE_BEFORE': return removeRule(context)
@@ -43,11 +43,11 @@ const startAddUntil = context => startSaga('addUntil', context, result => {
     }
     case 'REAPPLY_ADD_UNTIL': return globalEvents.once('END_ACTION_EXECUTION', () => startAddUntil(context))
     case 'READD_RULE': return globalEvents.once('END_ACTION_EXECUTION', () => {
-      removeRule()
+      removeRule(context)
       startAddUntil(context)
     })
     case 'READD_RULE_BEFORE': {
-      removeRule()
+      removeRule(context)
       startAddUntil(context)
       return
     }
@@ -61,7 +61,7 @@ const startAddUntil = context => startSaga('addUntil', context, result => {
   }
 })
 
-export function activateSubRule (ruleContext, name, parameters={}) {
+export function activateSubRule (ruleContext:t.RuleContext, name:string, parameters:Object={}) {
   const subContext = ruleContext.subRuleContexts[name]
 
   if(!subContext){

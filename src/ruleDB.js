@@ -1,4 +1,5 @@
 // @flow
+import * as t from './types'
 import {removeItem} from './utils'
 
 const activeRules = {
@@ -9,7 +10,7 @@ const activeRules = {
 
 const GLOBAL_TYPE = '-global-'
 
-export const addRule = context => {
+export const addRule = (context:t.RuleContext) => {
   const position = context.rule.position || 'AFTER'
   
   // throw error if rule is already active
@@ -37,7 +38,7 @@ export const addRule = context => {
   context.events.trigger('ADD_RULE')
 }
 
-export const removeRule = context => {
+export const removeRule = (context:t.RuleContext) => {
   // remove child rules
   for(let name in context.subRuleContexts){
     const subContext = context.subRuleContexts[name]
@@ -62,7 +63,7 @@ export const removeRule = context => {
   context.events.trigger('REMOVE_RULE')
 }
 
-export const forEachRuleContext = (target, position, cb) => {
+export const forEachRuleContext = (target:string, position:t.Position, cb:Function) => {
   const globalList = activeRules[position][GLOBAL_TYPE] || []
   const targetList = activeRules[position][target] || []
   let i = 0

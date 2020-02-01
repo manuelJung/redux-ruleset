@@ -1,4 +1,5 @@
 // @flow
+import * as t from './types'
 
 export function removeItem <Item:*>(list:Item[], item:Item) {
   let i, j
@@ -53,7 +54,7 @@ export function createEventContainer () {
   }
 }
 
-export function createRuleContext (rule:Rule):RuleContext {
+export function createRuleContext (rule:t.Rule):t.RuleContext {
   return {
     rule: rule,
     active: false,

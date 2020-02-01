@@ -1,5 +1,6 @@
 // @flow
 
+export type Action = {type:string}
 
 export type LogicAdd = 'ADD_RULE' | 'ABORT' | 'REAPPLY_ADD_WHEN' | 'ADD_RULE_BEFORE'
 
@@ -21,15 +22,25 @@ type CTX = {
   getContext: (key:string) => mixed
 }
 
+export type GetState = () => Object
+export type Dispatch = (action:Action) => any
+export type AddRule = (name:string, args:Object) => void
+export type RemoveRule = (name:string) => void
+export type Effect = (()=>mixed)=>void
+export type Target = '*' | string | string[]
+export type Position = 'AFTER' | 'BEFORE' | 'INSTEAD'
+
 export type Saga<Logic> = (
-  action: (cb?:(action:Action) => mixed) => mixed,
-  getState: GetState,
-  context: CTX
+  action: (target:Target, cb?:(action:Action) => mixed)=>mixed,
+  {
+    getState: GetState,
+    context: CTX
+  }
 ) => Generator<any,Logic,mixed>
 
 export type Rule = {
   id: string,
-  target: '*' | string | string[],
+  target: Target,
   position?: Position,
   weight?: number,
   concurrency?: LogicConcurrency,
@@ -37,31 +48,33 @@ export type Rule = {
   throttle?: number,
   delay?: number,
   concurrencyFilter?: (action:Action) => string,
-  condition?: (action?:Action, getState:GetState, context:CTX) => boolean,
-  consequence: ({
-    dispatch:Dispatch,
-    getState:GetState, 
-    action?:Action, 
-    addRule:AddRule,
-    removeRule:RemoveRule, 
-    effect: (()=>mixed)=>void,
-    context: CTX
-  }) => Action | Promise<Action> | Promise<void> | void | () => void,
+  condition?: (action?:Action, args:{getState:GetState, context:CTX}) => boolean,
+  consequence: (
+    action:Action,
+    {
+      dispatch:Dispatch,
+      getState:GetState, 
+      addRule:AddRule,
+      removeRule:RemoveRule, 
+      effect: (()=>mixed)=>void,
+      context: CTX
+    }) => Action | Promise<Action> | Promise<void> | void | () => void,
   addOnce?: boolean,
+  // $FlowFixMe
   addWhen?: Saga<LogicAdd>,
   addUntil?: Saga<LogicRemove>,
-  childRules?: {[id:string]: Rule}
+  subRules?: {[id:string]: Rule}
 }
 
 export type RuleContext = {
   rule: Rule,
   active: boolean,
-  runningSaga: null | 'addWhen' | 'addUntil',
+  runningSaga: null | SagaExecution,
   parentContext: null | RuleContext,
   subRuleContexts: {[name:string]:RuleContext},
   concurrency: {[name:string]:{
     running: number,
-    debounceTimeoutId: null | number
+    debounceTimeoutId: null | TimeoutID
   }},
   publicContext: {
     global: {},
@@ -87,8 +100,9 @@ export type RuleExecution = {
   execId: number,
   concurrencyId: string,
   actionExecId: number,
-  concurrency: {[name:string]: {
-    running: number,
-    debounceTimeoutId: TimeoutID | null,
-  }}
+}
+
+export type SagaExecution = {
+  execId: number,
+  sagaType: 'addWhen' | 'addUntil'
 }

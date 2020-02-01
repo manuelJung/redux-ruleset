@@ -1,4 +1,5 @@
 // @flow
+import * as t from './types'
 import reduxPlugin, {middleware as _middleware} from './reduxPlugin'
 import setup from './setup'
 import registerRule from './registerRule'
@@ -6,14 +7,14 @@ import './devtools'
 
 setup({plugin:reduxPlugin})
 
-export {dispatchEvent} from './dispatchEvent'
-export const addRule = (rule:Rule) => registerRule(rule)
+export {default as dispatchEvent} from './dispatchEvent'
+export const addRule = (rule:t.Rule) => registerRule(rule)
 
 // export const removeRule = (rule:Rule) => ruleDB.removeRule(rule)
 
 
 
-export const skipRule = (ruleId:'*'|string|string[], action:Action) => {
+export const skipRule = (ruleId:'*'|string|string[], action:Object) => {
   if(action.meta && typeof action.meta !== 'object') throw new Error('Expect action.meta be be an action')
   let newAction = {}
   let key
