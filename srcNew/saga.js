@@ -54,7 +54,7 @@ export function startSaga (sagaType, ruleContext, finCb, isReady) {
     if(result.done){
       ruleContext.runningSaga = null
       ruleContext.events.trigger('SAGA_END', sagaContext, result.value)
-      finCb({ logic: payload ? result.value : 'CANCELED' })
+      finCb({ logic: payload === 'CANCELED' ? 'CANCELED' : result.value  })
     }
   }
 
@@ -68,7 +68,7 @@ export function startSaga (sagaType, ruleContext, finCb, isReady) {
   const cancel = () => {
     ruleContext.events.trigger('SAGA_YIELD', 'CANCELED', sagaType)
     iter.return('CANCELED')
-    iterate(iter)
+    iterate(iter, 'CANCELED')
   }
 
   // let's start

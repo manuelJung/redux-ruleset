@@ -31,12 +31,12 @@ const startAddUntil = context => startSaga('addUntil', context, result => {
     case 'REMOVE_RULE': return globalEvents.once('END_ACTION_EXECUTION', () => removeRule(context))
     case 'REMOVE_RULE_BEFORE': return removeRule(context)
     case 'RECREATE_RULE': return globalEvents.once('END_ACTION_EXECUTION', () => {
-      removeRule()
+      removeRule(context)
       if(context.rule.addWhen) startAddWhen(context)
       else startAddUntil(context)
     })
     case 'RECREATE_RULE_BEFORE': {
-      removeRule()
+      removeRule(context)
       if(context.rule.addWhen) startAddWhen(context)
       else startAddUntil(context)
       return

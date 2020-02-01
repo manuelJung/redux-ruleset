@@ -87,7 +87,7 @@ describe('basic', () => {
       id: 'UNIT_TEST',
       target: 'TEST_TYPE',
       position: 'INSTEAD',
-      consequence: () => ({type:'TEST_TYPE', foo:'bar'})
+      consequence: (action) => Object.assign({}, action, {foo:'bar'})
     })
 
     store.dispatch({type:'TEST_TYPE'})
@@ -109,6 +109,39 @@ describe('basic', () => {
     
     const actions = store.getActions()
     expect(actions).toEqual([{type:'ONE'}, {type:'THREE'}])
+  })
+
+  test('sagas manage active state', () => {
+    index.addRule({
+      id: 'PING_PONG',
+      target: 'PING',
+      consequence: () => ({type:'PONG'}),
+      addWhen: function* (next) {
+        yield next('START_GAME')
+        return 'ADD_RULE'
+      },
+      addUntil: function* (next) {
+        yield next('STOP_GAME')
+        return 'RECREATE_RULE'
+      }
+    })
+
+    store.dispatch({type:'PING'})
+    store.dispatch({type:'START_GAME'})
+    store.dispatch({type:'PING'})
+    store.dispatch({type:'STOP_GAME'})
+    store.dispatch({type:'PING'})
+
+    const actions = store.getActions()
+
+    expect(actions).toEqual([
+      {type: 'PING'},
+      {type: 'START_GAME'},
+      {type: 'PING'},
+      {type: 'PONG'},
+      {type: 'STOP_GAME'},
+      {type: 'PING'}
+    ])
   })
 
   test('throw error on endless loops', () => {
@@ -186,5 +219,78 @@ describe('access state', () => {
 describe('context', () => {
   beforeEach(initTest)
 
-  test.skip('todo', () => {})
+  test('sagas can send context to consequence and sagas', () => {
+    const rule = index.addRule({
+      id: 'UNIT_TEST',
+      target: 'TEST_TYPE',
+      consequence: jest.fn((_, {context}) => {
+        expect(context.getContext('foo')).toBe('bar')
+      }),
+      addWhen: jest.fn(function* (next, {context}){
+        context.setContext('foo', 'bar')
+        return 'ADD_RULE'
+      }),
+      addUntil: jest.fn(function* (next, {context}){
+        expect(context.getContext('foo')).toBe('bar')
+        yield next('UNKNOWN')
+        return 'REMOVE_RULE'
+      })
+    })
+
+    store.dispatch({type:'START'})
+    store.dispatch({type:'TEST_TYPE'})
+    expect(rule.consequence).toBeCalled()
+    expect(rule.addWhen).toBeCalled()
+    expect(rule.addUntil).toBeCalled()
+  })
+})
+
+describe('subRules', () => {
+  beforeEach(initTest)
+
+  test('subRules can be added', () => {
+    const rule = index.addRule({
+      id: 'UNIT_TEST',
+      target: 'TRIGGER',
+      consequence: jest.fn((_, {addRule}) => addRule('test')),
+      subRules: {
+        test: {
+          target: 'PING',
+          consequence: jest.fn(() => ({type:'PONG'}))
+        }
+      }
+    })
+    store.dispatch({type:'PING'})
+    expect(store.getActions()).toEqual([{type:'PING'}])
+
+    store.clearActions()
+    store.dispatch({type:'TRIGGER'})
+    store.dispatch({type:'PING'})
+    expect(store.getActions()).toEqual([
+      {type:'TRIGGER'},
+      {type:'PING'},
+      {type:'PONG'}
+    ])
+  })
+
+  test('addRule can set global sub-rule context', () => {
+    const rule = index.addRule({
+      id: 'UNIT_TEST',
+      target: 'TRIGGER',
+      consequence: jest.fn((_, {addRule}) => addRule('test', {foo:'bar'})),
+      subRules: {
+        test: {
+          target: 'PING',
+          consequence: jest.fn((_, {context}) => {
+            expect(context.getContext('foo')).toBe('bar')
+          })
+        }
+      }
+    })
+
+    store.dispatch({type:'TRIGGER'})
+    store.dispatch({type:'PING'})
+    expect(rule.consequence).toBeCalled()
+    expect(rule.subRules.test.consequence).toBeCalled()
+  })
 })
