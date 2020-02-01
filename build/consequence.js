@@ -3,10 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-
-var _defineProperty2 = require('babel-runtime/helpers/defineProperty');
-
-var _defineProperty3 = _interopRequireDefault(_defineProperty2);
+exports.getCurrentRuleExecId = undefined;
 
 var _typeof2 = require('babel-runtime/helpers/typeof');
 
@@ -16,102 +13,126 @@ var _promise = require('babel-runtime/core-js/promise');
 
 var _promise2 = _interopRequireDefault(_promise);
 
-exports.getRuleExecutionId = getRuleExecutionId;
+var _assign = require('babel-runtime/core-js/object/assign');
+
+var _assign2 = _interopRequireDefault(_assign);
+
 exports.default = consequence;
 
+var _types = require('./types');
+
+var t = _interopRequireWildcard(_types);
+
+var _setup = require('./setup');
+
+var setup = _interopRequireWildcard(_setup);
+
+var _registerRule = require('./registerRule');
+
 var _ruleDB = require('./ruleDB');
-
-var ruleDB = _interopRequireWildcard(_ruleDB);
-
-var _devTools = require('./utils/devTools');
-
-var devTools = _interopRequireWildcard(_devTools);
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var executionId = 1;
+var execId = 1;
+var wrappedExecIds = [];
+var getCurrentRuleExecId = exports.getCurrentRuleExecId = function getCurrentRuleExecId() {
+  return wrappedExecIds[wrappedExecIds.length - 1] || null;
+};
 
-var nextExecutionId = null;
-function getRuleExecutionId() {
-  var id = nextExecutionId;
-  nextExecutionId = null;
-  return id;
-}
+function consequence(actionExecution, ruleContext) {
+  var action = actionExecution.action;
+  var rule = ruleContext.rule;
 
-function consequence(context, action, store, actionExecId) {
-  var rule = context.rule;
-  var ctx = {
-    getContext: function getContext(key) {
-      return context.addUntilContext[key] || context.addWhenContext[key];
-    },
-    setContext: function setContext(key, value) {
-      throw new Error('consequences cannot set context');
-    }
-  };
-
-  var concurrencyId = rule.concurrencyFilter && action ? rule.concurrencyFilter(action) : 'default';
-  if (!context.concurrency[concurrencyId]) {
-    context.concurrency[concurrencyId] = {
+  // setup concurrency
+  var concurrencyId = rule.concurrencyFilter ? rule.concurrencyFilter(action) : 'default';
+  if (!ruleContext.concurrency[concurrencyId]) {
+    ruleContext.concurrency[concurrencyId] = {
       running: 0,
       debounceTimeoutId: null
+      // orderedEffects: []
     };
   }
-  var concurrency = context.concurrency[concurrencyId];
+  var concurrency = ruleContext.concurrency[concurrencyId];
 
+  // addOnce rules may not be removed when they return a promise
+  // so we totally ignore all futher consequence executions until the rule is removed
   if (concurrency.running) {
-    if (rule.addOnce) return { resolved: false };
+    // TODO: what happens when position === INSTEAD. will actionExecution be canceled=
+    if (rule.addOnce) return null;
   }
 
-  var execId = executionId++;
+  // setup ruleExecution
+  var ruleExecution = {
+    execId: execId++,
+    concurrencyId: concurrencyId,
+    actionExecId: actionExecution.execId
+  };
 
-  context.trigger('CONSEQUENCE_START', execId);
-
-  if (process.env.NODE_ENV === 'development') {
-    devTools.execRuleStart(rule.id, execId, actionExecId, concurrencyId);
-  }
+  ruleContext.events.trigger('CONSEQUENCE_START', ruleExecution);
+  concurrency.running++;
 
   /**
    * Check concurrency and conditions
    */
 
   // trigger when consequence should not be invoked (e.g condition does not match)
-  var skipConsequence = function skipConsequence() {
-    context.trigger('CONSEQUENCE_END', execId);
-    if (process.env.NODE_ENV === 'development') {
-      devTools.execRuleEnd(rule.id, execId, actionExecId, concurrencyId, 'SKIP');
-    }
-    return { resolved: false };
+  var endConsequence = function endConsequence(logic) {
+    concurrency.running--;
+    ruleContext.events.trigger('CONSEQUENCE_END', ruleExecution, logic);
+    return null;
   };
 
-  // skip when concurrency matches
-  if (concurrency.running) {
-    if (rule.concurrency === 'ONCE') return skipConsequence();
-    if (rule.concurrency === 'FIRST') return skipConsequence();
-    if (rule.concurrency === 'LAST') context.trigger('CANCEL_CONSEQUENCE', concurrencyId);
-    if (rule.throttle) context.trigger('CANCEL_CONSEQUENCE', concurrencyId);
-    if (rule.debounce) context.trigger('CANCEL_CONSEQUENCE', concurrencyId);
+  if (concurrency.running - 1 > 0) {
+    // skip when concurrency matches
+    if (rule.concurrency === 'ONCE') return endConsequence('SKIP');
+    if (rule.concurrency === 'FIRST') return endConsequence('SKIP');
+    // cancel previous consequences
+    if (rule.concurrency === 'LAST') ruleContext.events.trigger('CANCEL_CONSEQUENCE', ruleExecution, 'LAST');
+    if (rule.throttle) ruleContext.events.trigger('CANCEL_CONSEQUENCE', ruleExecution, 'THROTTLE');
+    if (rule.debounce) ruleContext.events.trigger('CANCEL_CONSEQUENCE', ruleExecution, 'DEBOUNCE');
   }
   // skip if 'skipRule' condition matched
-  if (action && action.meta && action.meta.skipRule && matchGlob(rule.id, action.meta.skipRule)) {
-    return skipConsequence();
+  if (action.meta && action.meta.skipRule && matchGlob(rule.id, action.meta.skipRule)) {
+    return endConsequence('SKIP');
   }
   // skip if rule condition does not match
-  if (rule.condition && !rule.condition(action, store.getState, ctx)) {
-    if (process.env.NODE_ENV === 'development') {
-      devTools.execRuleEnd(rule.id, execId, actionExecId, concurrencyId, 'CONDITION_NOT_MATCH');
+  if (rule.condition) {
+    var conditionArgs = setup.createConditionArgs({ context: (0, _assign2.default)({}, ruleContext.publicContext, {
+        setContext: function setContext(key, value) {
+          throw new Error('you cannot call setContext within condition. check rule ' + rule.id);
+        }
+      }) });
+    if (rule.condition && !rule.condition(action, conditionArgs)) {
+      return endConsequence('CONDITION_NOT_MATCHED');
     }
-    context.trigger('CONSEQUENCE_END', execId);
-    return { resolved: false };
   }
 
   /**
-   * Prepare Execution
+   * setup cancelation
    */
 
+  // later consequences can cancel this execution
+  var offCancel = ruleContext.events.on('CANCEL_CONSEQUENCE', function (newRuleExecution) {
+    if (newRuleExecution.concurrencyId !== ruleExecution.concurrencyId) return;
+    if (newRuleExecution.execId === ruleExecution.execId) return;
+    cancel();
+    status = 'CANCELED';
+  });
+
+  // cancel consequence when rule gets removed
+  var offRemoveRule = ruleContext.events.once('REMOVE_RULE', function () {
+    cancel();
+    status = 'REMOVED';
+  });
+
+  /**
+   * Execute consequence
+   */
+  var result = void 0;
   var canceled = false;
-  var execution = null;
+  var status = void 0;
   var cancel = function cancel() {
     canceled = true;
   };
@@ -120,67 +141,59 @@ function consequence(context, action, store, actionExecId) {
   };
   var effect = function effect(fn) {
     if (canceled) return;
-    if (rule.concurrency === 'ORDERED' && execution && execution.active !== execId) {
-      execution.effects[execId].push(function () {
-        return effect(fn);
-      });
-      return;
-    }
-    rule.concurrency === 'SWITCH' && context.trigger('CANCEL_CONSEQUENCE', concurrencyId);
+    // if(rule.concurrency === 'ORDERED' && execution && execution.active !== execId){
+    //   execution.effects[execId].push(() => effect(fn))
+    //   return
+    // }
+    rule.concurrency === 'SWITCH' && ruleContext.events.trigger('CANCEL_CONSEQUENCE', ruleExecution, 'SWITCH');
+    wrappedExecIds.push(ruleExecution.execId);
     fn();
+    wrappedExecIds.pop();
   };
-  var getState = store.getState;
-  var dispatch = function dispatch(action) {
-    effect(function () {
-      nextExecutionId = execId;
-      var result = store.dispatch(action);
-      nextExecutionId = null;
-      return result;
-    });return action;
+  var addRule = function addRule(name, parameters) {
+    (0, _registerRule.activateSubRule)(ruleContext, name, parameters);
   };
-  var addRule = function addRule(rule) {
-    effect(function () {
-      ruleDB.addRule(rule, { parentRuleId: context.rule.id });
-    });return rule;
+  var removeRule = function removeRule(name) {
+    var context = ruleContext.subRuleContexts[name];
+    if (!context || !context.active) return;
+    (0, _ruleDB.removeRule)(context);
   };
-  var removeRule = function removeRule(rule) {
-    effect(function () {
-      return ruleDB.removeRule(rule);
-    });
+  var context = {
+    setContext: function setContext() {
+      throw new Error('you cannot call setContext within a consequence. check rule ' + rule.id);
+    },
+    getContext: function getContext(name) {
+      return ruleContext.publicContext.addUntil[name] || ruleContext.publicContext.addWhen[name] || ruleContext.publicContext.global[name];
+    }
   };
 
-  /**
-   * Setup Cancel Listeners
-   */
-  if (rule.concurrency === 'ORDERED') {
-    execution = registerOrdererdExecution(context, execId, concurrencyId);
-  }
+  var consequenceArgs = setup.createConsequenceArgs(effect, { addRule: addRule, removeRule: removeRule, effect: effect, wasCanceled: wasCanceled, context: context });
 
-  context.on('CANCEL_CONSEQUENCE', function (id) {
-    id === concurrencyId && cancel();
-  });
-  context.on('REMOVE_RULE', cancel);
-
-  /**
-   * Execute consequence
-   */
-
-  concurrency.running++;
-  var result = void 0;
-  var args = { dispatch: dispatch, getState: getState, action: action, addRule: addRule, removeRule: removeRule, effect: effect, wasCanceled: wasCanceled, context: ctx };
-
+  // run the thing
   if (rule.throttle || rule.delay || rule.debounce) {
+    // $FlowFixMe
     result = new _promise2.default(function (resolve) {
       if (rule.debounce && concurrency.debounceTimeoutId) clearTimeout(concurrency.debounceTimeoutId);
       concurrency.debounceTimeoutId = setTimeout(function () {
         concurrency.debounceTimeoutId = null;
         if (canceled) return resolve();
-        var result = rule.consequence(args);
+        var result = rule.consequence(action, consequenceArgs);
+        // $FlowFixMe
         resolve(result);
       }, rule.throttle || rule.delay || rule.debounce);
     });
   } else {
-    result = rule.consequence(args);
+    result = rule.consequence(action, consequenceArgs);
+  }
+
+  /**
+   * setup unlisten
+   */
+  function unlisten() {
+    rule.concurrency !== 'ONCE' && concurrency.running--;
+    ruleContext.events.trigger('CONSEQUENCE_END', ruleExecution, status || 'RESOLVED');
+    offCancel();
+    offRemoveRule();
   }
 
   /**
@@ -188,119 +201,56 @@ function consequence(context, action, store, actionExecId) {
    */
 
   // position:INSTEAD can extend the action if type is equal
-  if (action && (typeof result === 'undefined' ? 'undefined' : (0, _typeof3.default)(result)) === 'object' && result.type && rule.position === 'INSTEAD' && result.type === action.type) {
-    var _action = result;
-    unlisten(context, execId, cancel, concurrency);
-    if (process.env.NODE_ENV === 'development') {
-      devTools.execRuleEnd(rule.id, execId, actionExecId, concurrencyId, 'RESOLVED');
-    }
-    return { resolved: true, action: _action };
+  if ((typeof result === 'undefined' ? 'undefined' : (0, _typeof3.default)(result)) === 'object' && result !== null && result.type && rule.position === 'INSTEAD' && result.type === action.type) {
+    unlisten();
+    return result;
   }
 
   // dispatch returned action
-  if ((typeof result === 'undefined' ? 'undefined' : (0, _typeof3.default)(result)) === 'object' && result.type) {
-    var _action2 = result;
-    dispatch(_action2);
-    unlisten(context, execId, cancel, concurrency);
-    if (process.env.NODE_ENV === 'development') {
-      devTools.execRuleEnd(rule.id, execId, actionExecId, concurrencyId, 'RESOLVED');
-    }
+  if ((typeof result === 'undefined' ? 'undefined' : (0, _typeof3.default)(result)) === 'object' && result !== null && result.type) {
+    unlisten();
+    // $FlowFixMe
+    setup.handleConsequenceReturn(result);
   }
 
   // dispatch returned (promise-wrapped) action
-  else if ((typeof result === 'undefined' ? 'undefined' : (0, _typeof3.default)(result)) === 'object' && result.then) {
-      var promise = result;
-      promise.then(function (action) {
-        action && action.type && dispatch(action);
-        if (rule.concurrency === 'ORDERED') effect(function () {
-          return unlisten(context, execId, cancel, concurrency);
-        });else unlisten(context, execId, cancel, concurrency);
-        if (process.env.NODE_ENV === 'development') {
-          devTools.execRuleEnd(rule.id, execId, actionExecId, concurrencyId, 'RESOLVED');
-        }
+  if ((typeof result === 'undefined' ? 'undefined' : (0, _typeof3.default)(result)) === 'object' && result !== null && result.then) {
+    // $FlowFixMe
+    result.then(function (action) {
+      // if(rule.concurrency === 'ORDERED') effect(() => unlisten(context, execId, cancel, concurrency))
+      // else unlisten(context, execId, cancel, concurrency)
+      unlisten();
+      action && action.type && setup.handleConsequenceReturn(action);
+    });
+  }
+
+  // register unlisten callback
+  else if (typeof result === 'function') {
+      var _offRemoveRule = ruleContext.events.once('REMOVE_RULE', function () {
+        _offCancel();
+        unlisten();
+        // $FlowFixMe
+        result();
+      });
+      var _offCancel = ruleContext.events.once('CANCEL_CONSEQUENCE', function (newRuleExecution) {
+        if (newRuleExecution.concurrencyId !== ruleExecution.concurrencyId) return;
+        if (newRuleExecution.execId === ruleExecution.execId) return;
+        _offRemoveRule();
+        unlisten();
+        // $FlowFixMe
+        result();
       });
     }
 
-    // register unlisten callback
-    else if (typeof result === 'function') {
-        var cb = result;
-        var applyCb = function applyCb() {
-          unlisten(context, execId, cancel, concurrency);
-          context.off('REMOVE_RULE', applyCb);
-          context.off('CANCEL_CONSEQUENCE', applyCb);
-          if (process.env.NODE_ENV === 'development') {
-            devTools.execRuleEnd(rule.id, execId, actionExecId, concurrencyId, 'RESOLVED');
-          }
-          cb();
-        };
-        context.on('REMOVE_RULE', applyCb);
-        context.on('CANCEL_CONSEQUENCE', function (id) {
-          id === concurrencyId && applyCb();
-        });
+    // unlisten for void return
+    else {
+        unlisten();
       }
 
-      // unlisten for void return
-      else {
-          unlisten(context, execId, cancel, concurrency);
-          if (process.env.NODE_ENV === 'development') {
-            devTools.execRuleEnd(rule.id, execId, actionExecId, concurrencyId, 'RESOLVED');
-          }
-        }
-
-  return { resolved: true };
-}
-
-// HELPERS
-
-function unlisten(context, execId, cancelFn, concurrency) {
-  context.rule.concurrency !== 'ONCE' && concurrency.running--;
-  context.trigger('CONSEQUENCE_END', execId);
-  context.rule.addOnce && ruleDB.removeRule(context.rule);
-  context.off('CANCEL_CONSEQUENCE', cancelFn);
-  context.off('REMOVE_RULE', cancelFn);
+  return null;
 }
 
 function matchGlob(id, glob) {
   if (glob === '*') return true;
   if (typeof glob === 'string') return glob === id;else return glob.includes(id);
-}
-
-var db = {};
-function registerOrdererdExecution(context, execId, concurrencyId) {
-  var id = context.rule.id;
-
-  if (db[id]) {
-    db[id].buffer.push(execId);
-    db[id].effects[execId] = [];
-    return db[id];
-  }
-  db[id] = {
-    active: execId,
-    buffer: [],
-    effects: (0, _defineProperty3.default)({}, execId, [])
-  };
-  var store = db[id];
-
-  var clearStore = function clearStore() {
-    context.off('CONSEQUENCE_END', updateActive);
-    context.off('CANCEL_CONSEQUENCE', clearStore);
-    delete db[context.rule.id];
-  };
-
-  var updateActive = function updateActive() {
-    var nextId = store.buffer.splice(0, 1)[0];
-    if (!nextId) return clearStore();
-    store.active = nextId;
-    var effects = store.effects[nextId];
-    effects.forEach(function (fn) {
-      return fn();
-    });
-  };
-
-  context.on('CONSEQUENCE_END', updateActive);
-  context.on('REMOVE_RULE', clearStore);
-  context.on('CANCEL_CONSEQUENCE', function (id) {
-    id === concurrencyId && clearStore();
-  }); // important when debouncing
-  return store;
 }

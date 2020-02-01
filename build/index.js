@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.middleware = exports.skipRule = exports.dispatchEvent = exports.removeRule = exports.addRule = undefined;
+exports.middleware = exports.skipRule = exports.addRule = exports.dispatchEvent = undefined;
 
 var _toConsumableArray2 = require('babel-runtime/helpers/toConsumableArray');
 
@@ -13,37 +13,44 @@ var _typeof2 = require('babel-runtime/helpers/typeof');
 
 var _typeof3 = _interopRequireDefault(_typeof2);
 
-var _ruleDB = require('./ruleDB');
-
-var ruleDB = _interopRequireWildcard(_ruleDB);
-
-var _middleware2 = require('./middleware');
-
-var _middleware3 = _interopRequireDefault(_middleware2);
-
 var _dispatchEvent = require('./dispatchEvent');
 
-var _dispatchEvent2 = _interopRequireDefault(_dispatchEvent);
+Object.defineProperty(exports, 'dispatchEvent', {
+  enumerable: true,
+  get: function get() {
+    return _interopRequireDefault(_dispatchEvent).default;
+  }
+});
 
-var _lazyStore = require('./utils/lazyStore');
+var _types = require('./types');
+
+var t = _interopRequireWildcard(_types);
+
+var _reduxPlugin = require('./reduxPlugin');
+
+var _reduxPlugin2 = _interopRequireDefault(_reduxPlugin);
+
+var _setup = require('./setup');
+
+var _setup2 = _interopRequireDefault(_setup);
+
+var _registerRule = require('./registerRule');
+
+var _registerRule2 = _interopRequireDefault(_registerRule);
+
+require('./devtools');
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+(0, _setup2.default)({ plugin: _reduxPlugin2.default });
 var addRule = exports.addRule = function addRule(rule) {
-  return ruleDB.addRule(rule);
+  return (0, _registerRule2.default)(rule);
 };
 
-var removeRule = exports.removeRule = function removeRule(rule) {
-  return ruleDB.removeRule(rule);
-};
+// export const removeRule = (rule:Rule) => ruleDB.removeRule(rule)
 
-var dispatchEvent = exports.dispatchEvent = function dispatchEvent(action, cb) {
-  return (0, _lazyStore.applyLazyStore)(function (store) {
-    (0, _dispatchEvent2.default)(action, store, cb, false);
-  });
-};
 
 var skipRule = exports.skipRule = function skipRule(ruleId, action) {
   if (action.meta && (0, _typeof3.default)(action.meta) !== 'object') throw new Error('Expect action.meta be be an action');
@@ -64,6 +71,6 @@ var skipRule = exports.skipRule = function skipRule(ruleId, action) {
   return newAction;
 };
 
-var middleware = exports.middleware = _middleware3.default;
+var middleware = exports.middleware = _reduxPlugin.middleware;
 
-exports.default = _middleware3.default;
+exports.default = _reduxPlugin.middleware;

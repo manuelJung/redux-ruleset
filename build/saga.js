@@ -3,118 +3,118 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.applyAction = applyAction;
-exports.createSaga = createSaga;
+exports.testing = undefined;
+exports.yieldAction = yieldAction;
+exports.startSaga = startSaga;
 
-var _devTools = require('./utils/devTools');
+var _types = require('./types');
 
-var devTools = _interopRequireWildcard(_devTools);
+var t = _interopRequireWildcard(_types);
 
-var _consequence = require('./consequence');
+var _setup = require('./setup');
 
-var _lazyStore = require('./utils/lazyStore');
+var setup = _interopRequireWildcard(_setup);
+
+var _utils = require('./utils');
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
 var listeners = {};
 
-var id = 1;
+var GLOBAL_TYPE = '-global-';
 
-function applyAction(action, actionExecId) {
-  var globalCallbacks = listeners.global;
-  var boundCallbacks = listeners[action.type];
-  if (globalCallbacks) {
-    listeners.global = undefined;
-    for (var i = 0; i < globalCallbacks.length; i++) {
-      globalCallbacks[i](action, actionExecId);
-    }
-  }
-  if (boundCallbacks) {
-    listeners[action.type] = undefined;
-    for (var _i = 0; _i < boundCallbacks.length; _i++) {
-      boundCallbacks[_i](action, actionExecId);
-    }
+var sagaExecId = 1;
+
+function yieldAction(actionExecution) {
+  var globalList = listeners[GLOBAL_TYPE];
+  var targetList = listeners[actionExecution.action.type];
+  var i = 0;
+
+  if (globalList) for (i = 0; i < globalList.length; i++) {
+    globalList[i](actionExecution);
+  }if (targetList) for (i = 0; i < targetList.length; i++) {
+    targetList[i](actionExecution);
   }
 }
 
-function addListener(target, cb) {
-  if (typeof target === 'function') {
-    cb = target;
-    target = '*';
-  } else if (typeof target === 'string') {
-    if (target === '*') target = 'global';
-    if (!listeners[target]) listeners[target] = [];
-    listeners[target] && listeners[target].push(cb);
-  } else if (target) {
-    for (var i = 0; i < target.length; i++) {
-      if (!listeners[target[i]]) listeners[target[i]] = [];
-      listeners[target[i]].push(cb);
-    }
+function addActionListener(target, ruleContext, cb) {
+  var targetList = [];
+  if (target === '*') targetList = [GLOBAL_TYPE];else if (typeof target === 'string') targetList = [target];else targetList = target;
+
+  var _loop = function _loop(i) {
+    if (!listeners[targetList[i]]) listeners[targetList[i]] = [];
+    listeners[targetList[i]].push(cb);
+    ruleContext.events.once('SAGA_YIELD', function () {
+      (0, _utils.removeItem)(listeners[targetList[i]], cb);
+    });
+  };
+
+  for (var i = 0; i < targetList.length; i++) {
+    _loop(i);
   }
 }
 
-function createSaga(context, saga, cb, store) {
-  if (!store) {
-    (0, _lazyStore.applyLazyStore)(function (store) {
-      return createSaga(context, saga, cb, store);
+function yieldFn(target, condition, ruleContext, onYield) {
+  addActionListener(target, ruleContext, function (actionExecution) {
+    var result = condition ? condition(actionExecution.action) : actionExecution.action;
+    if (result) onYield(result);
+  });
+}
+
+function startSaga(sagaType, ruleContext, finCb, isReady) {
+  if (!isReady) {
+    setup.onSetupFinished(function () {
+      return startSaga(sagaType, ruleContext, finCb, true);
     });
     return;
   }
-  var execId = id++;
-  var sagaType = saga === context.rule.addWhen ? 'ADD_WHEN' : 'ADD_UNTIL';
-  if (process.env.NODE_ENV === 'development') {
-    devTools.execSagaStart(execId, context.rule.id, sagaType);
-  }
-  context.pendingSaga = true;
-  context.sagaStep = -1;
-  var boundStore = store;
-  var cancel = function cancel() {};
-  var lastAction = void 0;
-
-  var run = function run(gen) {
-    var next = function next(iter, payload, actionExecId) {
-      context.sagaStep++;
-      var result = iter.next(payload);
-      if (result.done) {
-        context.pendingSaga = false;
-        context.off('REMOVE_RULE', cancel);
-        if (process.env.NODE_ENV === 'development') {
-          var _sagaType = saga === context.rule.addWhen ? 'ADD_WHEN' : 'ADD_UNTIL';
-          devTools.execSagaEnd(execId, context.rule.id, _sagaType, result.value);
-        }
-        cb({ logic: result.value, action: lastAction, actionExecId: actionExecId });
-      }
-    };
-    var nextAction = function nextAction(target, cb) {
-      var _addListener = function _addListener(newTarget) {
-        addListener(newTarget || target, function (action, actionExecId) {
-          var result = cb ? cb(action) : action; // false or mixed
-          lastAction = action;
-          if (process.env.NODE_ENV === 'development') {
-            var _sagaType2 = saga === context.rule.addWhen ? 'ADD_WHEN' : 'ADD_UNTIL';
-            var ruleExecId = (0, _consequence.getRuleExecutionId)();
-            devTools.yieldSaga(execId, context.rule.id, _sagaType2, action, ruleExecId, actionExecId, result ? 'RESOLVE' : 'REJECT');
-          }
-          if (result) next(iter, result, actionExecId);else _addListener(action.type); // only re-add listener to single action
-        });
-      };
-      _addListener();
-    };
-    var contextName = sagaType === 'ADD_WHEN' ? 'addWhenContext' : 'addUntilContext';
-    var setContext = function setContext(key, value) {
-      return context[contextName][key] = value;
-    };
-    var getContext = function getContext(key) {
-      return context.addUntilContext[key] || context.addWhenContext[key];
-    };
-    var iter = gen(nextAction, boundStore.getState, { setContext: setContext, getContext: getContext });
-    cancel = function cancel() {
-      iter.return('CANCELED');
-      next(iter, undefined, 0);
-    };
-    context.on('REMOVE_RULE', cancel);
-    next(iter, undefined, 0);
+  var sagaExecution = {
+    execId: sagaExecId++,
+    sagaType: sagaType
   };
 
-  run(saga);
+  var iterate = function iterate(iter, payload) {
+    var result = iter.next(payload);
+    if (result.done) {
+      ruleContext.runningSaga = null;
+      ruleContext.events.trigger('SAGA_END', sagaExecution, result.value);
+      finCb({ logic: payload === 'CANCELED' || !result.value ? 'CANCELED' : result.value });
+    }
+  };
+
+  var nextFn = function nextFn(target, condition) {
+    yieldFn(target, condition, ruleContext, function (result) {
+      ruleContext.events.trigger('SAGA_YIELD', sagaExecution, result);
+      iterate(iter, result);
+    });
+  };
+
+  var cancel = function cancel() {
+    ruleContext.events.trigger('SAGA_YIELD', 'CANCELED', sagaType);
+    iter.return('CANCELED');
+    iterate(iter, 'CANCELED');
+  };
+
+  // let's start
+  ruleContext.runningSaga = sagaExecution;
+  ruleContext.events.trigger('SAGA_START', sagaExecution);
+  ruleContext.events.once('REMOVE_RULE', cancel);
+
+  var context = {
+    setContext: function setContext(name, value) {
+      return ruleContext.publicContext[sagaType][name] = value;
+    },
+    getContext: function getContext(name) {
+      return ruleContext.publicContext.addUntil[name] || ruleContext.publicContext.addWhen[name] || ruleContext.publicContext.global[name];
+    }
+  };
+
+  var saga = ruleContext.rule[sagaType];
+  var iter = void 0;
+  if (saga) {
+    iter = saga(nextFn, setup.createSagaArgs({ context: context }));
+    iterate(iter);
+  }
 }
+
+var testing = exports.testing = { addActionListener: addActionListener, listeners: listeners, yieldFn: yieldFn };
