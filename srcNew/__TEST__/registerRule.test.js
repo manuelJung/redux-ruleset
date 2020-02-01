@@ -76,10 +76,10 @@ describe('registerRule', () => {
     const ruleContext = lastRuleContext
     ruleContext.publicContext.addWhen = {foo:'bar'}
     
-    ruleContext.events.trigger('SAGA_END', 'ADD_RULE', 'addWhen')
+    ruleContext.events.trigger('SAGA_END', {}, 'ADD_RULE')
     expect(ruleContext.publicContext.addWhen).toEqual({foo:'bar'})
 
-    ruleContext.events.trigger('SAGA_END', 'REAPPLY_ADD_WHEN', 'addWhen')
+    ruleContext.events.trigger('SAGA_END', {}, 'REAPPLY_ADD_WHEN')
     expect(ruleContext.publicContext.addWhen).toEqual({})
   })
 
@@ -89,17 +89,17 @@ describe('registerRule', () => {
     ruleContext.publicContext.addUntil = {foo:'bar'}
     ruleContext.publicContext.addWhen = {foo:'bar'}
 
-    ruleContext.events.trigger('SAGA_END', 'REAPPLY_ADD_UNTIL', 'addUntil')
+    ruleContext.events.trigger('SAGA_END', {}, 'REAPPLY_ADD_UNTIL')
     expect(ruleContext.publicContext.addUntil).toEqual({})
     expect(ruleContext.publicContext.addWhen).toEqual({foo:'bar'})
 
     ruleContext.publicContext.addUntil = {foo:'bar'}
-    ruleContext.events.trigger('SAGA_END', 'READD_RULE', 'addUntil')
+    ruleContext.events.trigger('SAGA_END', {}, 'READD_RULE')
     expect(ruleContext.publicContext.addUntil).toEqual({})
     expect(ruleContext.publicContext.addWhen).toEqual({foo:'bar'})
 
     ruleContext.publicContext.addUntil = {foo:'bar'}
-    ruleContext.events.trigger('SAGA_END', 'READD_RULE_BEFORE', 'addUntil')
+    ruleContext.events.trigger('SAGA_END', {}, 'READD_RULE_BEFORE')
     expect(ruleContext.publicContext.addUntil).toEqual({})
     expect(ruleContext.publicContext.addWhen).toEqual({foo:'bar'})
   })
@@ -110,14 +110,14 @@ describe('registerRule', () => {
     ruleContext.publicContext.addUntil = {foo:'bar'}
     ruleContext.publicContext.addWhen = {foo:'bar'}
 
-    ruleContext.events.trigger('SAGA_END', 'RECREATE_RULE', 'addUntil')
+    ruleContext.events.trigger('SAGA_END', {}, 'RECREATE_RULE')
     expect(ruleContext.publicContext.addUntil).toEqual({})
     expect(ruleContext.publicContext.addWhen).toEqual({})
 
     ruleContext.publicContext.addUntil = {foo:'bar'}
     ruleContext.publicContext.addWhen = {foo:'bar'}
 
-    ruleContext.events.trigger('SAGA_END', 'RECREATE_RULE_BEFORE', 'addUntil')
+    ruleContext.events.trigger('SAGA_END', {}, 'RECREATE_RULE_BEFORE')
     expect(ruleContext.publicContext.addUntil).toEqual({})
     expect(ruleContext.publicContext.addWhen).toEqual({})
   })
