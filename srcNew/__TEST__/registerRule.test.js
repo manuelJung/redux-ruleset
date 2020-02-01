@@ -11,12 +11,15 @@ let appUtils
 let ruleDB
 let globalEvents
 
+const any = expect.anything()
+
 const initTest = () => {
   jest.resetModules()
   registerRule = require('../registerRule')
   saga = require('../saga')
   ruleDB = require('../ruleDB')
   globalEvents = require('../globalEvents')
+  globalEvents.default.trigger = jest.fn()
   ruleDB.addRule = jest.fn()
   ruleDB.removeRule = jest.fn()
   appUtils = require('../utils')
@@ -52,18 +55,17 @@ describe('registerRule', () => {
     rule.addUntil = function* () {}
     saga.startSaga = jest.fn()
     registerRule.default(rule)
-    expect(saga.startSaga).toBeCalledWith('addWhen', expect.anything(), expect.anything())
+    expect(saga.startSaga).toBeCalledWith('addWhen', any, any)
   })
 
   test('starts addUntil saga when rule has prop "addUntil"', () => {
     rule.addUntil = function* () {}
     saga.startSaga = jest.fn()
     registerRule.default(rule)
-    expect(saga.startSaga).toBeCalledWith('addUntil', expect.anything(), expect.anything())
+    expect(saga.startSaga).toBeCalledWith('addUntil', any, any)
   })
 
   test('triggers global REGISTER_RULE', () => {
-    globalEvents.default.trigger = jest.fn()
     registerRule.default(rule)
     const ruleContext = lastRuleContext
     expect(globalEvents.default.trigger).toBeCalledWith('REGISTER_RULE', ruleContext)
@@ -187,10 +189,10 @@ describe('startAddUntil', () => {
     saga.startSaga = jest.fn().mockImplementationOnce((_,__,cb) => cb({logic:'RECREATE_RULE'}))
     registerRule.testing.startAddUntil(ruleContext)
     expect(ruleDB.removeRule).not.toBeCalled()
-    expect(saga.startSaga).not.toBeCalledWith('addWhen', expect.anything(), expect.anything())
+    expect(saga.startSaga).not.toBeCalledWith('addWhen', any, any)
     globalEvents.default.trigger('END_ACTION_EXECUTION')
     expect(ruleDB.removeRule).toBeCalled()
-    expect(saga.startSaga).toBeCalledWith('addWhen', expect.anything(), expect.anything())
+    expect(saga.startSaga).toBeCalledWith('addWhen', any, any)
   })
 
   test('remove rule and start addWhen saga instantly for logic RECREATE_RULE_BEFORE', () => {
@@ -198,7 +200,7 @@ describe('startAddUntil', () => {
     saga.startSaga = jest.fn().mockImplementationOnce((_,__,cb) => cb({logic:'RECREATE_RULE_BEFORE'}))
     registerRule.testing.startAddUntil(ruleContext)
     expect(ruleDB.removeRule).toBeCalled()
-    expect(saga.startSaga).toBeCalledWith('addWhen', expect.anything(), expect.anything())
+    expect(saga.startSaga).toBeCalledWith('addWhen', any, any)
   })
 
   test('recall startAddUntil after action-execution for logic REAPPLY_ADD_UNTIL', () => {
@@ -237,5 +239,72 @@ describe('startAddUntil', () => {
   test('throws error for any other logic', () => {
     saga.startSaga = jest.fn((_,__,cb) => cb({logic:'UNKNOWN_LOGIC'}))
     expect(() => registerRule.testing.startAddUntil(ruleContext)).toThrow()
+  })
+})
+
+describe.only('subRules', () => {
+  beforeEach(() => {
+    initTest()
+    rule.subRules = {
+      test: {
+        target: 'OTHER_TYPE',
+        consequence: jest.fn()
+      }
+    }
+  })
+
+  test('register subRules without activating it', () => {
+    registerRule.default(rule)
+
+    expect(globalEvents.default.trigger).toBeCalledWith('REGISTER_RULE', expect.objectContaining({
+      rule: expect.objectContaining({
+        id: 'TEST_RULE::test'
+      })
+    }))
+
+    const subRuleContext = registerRule.testing.registeredDict['TEST_RULE::test']
+    expect(subRuleContext.active).toBe(false)
+  })
+
+  test('subRule and parentRule contexts are connected', () => {
+    registerRule.default(rule)
+    const ruleContext = registerRule.testing.registeredDict['TEST_RULE']
+    const subRuleContext = ruleContext.subRuleContexts.test
+    expect(ruleContext.parentContext).toBe(null)
+    expect(ruleContext.subRuleContexts['test']).toBe(subRuleContext)
+    expect(subRuleContext.parentContext).toBe(ruleContext)
+  })
+
+  test('throw error when trying to add unknown sub-rule', () => {
+    registerRule.default(rule)
+    const ruleContext = registerRule.testing.registeredDict['TEST_RULE']
+    expect(() => registerRule.activateSubRule(ruleContext, 'unknown')).toThrow()
+  })
+
+  test('when subRules are added parameters are saved on global context', () => {
+    registerRule.default(rule)
+    const ruleContext = registerRule.testing.registeredDict['TEST_RULE']
+    const subRuleContext = ruleContext.subRuleContexts.test
+    registerRule.activateSubRule(ruleContext, 'test', {foo:'bar'})
+
+    expect(subRuleContext.publicContext.global).toEqual({foo:'bar'})
+  })
+
+  test('activate subRule', () => {
+    registerRule.default(rule)
+    const ruleContext = registerRule.testing.registeredDict['TEST_RULE']
+    registerRule.activateSubRule(ruleContext, 'test')
+    expect(ruleDB.addRule).toBeCalledWith(ruleContext.subRuleContexts.test)
+  })
+
+  test('start addWhen saga of sub-rule', () => {
+    rule.subRules.test.addWhen = jest.fn()
+    saga.startSaga = jest.fn()
+    registerRule.default(rule)
+    const ruleContext = registerRule.testing.registeredDict['TEST_RULE']
+    const subRuleContext = ruleContext.subRuleContexts.test
+    registerRule.activateSubRule(ruleContext, 'test')
+    expect(ruleDB.addRule).not.toBeCalledWith(subRuleContext)
+    expect(saga.startSaga).toBeCalledWith('addWhen', subRuleContext, any)
   })
 })

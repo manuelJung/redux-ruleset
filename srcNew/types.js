@@ -57,6 +57,12 @@ export type RuleContext = {
   rule: Rule,
   active: boolean,
   runningSaga: null | 'addWhen' | 'addUntil',
+  parentContext: null | RuleContext,
+  subRuleContexts: {[name:string]:RuleContext},
+  concurrency: {[name:string]:{
+    running: number,
+    debounceTimeoutId: null | number
+  }},
   publicContext: {
     global: {},
     addWhen: {},
@@ -83,6 +89,6 @@ export type RuleExecution = {
   actionExecId: number,
   concurrency: {[name:string]: {
     running: number,
-    debounceTimeoutId: number | null,
+    debounceTimeoutId: TimeoutID | null,
   }}
 }

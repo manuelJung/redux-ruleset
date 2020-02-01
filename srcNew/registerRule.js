@@ -57,8 +57,21 @@ const startAddUntil = context => startSaga('addUntil', context, result => {
   }
 })
 
+export function activateSubRule (ruleContext, name, parameters={}) {
+  const subContext = ruleContext.subRuleContexts[name]
 
-export default function registerRule (rule:t.Rule) {
+  if(!subContext){
+    throw new Error(`you tried to add sub-rule "${name}" but rule "${ruleContext.rule.id}" does not have such an sub-rule`)
+  }
+
+  subContext.publicContext.global = parameters
+
+  if(subContext.rule.addWhen) startAddWhen(subContext)
+  else addRule(subContext)
+}
+
+
+export default function registerRule (rule:t.Rule, parentContext?:t.RuleContext, name?:string) {
 
   // check if rule is already registered
   if(registeredDict[rule.id]){
@@ -67,9 +80,9 @@ export default function registerRule (rule:t.Rule) {
     }
     return
   }
-  registeredDict[rule.id] = true
 
   const ruleContext = createRuleContext(rule)
+  registeredDict[rule.id] = ruleContext
 
   // clear public context
   ruleContext.events.on('SAGA_END', result => {
@@ -87,17 +100,32 @@ export default function registerRule (rule:t.Rule) {
   
   globalEvents.trigger('REGISTER_RULE', ruleContext)
 
+  // whenever the rule gets added we want to start the ad until saga
   if(rule.addUntil){
     ruleContext.events.on('ADD_RULE', () => startAddUntil(ruleContext))
   }
 
-  if(rule.addWhen) startAddWhen(ruleContext)
-  else  {
-    addRule(ruleContext)
-    if(rule.addUntil) startAddUntil(ruleContext)
+  // register sub rules
+  if(rule.subRules) {
+    for(let name in rule.subRules) {
+      const subRule = rule.subRules[name]
+      subRule.id = rule.id + '::' + name
+      registerRule(subRule, ruleContext, name)
+    }
   }
+
+  // subrules are not active initially
+  if(parentContext && name) {
+    ruleContext.parentContext = parentContext
+    parentContext.subRuleContexts[name] = ruleContext
+    return rule
+  }
+
+  // activate
+  if(rule.addWhen) startAddWhen(ruleContext)
+  else addRule(ruleContext)
 
   return rule
 }
 
-export const testing = {startAddWhen, startAddUntil}
+export const testing = {startAddWhen, startAddUntil, registeredDict}
