@@ -37,7 +37,11 @@ export const addRule = context => {
 }
 
 export const removeRule = context => {
-  // TODO: remove child rules
+  // remove child rules
+  for(let name in context.subRuleContexts){
+    const subContext = context.subRuleContexts[name]
+    if(subContext.active) removeRule(subContext)
+  }
   
   context.active = false
   const position = context.rule.position || 'AFTER'

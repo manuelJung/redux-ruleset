@@ -110,7 +110,23 @@ describe('removeRule', () => {
     expect(ruleContext.events.trigger).toBeCalledWith('REMOVE_RULE')
   })
 
-  test.skip('removes all activeChildRules', () => false)
+  test('removes all active activeChildRules', () => {
+    ruleContext.subRuleContexts.active = utils.createContext({
+      id: 'UNIT_TEST::active',
+      target: 'ACTIVE',
+      consequence: jest.fn()
+    }, {active:true})
+    ruleContext.subRuleContexts.inactive = utils.createContext({
+      id: 'UNIT_TEST::inactive',
+      target: 'INACTIVE',
+      consequence: jest.fn()
+    }, {active:false})
+    ruleDB.removeRule(ruleContext)
+    const activeContext = ruleContext.subRuleContexts.active
+    const inactiveContext = ruleContext.subRuleContexts.inactive
+    expect(activeContext.events.trigger).toBeCalledWith('REMOVE_RULE')
+    expect(inactiveContext.events.trigger).not.toBeCalledWith('REMOVE_RULE')
+  })
 })
 
 describe('forEachRuleContext', () => {

@@ -19,7 +19,7 @@ const initTest = () => {
   saga = require('../saga')
   ruleDB = require('../ruleDB')
   globalEvents = require('../globalEvents')
-  globalEvents.default.trigger = jest.fn()
+  globalEvents.default.trigger = jest.fn(globalEvents.default.trigger)
   ruleDB.addRule = jest.fn()
   ruleDB.removeRule = jest.fn()
   appUtils = require('../utils')
@@ -242,7 +242,7 @@ describe('startAddUntil', () => {
   })
 })
 
-describe.only('subRules', () => {
+describe('subRules', () => {
   beforeEach(() => {
     initTest()
     rule.subRules = {

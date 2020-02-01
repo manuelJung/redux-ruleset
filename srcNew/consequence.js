@@ -1,6 +1,8 @@
 // @flow
 import * as t from './types'
 import * as setup from './setup'
+import {activateSubRule} from './registerRule'
+import {removeRule as removeRuleFromRuleDB} from './ruleDB'
 
 let execId = 1
 let wrappedExecIds = []
@@ -109,8 +111,14 @@ export default function consequence (actionExecution:t.ActionExecution, ruleCont
     fn()
     wrappedExecIds.pop()
   }
-  const addRule = name => {}
-  const removeRule = name => {}
+  const addRule = (name, parameters) => {
+    activateSubRule(ruleContext, name, parameters)
+  }
+  const removeRule = name => {
+    const context = ruleContext.subRuleContexts[name]
+    if(!context || !context.active) return
+    removeRuleFromRuleDB(context)
+  }
   const context = {
     addContext: () => {throw new Error('you cannot call addContext within a consequence. check rule '+ rule.id)},
     getContext: (name:string) => ruleContext.publicContext.addUntil[name] 

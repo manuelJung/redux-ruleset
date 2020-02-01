@@ -8,9 +8,13 @@ import globalEvents from './globalEvents'
 const registeredDict = {}
 
 const startAddWhen = context => startSaga('addWhen', context, result => {
+  const add = () => {
+    context.rule.addUntil && startAddUntil(context)
+    addRule(context)
+  }
   switch (result.logic) {
-    case 'ADD_RULE': return globalEvents.once('END_ACTION_EXECUTION', () => addRule(context))
-    case 'ADD_RULE_BEFORE': return addRule(context)
+    case 'ADD_RULE': return globalEvents.once('END_ACTION_EXECUTION', add)
+    case 'ADD_RULE_BEFORE': return add(context)
     case 'REAPPLY_ADD_WHEN': return globalEvents.once('END_ACTION_EXECUTION', () => startAddWhen(context))
     case 'CANCELED':
     case 'ABORT': return
@@ -67,7 +71,10 @@ export function activateSubRule (ruleContext, name, parameters={}) {
   subContext.publicContext.global = parameters
 
   if(subContext.rule.addWhen) startAddWhen(subContext)
-  else addRule(subContext)
+  else {
+    addRule(subContext)
+    if(subContext.rule.addUntil) startAddUntil(subContext)
+  }
 }
 
 
@@ -100,11 +107,6 @@ export default function registerRule (rule:t.Rule, parentContext?:t.RuleContext,
   
   globalEvents.trigger('REGISTER_RULE', ruleContext)
 
-  // whenever the rule gets added we want to start the ad until saga
-  if(rule.addUntil){
-    ruleContext.events.on('ADD_RULE', () => startAddUntil(ruleContext))
-  }
-
   // register sub rules
   if(rule.subRules) {
     for(let name in rule.subRules) {
@@ -123,7 +125,10 @@ export default function registerRule (rule:t.Rule, parentContext?:t.RuleContext,
 
   // activate
   if(rule.addWhen) startAddWhen(ruleContext)
-  else addRule(ruleContext)
+  else {
+    addRule(ruleContext)
+    if(rule.addUntil) startAddUntil(ruleContext)
+  }
 
   return rule
 }
