@@ -92,7 +92,7 @@ export default function registerRule (rule:t.Rule, parentContext?:t.RuleContext,
   registeredDict[rule.id] = ruleContext
 
   // clear public context
-  ruleContext.events.on('SAGA_END', result => {
+  ruleContext.events.on('SAGA_END', (_,result) => {
     switch(result){
       case 'RECREATE_RULE':
       case 'REAPPLY_ADD_WHEN':

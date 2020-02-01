@@ -30,16 +30,19 @@ export function createEventContainer () {
     },
     trigger(event, ...args){
       let i = 0
-      if(onceList[event]){
-        for(i=0;i<onceList[event].length;i++){
+      const once = onceList[event]
+      const on = onList[event]
+
+      if(once){
+        for(i=0;i<once.length;i++){
           const cb = onceList[event][i]
           cb(...args)
         }
         onceList[event] = []
       }
-      if(onList[event]){
-        for(i=0;i<onList[event].length;i++){
-          const cb = onList[event][i]
+      if(on){
+        for(i=0;i<on.length;i++){
+          const cb = on[i]
           cb(...args)
         }
       }

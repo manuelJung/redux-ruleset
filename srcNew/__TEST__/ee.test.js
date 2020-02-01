@@ -243,6 +243,43 @@ describe('context', () => {
     expect(rule.addWhen).toBeCalled()
     expect(rule.addUntil).toBeCalled()
   })
+
+  test('context can be cleared', () => {
+    const rule = index.addRule({
+      id: 'UNIT_TEST',
+      target: 'SHOW',
+      addWhen: function* (next, {context}) {
+        context.setContext('name', 'manu')
+        return 'ADD_RULE_BEFORE'
+      },
+      addUntil: function* (next, {context}) {
+        yield next('RESET')
+        context.setContext('name', 'alex')
+        yield next('RESET')
+        return 'REAPPLY_ADD_UNTIL'
+      },
+      consequence: (action, {context}) => {
+        const name = context.getContext('name')
+        return {type:'SHOW_NAME', name}
+      }
+    })
+
+    store.dispatch({type:'SHOW'})
+    store.dispatch({type:'RESET'})
+    store.dispatch({type:'SHOW'})
+    store.dispatch({type:'RESET'})
+    store.dispatch({type:'SHOW'})
+
+    const actions = store.getActions()
+    expect(actions[0]).toEqual({type:'SHOW'})
+    expect(actions[1]).toEqual({type:'SHOW_NAME', name: 'manu'})
+    expect(actions[2]).toEqual({type:'RESET'})
+    expect(actions[3]).toEqual({type:'SHOW'})
+    expect(actions[4]).toEqual({type:'SHOW_NAME', name: 'alex'})
+    expect(actions[5]).toEqual({type:'RESET'})
+    expect(actions[6]).toEqual({type:'SHOW'})
+    expect(actions[7]).toEqual({type:'SHOW_NAME', name: 'manu'})
+  })
 })
 
 describe('subRules', () => {
