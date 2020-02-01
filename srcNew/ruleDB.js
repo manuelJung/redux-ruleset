@@ -1,4 +1,5 @@
 // @flow
+import {removeItem} from './utils'
 
 const activeRules = {
   INSTEAD: {},
@@ -55,7 +56,7 @@ export const removeRule = context => {
   // remove context from activeRules by targets
   for(let i=0;i<targets.length;i++){
     if(!activeRules[position][targets[i]]) activeRules[position][targets[i]] = []
-    activeRules[position][targets[i]] = activeRules[position][targets[i]].filter(item => item !== context) // TODO: better filtering
+    removeItem(activeRules[position][targets[i]], context)
   }
 
   context.events.trigger('REMOVE_RULE')
