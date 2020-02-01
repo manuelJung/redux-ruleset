@@ -67,7 +67,7 @@ export default function consequence (actionExecution:t.ActionExecution, ruleCont
   // skip if rule condition does not match
   if(rule.condition){
     const conditionArgs = setup.createConditionArgs({context: Object.assign({}, ruleContext.context, {
-      setContext: (key:string, value:mixed) => {throw new Error('consequences cannot set context')}
+      setContext: (key:string, value:mixed) => {throw new Error('you cannot call setContext within condition. check rule '+ rule.id)}
     })})
     if(!rule.condition(action, conditionArgs)){
       return endConsequence('CONDITION_NOT_MATCHED')
@@ -120,7 +120,7 @@ export default function consequence (actionExecution:t.ActionExecution, ruleCont
     removeRuleFromRuleDB(context)
   }
   const context = {
-    addContext: () => {throw new Error('you cannot call addContext within a consequence. check rule '+ rule.id)},
+    setContext: () => {throw new Error('you cannot call setContext within a consequence. check rule '+ rule.id)},
     getContext: (name:string) => ruleContext.publicContext.addUntil[name] 
     || ruleContext.publicContext.addWhen[name]
     || ruleContext.publicContext.global[name]

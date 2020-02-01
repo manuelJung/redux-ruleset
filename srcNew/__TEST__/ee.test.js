@@ -32,13 +32,11 @@ describe('basic', () => {
     })
 
     store.dispatch({type:'PING'})
-    const actions = store.getActions()
-
     expect(rule.consequence).toBeCalled()
-    expect(actions).toEqual([
-      {type: 'PING'},
-      {type: 'PONG'}
-    ])
+    
+    const actions = store.getActions()
+    expect(actions[0]).toEqual({type: 'PING'})
+    expect(actions[1]).toEqual({type: 'PONG'})
   })
 
   test('dispatch promise wrapped action', async () => {
@@ -52,13 +50,11 @@ describe('basic', () => {
 
     await wait(1)
 
-    const actions = store.getActions()
-
     expect(rule.consequence).toBeCalled()
-    expect(actions).toEqual([
-      {type: 'PING'},
-      {type: 'PONG'}
-    ])
+
+    const actions = store.getActions()
+    expect(actions[0]).toEqual({type: 'PING'})
+    expect(actions[1]).toEqual({type: 'PONG'})
   })
 
   test('consequence cb is called when the rule gets removed', () => {
@@ -92,7 +88,7 @@ describe('basic', () => {
 
     store.dispatch({type:'TEST_TYPE'})
     const actions = store.getActions()
-    expect(actions).toEqual([{type:'TEST_TYPE', foo:'bar'}])
+    expect(actions[0]).toEqual({type:'TEST_TYPE', foo:'bar'})
   })
 
   test('actions can be canceled', () => {
@@ -108,7 +104,7 @@ describe('basic', () => {
     store.dispatch({type:'THREE'})
     
     const actions = store.getActions()
-    expect(actions).toEqual([{type:'ONE'}, {type:'THREE'}])
+    expect(actions[0]).toEqual({type:'ONE'}, {type:'THREE'})
   })
 
   test('sagas manage active state', () => {
@@ -133,15 +129,12 @@ describe('basic', () => {
     store.dispatch({type:'PING'})
 
     const actions = store.getActions()
-
-    expect(actions).toEqual([
-      {type: 'PING'},
-      {type: 'START_GAME'},
-      {type: 'PING'},
-      {type: 'PONG'},
-      {type: 'STOP_GAME'},
-      {type: 'PING'}
-    ])
+    expect(actions[0]).toEqual({type: 'PING'})
+    expect(actions[1]).toEqual({type: 'START_GAME'})
+    expect(actions[2]).toEqual({type: 'PING'})
+    expect(actions[3]).toEqual({type: 'PONG'})
+    expect(actions[4]).toEqual({type: 'STOP_GAME'})
+    expect(actions[5]).toEqual({type: 'PING'})
   })
 
   test('throw error on endless loops', () => {
@@ -279,6 +272,33 @@ describe('context', () => {
     expect(actions[5]).toEqual({type:'RESET'})
     expect(actions[6]).toEqual({type:'SHOW'})
     expect(actions[7]).toEqual({type:'SHOW_NAME', name: 'manu'})
+  })
+
+  test('setContext cannot be called within consequence', () => {
+    const rule = index.addRule({
+      id: 'UNIT_TEST',
+      target: 'START',
+      consequence: jest.fn((_,{context}) => {
+        expect(() => context.setContext('key', 'val')).toThrow('you cannot call setContext within a consequence. check rule UNIT_TEST')
+      })
+    })
+
+    store.dispatch({type:'START'})
+    expect(rule.consequence).toBeCalled()
+  })
+
+  test('setContext cannot be called within condition', () => {
+    const rule = index.addRule({
+      id: 'UNIT_TEST',
+      target: 'START',
+      condition: jest.fn((_,{context}) => {
+        expect(() => context.setContext('key', 'val')).toThrow('you cannot call setContext within condition. check rule UNIT_TEST')
+      }),
+      consequence: () => null
+    })
+
+    store.dispatch({type:'START'})
+    expect(rule.condition).toBeCalled()
   })
 })
 
