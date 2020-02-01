@@ -1,16 +1,16 @@
 // @flow
-import * as ruleDB from './ruleDB'
-import _middleware from './middleware'
-import dispatch from './dispatchEvent'
-import {applyLazyStore} from './utils/lazyStore'
+import reduxPlugin, {middleware as _middleware} from './reduxPlugin'
+import setup from './setup'
+import registerRule from './registerRule'
+import './devtools'
 
-import type {Rule, Action} from './types'
+setup({plugin:reduxPlugin})
 
-export const addRule = (rule:Rule) => ruleDB.addRule(rule)
+export {dispatchEvent} from './dispatchEvent'
+export const addRule = (rule:Rule) => registerRule(rule)
 
-export const removeRule = (rule:Rule) => ruleDB.removeRule(rule)
+// export const removeRule = (rule:Rule) => ruleDB.removeRule(rule)
 
-export const dispatchEvent = (action:Action,cb?:(action:Action)=>mixed) => applyLazyStore(store => {dispatch(action, store, cb, false)})
 
 
 export const skipRule = (ruleId:'*'|string|string[], action:Action) => {

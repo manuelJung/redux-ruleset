@@ -1,73 +1,67 @@
 // @flow
-import consequence, {getRuleExecutionId} from './consequence'
-import * as saga from './saga'
-import * as ruleDB from './ruleDB'
-import {executeBuffer} from './utils/laterEvents'
-import * as devTools from './utils/devTools'
+import consequence, {getCurrentRuleExecId} from './consequence'
+import {forEachRuleContext} from './ruleDB'
+import globalEvents from './globalEvents'
+import {yieldAction} from './saga'
 
-import type {Action,Store} from './types'
-
-let executionId = 1
-const dispatchListeners = []
+let execId = 1
 
 const cycle = {
   waiting: false,
   step: 0
 }
 
-export function registerDispatchListener(cb:(action:Action, wasDispatched:boolean, ruleExecutionId:number|null)=>void){
-  dispatchListeners.push(cb)
-}
-
-function notifyDispatchListener(action:Action, ruleExecutionId:number|null, wasDispatched:boolean){
-  if(!dispatchListeners.length) return
-  for(let i=0;i<dispatchListeners.length;i++){
-    const cb = dispatchListeners[i]
-    cb(action, wasDispatched, ruleExecutionId)
-  }
-}
-
-export default function dispatchEvent (action:Action, store:Store, cb?:(action:Action)=>mixed, isReduxDispatch:boolean){
-  const execId = executionId++
+export default function dispatchEvent (action, cb=()=>null) {
   cycle.step++
-  const ruleExeId = getRuleExecutionId()
-  let instead = false
 
-  if(process.env.NODE_ENV === 'development'){
-    if(typeof window !== 'undefined'){
-      devTools.execActionStart(execId, ruleExeId, action)
-      if(!cycle.waiting){
-        cycle.waiting = true
-        requestAnimationFrame(() => {
-          cycle.waiting = false
-          cycle.step = 0
-        })
-      }
-      if(cycle.step > 1000) console.warn('detected endless cycle with action', action)
-      if(cycle.step > 1010) throw new Error('detected endless cycle')
+  // detect endless recursive loops
+  if(process.env.NODE_ENV !== 'production'){
+    let next = fn => setTimeout(fn,1)
+    if(!cycle.waiting){
+      cycle.waiting = true
+      next(() => {
+        cycle.waiting = false
+        cycle.step = 0
+      })
     }
+    if(cycle.step > 800) console.warn('detected endless cycle with action', action)
+    if(cycle.step > 810) throw new Error('detected endless cycle')
+  }
+  
+  const actionExecution = {
+    execId: execId++,
+    ruleExecId: getCurrentRuleExecId(),
+    canceled: false,
+    history: [],
+    action: action
   }
 
-  ruleDB.forEachRuleContext('INSTEAD', action.type, context => {
-    if(instead) return
-    const result = consequence(context, action, store, execId)
-    if(result.resolved) {
-      if(result.action) action = result.action
-      else instead = true
+  globalEvents.trigger('START_ACTION_EXECUTION', actionExecution)
+
+  forEachRuleContext(action.type, 'INSTEAD', context => {
+    if(actionExecution.canceled) return
+    const newAction = consequence(actionExecution, context)
+    if(newAction) {
+      actionExecution.history.push({action, context})
+      action = newAction
     }
+    else actionExecution.canceled = true
   })
-  !instead && saga.applyAction(action, execId)
-  !instead && ruleDB.forEachRuleContext('BEFORE', action.type, context => consequence(context, action, store, execId))
-  const result = instead || !cb ? null : cb(action)
-  if(process.env.NODE_ENV === 'development'){
-    devTools.dispatchAction(execId, instead, isReduxDispatch, action)
-  }
-  notifyDispatchListener(action, ruleExeId, !instead)
-  !instead && ruleDB.forEachRuleContext('AFTER', action.type, context => consequence(context, action, store, execId))
-  executeBuffer(execId)
 
-  if(process.env.NODE_ENV === 'development'){
-    devTools.execActionEnd(execId, ruleExeId, action, instead ? 'ABORTED' : 'DISPATCHED')
+  if (!actionExecution.canceled) {
+    yieldAction(actionExecution)
+
+    forEachRuleContext(action.type, 'BEFORE', context => {
+      consequence(actionExecution, context)
+    })
+
+    globalEvents.trigger('DISPATCH_ACTION', actionExecution)
+    cb(action)
+
+    forEachRuleContext(action.type, 'AFTER', context => {
+      consequence(actionExecution, context)
+    })
   }
-  return result
+
+  globalEvents.trigger('END_ACTION_EXECUTION', actionExecution)
 }

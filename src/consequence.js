@@ -1,145 +1,157 @@
 // @flow
-import * as ruleDB from './ruleDB'
-import type {Action,Store,RuleContext} from './types'
-import * as devTools from './utils/devTools'
+import * as t from './types'
+import * as setup from './setup'
+import {activateSubRule} from './registerRule'
+import {removeRule as removeRuleFromRuleDB} from './ruleDB'
 
-let executionId = 1
+let execId = 1
+let wrappedExecIds = []
+export const getCurrentRuleExecId = () => wrappedExecIds[wrappedExecIds.length-1] || null
 
-let nextExecutionId:number|null = null
-export function getRuleExecutionId(){
-  const id = nextExecutionId
-  nextExecutionId = null
-  return id
-}
+export default function consequence (actionExecution:t.ActionExecution, ruleContext:t.RuleContext) {
+  const action = actionExecution.action
+  const rule = ruleContext.rule
 
-type ReturnType = {
-  resolved: boolean,
-  action?: Action
-}
-
-export default function consequence (context:RuleContext, action?:Action, store:Store, actionExecId:number|null):ReturnType{
-  const rule = context.rule
-  const ctx = {
-    getContext: (key:string) => context.addUntilContext[key] || context.addWhenContext[key],
-    setContext: (key:string, value:mixed) => {throw new Error('consequences cannot set context')} 
-  }
-
-  const concurrencyId = rule.concurrencyFilter && action ? rule.concurrencyFilter(action) : 'default'
-  if(!context.concurrency[concurrencyId]){
-    context.concurrency[concurrencyId] = {
+  // setup concurrency
+  const concurrencyId = rule.concurrencyFilter ? rule.concurrencyFilter(action) : 'default'
+  if(!ruleContext.concurrency[concurrencyId]){
+    ruleContext.concurrency[concurrencyId] = {
       running: 0,
-      debounceTimeoutId: null
+      debounceTimeoutId: null,
+      // orderedEffects: []
     }
   }
-  const concurrency = context.concurrency[concurrencyId]
-  
+  const concurrency = ruleContext.concurrency[concurrencyId]
+
+  // addOnce rules may not be removed when they return a promise
+  // so we totally ignore all futher consequence executions until the rule is removed
   if(concurrency.running){
-    if(rule.addOnce) return {resolved:false}
+    // TODO: what happens when position === INSTEAD. will actionExecution be canceled=
+    if(rule.addOnce) return null
   }
 
-  let execId = executionId++
-
-  context.trigger('CONSEQUENCE_START', execId)
-
-
-  if(process.env.NODE_ENV === 'development'){
-    devTools.execRuleStart(rule.id, execId, actionExecId, concurrencyId)
+  // setup ruleExecution
+  const ruleExecution:t.RuleExecution = {
+    execId: execId++,
+    concurrencyId: concurrencyId,
+    actionExecId: actionExecution.execId
   }
+
+  ruleContext.events.trigger('CONSEQUENCE_START', ruleExecution)
+  concurrency.running++
 
   /**
    * Check concurrency and conditions
    */
 
   // trigger when consequence should not be invoked (e.g condition does not match)
-  const skipConsequence = () => {
-    context.trigger('CONSEQUENCE_END', execId)
-    if(process.env.NODE_ENV === 'development'){
-      devTools.execRuleEnd(rule.id, execId, actionExecId, concurrencyId, 'SKIP')
-    }
+  const endConsequence = (logic) => {
+    concurrency.running--
+    ruleContext.events.trigger('CONSEQUENCE_END', ruleExecution, logic)
     return {resolved:false}
   }
 
-  // skip when concurrency matches
-  if(concurrency.running){
-    if(rule.concurrency === 'ONCE') return skipConsequence()
-    if(rule.concurrency === 'FIRST') return skipConsequence()
-    if(rule.concurrency === 'LAST') context.trigger('CANCEL_CONSEQUENCE', concurrencyId)
-    if(rule.throttle) context.trigger('CANCEL_CONSEQUENCE', concurrencyId)
-    if(rule.debounce) context.trigger('CANCEL_CONSEQUENCE', concurrencyId)
+  if(concurrency.running-1 > 0){
+    // skip when concurrency matches
+    if(rule.concurrency === 'ONCE') return endConsequence('SKIP')
+    if(rule.concurrency === 'FIRST') return endConsequence('SKIP')
+    // cancel previous consequences
+    if(rule.concurrency === 'LAST') ruleContext.events.trigger('CANCEL_CONSEQUENCE', ruleExecution, 'LAST')
+    if(rule.throttle) ruleContext.events.trigger('CANCEL_CONSEQUENCE', ruleExecution, 'THROTTLE')
+    if(rule.debounce) ruleContext.events.trigger('CANCEL_CONSEQUENCE', ruleExecution, 'DEBOUNCE')
   }
   // skip if 'skipRule' condition matched
-  if(action && action.meta && action.meta.skipRule && matchGlob(rule.id, action.meta.skipRule)){
-    return skipConsequence()
+  if(action.meta && action.meta.skipRule && matchGlob(rule.id, action.meta.skipRule)){
+    return endConsequence('SKIP')
   }
   // skip if rule condition does not match
-  if(rule.condition && !rule.condition(action, store.getState, ctx)){
-    if(process.env.NODE_ENV === 'development'){
-      devTools.execRuleEnd(rule.id, execId, actionExecId, concurrencyId, 'CONDITION_NOT_MATCH')
+  if(rule.condition){
+    const conditionArgs = setup.createConditionArgs({context: Object.assign({}, ruleContext.context, {
+      setContext: (key:string, value:mixed) => {throw new Error('you cannot call setContext within condition. check rule '+ rule.id)}
+    })})
+    if(!rule.condition(action, conditionArgs)){
+      return endConsequence('CONDITION_NOT_MATCHED')
     }
-    context.trigger('CONSEQUENCE_END', execId)
-    return {resolved:false}
   }
 
   /**
-   * Prepare Execution
+   * setup cancelation
    */
 
-  let canceled = false
-  let execution = null
-  const cancel = () => {canceled = true}
-  const wasCanceled = () => canceled
-  const effect = fn => {
-    if(canceled) return
-    if(rule.concurrency === 'ORDERED' && execution && execution.active !== execId){
-      execution.effects[execId].push(() => effect(fn))
-      return
-    }
-    rule.concurrency === 'SWITCH' && context.trigger('CANCEL_CONSEQUENCE', concurrencyId)
-    fn()
-  }
-  const getState = store.getState
-  const dispatch = action => {effect(() => {
-    nextExecutionId = execId
-    const result = store.dispatch(action)
-    nextExecutionId = null
-    return result
-  }); return action}
-  const addRule = rule => {effect(() => {
-    ruleDB.addRule(rule, {parentRuleId:context.rule.id})
-  }); return rule}
-  const removeRule = rule => {effect(() => ruleDB.removeRule(rule))}
+  // later consequences can cancel this execution
+  const offCancel = ruleContext.events.on('CANCEL_CONSEQUENCE', newRuleExecution => {
+    if(newRuleExecution.concurrencyId !== ruleExecution.concurrencyId) return
+    if(newRuleExecution.execId === ruleExecution.execId) return
+    cancel()
+    status = 'CANCELED'
+  })
 
-  /**
-   * Setup Cancel Listeners
-   */
-  if(rule.concurrency === 'ORDERED'){
-    execution = registerOrdererdExecution(context, execId, concurrencyId)
-  }
-
-  context.on('CANCEL_CONSEQUENCE', id => {id === concurrencyId && cancel()})
-  context.on('REMOVE_RULE', cancel)
+  // cancel consequence when rule gets removed
+  const offRemoveRule = ruleContext.events.once('REMOVE_RULE', () => {
+    cancel()
+    status = 'REMOVED'
+  })
 
   /**
    * Execute consequence
    */
-
-  concurrency.running++
   let result
-  const args = {dispatch, getState, action, addRule, removeRule, effect, wasCanceled, context:ctx}
+  let canceled = false
+  let status
+  const cancel = () => {canceled = true}
+  const wasCanceled = () => canceled
+  const effect = fn => {
+    if(canceled) return
+    // if(rule.concurrency === 'ORDERED' && execution && execution.active !== execId){
+    //   execution.effects[execId].push(() => effect(fn))
+    //   return
+    // }
+    rule.concurrency === 'SWITCH' && ruleContext.events.trigger('CANCEL_CONSEQUENCE', ruleExecution, 'SWITCH')
+    wrappedExecIds.push(ruleExecution.execId)
+    fn()
+    wrappedExecIds.pop()
+  }
+  const addRule = (name, parameters) => {
+    activateSubRule(ruleContext, name, parameters)
+  }
+  const removeRule = name => {
+    const context = ruleContext.subRuleContexts[name]
+    if(!context || !context.active) return
+    removeRuleFromRuleDB(context)
+  }
+  const context = {
+    setContext: () => {throw new Error('you cannot call setContext within a consequence. check rule '+ rule.id)},
+    getContext: (name:string) => ruleContext.publicContext.addUntil[name] 
+    || ruleContext.publicContext.addWhen[name]
+    || ruleContext.publicContext.global[name]
+  }
 
+  const consequenceArgs = setup.createConsequenceArgs(effect, {addRule, removeRule, effect, wasCanceled, context})
+
+  // run the thing
   if(rule.throttle || rule.delay || rule.debounce){
     result = new Promise(resolve => {
       if(rule.debounce && concurrency.debounceTimeoutId) clearTimeout(concurrency.debounceTimeoutId)
       concurrency.debounceTimeoutId = setTimeout(() => {
         concurrency.debounceTimeoutId = null
         if(canceled) return resolve()
-        const result = rule.consequence(args)
+        const result = rule.consequence(action, consequenceArgs)
         resolve(result)
       }, rule.throttle || rule.delay || rule.debounce)
     })
   }
   else {
-    result = rule.consequence(args)
+    result = rule.consequence(action, consequenceArgs)
+  }
+
+  /**
+   * setup unlisten
+   */
+  function unlisten () {
+    rule.concurrency !== 'ONCE' && concurrency.running--
+    ruleContext.events.trigger('CONSEQUENCE_END', ruleExecution, status || 'RESOLVED')
+    offCancel()
+    offRemoveRule()
   }
 
   /**
@@ -147,118 +159,53 @@ export default function consequence (context:RuleContext, action?:Action, store:
    */
 
   // position:INSTEAD can extend the action if type is equal
-  if(action && typeof result === 'object' && result.type && rule.position === 'INSTEAD' && result.type === action.type){
-    const action:Action = (result:any)
-    unlisten(context, execId, cancel, concurrency)
-    if(process.env.NODE_ENV === 'development'){
-      devTools.execRuleEnd(rule.id, execId, actionExecId, concurrencyId, 'RESOLVED')
-    }
-    return {resolved: true, action}
+  if(typeof result === 'object' && result !== null && result.type && rule.position === 'INSTEAD' && result.type === action.type){
+    unlisten()
+    return result
   }
 
   // dispatch returned action
-  if(typeof result === 'object' && result.type){
-    const action:any = result
-    dispatch(action)
-    unlisten(context, execId, cancel, concurrency)
-    if(process.env.NODE_ENV === 'development'){
-      devTools.execRuleEnd(rule.id, execId, actionExecId, concurrencyId, 'RESOLVED')
-    }
+  if(typeof result === 'object' && result !== null && result.type){
+    unlisten()
+    setup.handleConsequenceReturn(result)
   }
 
   // dispatch returned (promise-wrapped) action
-  else if(typeof result === 'object' && result.then){
-    const promise:any = result
-    promise.then(action => {
-      action && action.type && dispatch(action)
-      if(rule.concurrency === 'ORDERED') effect(() => unlisten(context, execId, cancel, concurrency))
-      else unlisten(context, execId, cancel, concurrency)
-      if(process.env.NODE_ENV === 'development'){
-        devTools.execRuleEnd(rule.id, execId, actionExecId, concurrencyId, 'RESOLVED')
-      }
+  else if(typeof result === 'object' && result !== null && result.then){
+    result.then(action => {
+      // if(rule.concurrency === 'ORDERED') effect(() => unlisten(context, execId, cancel, concurrency))
+      // else unlisten(context, execId, cancel, concurrency)
+      unlisten()
+      action && action.type && setup.handleConsequenceReturn(action)
     })
   }
 
   // register unlisten callback
   else if(typeof result === 'function'){
-    const cb:Function = result
-    const applyCb = () => {
-      unlisten(context, execId, cancel, concurrency)
-      context.off('REMOVE_RULE', applyCb)
-      context.off('CANCEL_CONSEQUENCE', applyCb)
-      if(process.env.NODE_ENV === 'development'){
-        devTools.execRuleEnd(rule.id, execId, actionExecId, concurrencyId, 'RESOLVED')
-      }
-      cb()
-    }
-    context.on('REMOVE_RULE', applyCb)
-    context.on('CANCEL_CONSEQUENCE', id => {id === concurrencyId && applyCb()})
+    const offRemoveRule = ruleContext.events.once('REMOVE_RULE', () => {
+      offCancel()
+      unlisten()
+      result()
+    })
+    const offCancel = ruleContext.events.once('CANCEL_CONSEQUENCE', newRuleExecution => {
+      if(newRuleExecution.concurrencyId !== ruleExecution.concurrencyId) return
+      if(newRuleExecution.execId === ruleExecution.execId) return
+      offRemoveRule()
+      unlisten()
+      result()
+    })
   }
 
   // unlisten for void return
   else {
-    unlisten(context, execId, cancel, concurrency)
-    if(process.env.NODE_ENV === 'development'){
-      devTools.execRuleEnd(rule.id, execId, actionExecId, concurrencyId, 'RESOLVED')
-    }
+    unlisten()
   }
 
-  return {resolved:true}
-}
-
-
-// HELPERS
-
-function unlisten(context:RuleContext, execId:number, cancelFn:Function, concurrency: {running:number}){
-  context.rule.concurrency !== 'ONCE' && concurrency.running--
-  context.trigger('CONSEQUENCE_END', execId)
-  context.rule.addOnce && ruleDB.removeRule(context.rule)
-  context.off('CANCEL_CONSEQUENCE', cancelFn)
-  context.off('REMOVE_RULE', cancelFn)
+  return null
 }
 
 function matchGlob(id:string, glob:'*' | string | string[]):boolean{
   if(glob === '*') return true
   if(typeof glob === 'string') return glob === id
   else return glob.includes(id)
-}
-
-type DB = {[ruleId:string]: {
-  active: number,
-  buffer: number[],
-  effects: {[execId:number]:(()=>void)[]}
-}}
-const db:DB = {}
-function registerOrdererdExecution(context:RuleContext, execId:number, concurrencyId:string){
-  const {id} = context.rule
-  if(db[id]){
-    db[id].buffer.push(execId)
-    db[id].effects[execId] = []
-    return db[id]
-  }
-  db[id] = {
-    active: execId,
-    buffer: [],
-    effects: {[execId]: []}
-  }
-  const store = db[id]
-
-  const clearStore = () => {
-    context.off('CONSEQUENCE_END', updateActive)
-    context.off('CANCEL_CONSEQUENCE', clearStore)
-    delete db[context.rule.id]
-  }
-
-  const updateActive = () => {
-    let nextId = store.buffer.splice(0,1)[0]
-    if(!nextId) return clearStore()
-    store.active = nextId
-    const effects = store.effects[nextId]
-    effects.forEach(fn => fn())
-  }
-
-  context.on('CONSEQUENCE_END', updateActive)
-  context.on('REMOVE_RULE', clearStore)
-  context.on('CANCEL_CONSEQUENCE', id => {id === concurrencyId && clearStore()}) // important when debouncing
-  return store
 }

@@ -1,17 +1,5 @@
 // @flow
 
-export type Action = { 
-  type: string,
-  meta?: { skipRule?: '*' | string | string[], }
-}
-export type GetState = () => {}
-export type Dispatch = (action:Action) => Action
-export type Store = {
-  getState: GetState,
-  dispatch: Dispatch
-}
-
-export type Position = 'BEFORE' | 'INSTEAD' | 'AFTER'
 
 export type LogicAdd = 'ADD_RULE' | 'ABORT' | 'REAPPLY_ADD_WHEN' | 'ADD_RULE_BEFORE'
 
@@ -62,25 +50,45 @@ export type Rule = {
   addOnce?: boolean,
   addWhen?: Saga<LogicAdd>,
   addUntil?: Saga<LogicRemove>,
+  childRules?: {[id:string]: Rule}
 }
 
 export type RuleContext = {
   rule: Rule,
-  childRules: Rule[],
   active: boolean,
-  pendingSaga:boolean,
-  addWhenContext:{[key:string]:mixed},
-  addUntilContext:{[key:string]:mixed},
-  sagaStep: number,
-  concurrency: {[concurrencyId:string]: {
+  runningSaga: null | 'addWhen' | 'addUntil',
+  parentContext: null | RuleContext,
+  subRuleContexts: {[name:string]:RuleContext},
+  concurrency: {[name:string]:{
     running: number,
-    debounceTimeoutId: TimeoutID | null,
+    debounceTimeoutId: null | number
   }},
-  on: (e:ContextEvent, cb:(payload:mixed) => void) => void,
-  off: (e:ContextEvent, cb:(payload:mixed) => void) => void,
-  trigger: (e:ContextEvent, payload?:mixed) => void,
+  publicContext: {
+    global: {},
+    addWhen: {},
+    addUntil: {}
+  },
+  events: {
+    once: (event:string, cb:Function) => Function,
+    on: (event:string, cb:Function) => Function,
+    trigger: (event:string, ...args:any[]) => void,
+    clearOnce: (event:string) => void
+  }
 }
 
-export type AddRule = (rule:Rule) => Rule
+export type ActionExecution = {
+  execId: number,
+  ruleExecId: number | null,
+  canceled: boolean,
+  action: Object
+}
 
-export type RemoveRule = (rule:Rule) => void
+export type RuleExecution = {
+  execId: number,
+  concurrencyId: string,
+  actionExecId: number,
+  concurrency: {[name:string]: {
+    running: number,
+    debounceTimeoutId: TimeoutID | null,
+  }}
+}

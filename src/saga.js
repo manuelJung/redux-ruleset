@@ -1,108 +1,91 @@
 // @flow
-import * as devTools from './utils/devTools'
-import {getRuleExecutionId} from './consequence'
-import type {Action, Saga, RuleContext, Store} from './types'
+import * as setup from './setup'
+import {removeItem} from './utils'
 
-import {applyLazyStore} from './utils/lazyStore'
+const listeners = {}
+const GLOBAL_TYPE = '-global-'
 
-type Listener = (action:Action, actionExecId:number) => mixed
-const listeners:{[type:string]:Listener[]|void} = {}
-let id = 1
+let sagaExecId = 1
+
+export function yieldAction (actionExecution) {
+  const globalList = listeners[GLOBAL_TYPE]
+  const targetList = listeners[actionExecution.action.type]
+  let i = 0
+
+  if(globalList) for (i=0; i<globalList.length; i++) globalList[i](actionExecution)
+  if(targetList) for (i=0; i<targetList.length; i++) targetList[i](actionExecution)
+}
+
+function addActionListener (target, ruleContext, cb) {
+  let targetList = []
+  if(target === '*') targetList = [GLOBAL_TYPE]
+  else if(typeof target === 'string') targetList = [target]
+  else targetList = target
 
 
-export function applyAction(action:Action, actionExecId:number){
-  const globalCallbacks = listeners.global
-  const boundCallbacks = listeners[action.type]
-  if(globalCallbacks){
-    listeners.global = undefined
-    for(let i=0;i<globalCallbacks.length;i++){globalCallbacks[i](action, actionExecId)}
-  }
-  if(boundCallbacks){
-    listeners[action.type] = undefined
-    for(let i=0;i<boundCallbacks.length;i++){boundCallbacks[i](action, actionExecId)}
+  for (let i=0; i<targetList.length; i++) {
+    if(!listeners[targetList[i]]) listeners[targetList[i]] = []
+    listeners[targetList[i]].push(cb)
+    ruleContext.events.once('SAGA_YIELD', () => {
+      removeItem(listeners[targetList[i]], cb)
+    })
   }
 }
 
-function addListener(target, cb){
-  if(typeof target === 'function'){
-    cb = target
-    target = '*'
-  }
-  else if(typeof target === 'string'){
-    if(target === '*') target = 'global'
-    if(!listeners[target]) listeners[target] = []
-    listeners[target] && listeners[target].push(cb)
-  }
-  else if(target) {
-    for(let i=0;i<target.length;i++){
-      if(!listeners[target[i]]) listeners[target[i]] = []
-      listeners[target[i]].push(cb)
-    }
-  }
+function yieldFn (target, condition, ruleContext, onYield) {
+  addActionListener(target, ruleContext, actionExecution => {
+    const result = condition ? condition(actionExecution.action) : actionExecution.action
+    if(result) onYield(result)
+  })
 }
 
-export function createSaga<Logic>(
-  context:RuleContext, 
-  saga:Saga<Logic>, 
-  cb:(result:{logic: Logic|void, action:Action|void, actionExecId:number}) => mixed,
-  store?:Store
-){
-  if(!store) {
-    applyLazyStore(store => createSaga(context,saga,cb,store))
+export function startSaga (sagaType, ruleContext, finCb, isReady) {
+  if(!isReady){
+    setup.onSetupFinished(() => startSaga(sagaType, ruleContext, finCb, true))
     return
   }
-  const execId = id++
-  const sagaType = saga === context.rule.addWhen ? 'ADD_WHEN' : 'ADD_UNTIL'
-  if(process.env.NODE_ENV === 'development'){
-    devTools.execSagaStart(execId, context.rule.id, sagaType)
-  }
-  context.pendingSaga = true
-  context.sagaStep = -1
-  const boundStore = store
-  let cancel = () => {}
-  let lastAction;
-
-  const run = gen => {
-    const next = (iter, payload, actionExecId) => {
-      context.sagaStep++
-      const result = iter.next(payload)
-      if(result.done) {
-        context.pendingSaga = false
-        context.off('REMOVE_RULE', cancel)
-        if(process.env.NODE_ENV === 'development'){
-          const sagaType = saga === context.rule.addWhen ? 'ADD_WHEN' : 'ADD_UNTIL'
-          devTools.execSagaEnd(execId, context.rule.id, sagaType, (result.value:any))
-        }
-        cb({logic: result.value, action: lastAction, actionExecId})
-      }
-    }
-    const nextAction = (target, cb) => {
-      const _addListener = (newTarget?:string) => {
-        addListener(newTarget || target, (action, actionExecId) => {
-          const result = cb ? cb(action) : action // false or mixed
-          lastAction = action
-          if(process.env.NODE_ENV === 'development'){
-            const sagaType = saga === context.rule.addWhen ? 'ADD_WHEN' : 'ADD_UNTIL'
-            const ruleExecId = getRuleExecutionId()
-            devTools.yieldSaga(execId, context.rule.id, sagaType, action, ruleExecId, actionExecId, result ? 'RESOLVE' : 'REJECT')
-          }
-          if(result) next(iter, result, actionExecId)
-          else _addListener(action.type) // only re-add listener to single action
-        })
-      }
-      _addListener()
-    }
-    const contextName = sagaType === 'ADD_WHEN' ? 'addWhenContext' : 'addUntilContext'
-    const setContext = (key:string, value:mixed) => context[contextName][key] = value
-    const getContext = (key:string) => context.addUntilContext[key] || context.addWhenContext[key]
-    const iter = gen(nextAction, boundStore.getState, {setContext, getContext})
-    cancel = () => {
-      iter.return('CANCELED')
-      next(iter, undefined, 0)
-    }
-    context.on('REMOVE_RULE', cancel)
-    next(iter, undefined, 0)
+  const sagaContext = {
+    execId: sagaExecId++,
+    sagaType: sagaType
   }
 
-  run(saga)
+  const iterate = (iter, payload) => {
+    const result = iter.next(payload)
+    if(result.done){
+      ruleContext.runningSaga = null
+      ruleContext.events.trigger('SAGA_END', sagaContext, result.value)
+      finCb({ logic: payload === 'CANCELED' ? 'CANCELED' : result.value  })
+    }
+  }
+
+  const nextFn = (target, condition) => {
+    yieldFn(target, condition, ruleContext, result => {
+      ruleContext.events.trigger('SAGA_YIELD', sagaContext, result)
+      iterate(iter, result)
+    })
+  }
+
+  const cancel = () => {
+    ruleContext.events.trigger('SAGA_YIELD', 'CANCELED', sagaType)
+    iter.return('CANCELED')
+    iterate(iter, 'CANCELED')
+  }
+
+  // let's start
+  ruleContext.runningSaga = sagaContext
+  ruleContext.events.trigger('SAGA_START', sagaContext)
+  ruleContext.events.once('REMOVE_RULE', cancel)
+
+  const context = {
+    setContext: (name, value) => ruleContext.publicContext[sagaType][name] = value,
+    getContext: (name:string) => ruleContext.publicContext.addUntil[name] 
+    || ruleContext.publicContext.addWhen[name]
+    || ruleContext.publicContext.global[name]
+  }
+
+  const saga = ruleContext.rule[sagaType]
+  const iter = saga(nextFn, setup.createSagaArgs({context}))
+  iterate(iter)
 }
+
+export const testing = {addActionListener, listeners, yieldFn}
