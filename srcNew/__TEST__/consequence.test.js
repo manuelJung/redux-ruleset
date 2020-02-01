@@ -247,7 +247,30 @@ describe('concurrency', () => {
     initTest()
   })
 
-  test.skip('ORDERED should execute consequence in order', () => {})
+  test.skip('ORDERED should execute consequence in order', async () => {
+    ruleContext.rule.concurrency = 'ORDERED'
+    ruleContext.rule.consequence
+      .mockImplementationOnce(() => wait(5).then(() => ({type:'ONE'})))
+      .mockImplementationOnce(() => wait(50).then(() => ({type:'TWO'})))
+      .mockImplementationOnce(() => wait(20).then(() => ({type:'THREE'})))
+      .mockImplementationOnce(() => wait(100).then(() => ({type:'FOUR'})))
+      .mockImplementationOnce(() => wait(80).then(() => ({type:'FIVE'})))
+
+    consequence.default(actionExecution, ruleContext) // ONE
+    consequence.default(actionExecution, ruleContext) // TWO
+    consequence.default(actionExecution, ruleContext) // THREE
+    consequence.default(actionExecution, ruleContext) // FOUR
+    consequence.default(actionExecution, ruleContext) // FIVE
+
+    await wait(150)
+
+    expect(setup.handleConsequenceReturn.mock.calls.length).toBe(5)
+    expect(setup.handleConsequenceReturn.mock.calls[0][0]).toEqual({type:'ONE'})
+    expect(setup.handleConsequenceReturn.mock.calls[1][0]).toEqual({type:'TWO'})
+    expect(setup.handleConsequenceReturn.mock.calls[2][0]).toEqual({type:'THREE'})
+    expect(setup.handleConsequenceReturn.mock.calls[3][0]).toEqual({type:'FOUR'})
+    expect(setup.handleConsequenceReturn.mock.calls[4][0]).toEqual({type:'FIVE'})
+  })
 
   test('SWITCH cancels all previous running consequences as soon as the first effect resolves', async () => {
     const callback = jest.fn()
