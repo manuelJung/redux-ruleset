@@ -17,7 +17,11 @@ export function yieldAction (actionExecution:t.ActionExecution) {
   if(targetList) for (i=0; i<targetList.length; i++) targetList[i](actionExecution)
 }
 
-function addActionListener (target:t.Target, ruleContext:t.RuleContext, cb:Function) {
+function addActionListener (
+  target:t.Target, 
+  ruleContext:t.RuleContext, 
+  cb:(actionExecution:t.ActionExecution)=>void
+) {
   let targetList = []
   if(target === '*') targetList = [GLOBAL_TYPE]
   else if(typeof target === 'string') targetList = [target]
@@ -33,7 +37,12 @@ function addActionListener (target:t.Target, ruleContext:t.RuleContext, cb:Funct
   }
 }
 
-function yieldFn (target:t.Target, condition?:Function, ruleContext:t.RuleContext, onYield:Function) {
+function yieldFn (
+  target:t.Target, 
+  condition?:(action:t.Action) => mixed, 
+  ruleContext:t.RuleContext, 
+  onYield:(result:mixed)=>void
+) {
   addActionListener(target, ruleContext, actionExecution => {
     const result = condition ? condition(actionExecution.action) : actionExecution.action
     if(result) onYield(result)
@@ -83,7 +92,7 @@ export function startSaga (
   ruleContext.events.once('REMOVE_RULE', cancel)
 
   const context = {
-    setContext: (name, value) => ruleContext.publicContext[sagaType][name] = value,
+    setContext: (name:string, value:mixed) => ruleContext.publicContext[sagaType][name] = value,
     getContext: (name:string) => ruleContext.publicContext.addUntil[name] 
     || ruleContext.publicContext.addWhen[name]
     || ruleContext.publicContext.global[name]

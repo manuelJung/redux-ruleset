@@ -29,6 +29,7 @@ export type RemoveRule = (name:string) => void
 export type Effect = (()=>mixed)=>void
 export type Target = '*' | string | string[]
 export type Position = 'AFTER' | 'BEFORE' | 'INSTEAD'
+export type Condition = (action:Action, args:{getState:GetState, context:CTX}) => boolean
 
 export type Saga<Logic> = (
   action: (target:Target, cb?:(action:Action) => mixed)=>mixed,
@@ -48,7 +49,7 @@ export type Rule = {
   throttle?: number,
   delay?: number,
   concurrencyFilter?: (action:Action) => string,
-  condition?: (action?:Action, args:{getState:GetState, context:CTX}) => boolean,
+  condition?: Condition,
   consequence: (
     action:Action,
     {
@@ -77,9 +78,9 @@ export type RuleContext = {
     debounceTimeoutId: null | TimeoutID
   }},
   publicContext: {
-    global: {},
-    addWhen: {},
-    addUntil: {}
+    global: {[key:string]:mixed},
+    addWhen: {[key:string]:mixed},
+    addUntil: {[key:string]:mixed}
   },
   events: {
     once: (event:string, cb:Function) => Function,
