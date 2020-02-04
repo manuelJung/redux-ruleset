@@ -41,13 +41,15 @@ export default function dispatchEvent (action:t.Action, cb:Function=()=>null) {
 
   forEachRuleContext(action.type, 'INSTEAD', context => {
     if(actionExecution.canceled) return
-    const newAction = consequence(actionExecution, context)
-    if(newAction) {
+    const result = consequence(actionExecution, context)
+    if(result.action) {
       actionExecution.history.push({action, context})
       // $FlowFixMe
-      action = newAction
+      action = result.action
     }
-    else actionExecution.canceled = true
+    else if(result.resolved){
+      actionExecution.canceled = true
+    }
   })
 
   if (!actionExecution.canceled) {

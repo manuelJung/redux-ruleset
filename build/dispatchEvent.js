@@ -68,12 +68,14 @@ function dispatchEvent(action) {
 
   (0, _ruleDB.forEachRuleContext)(action.type, 'INSTEAD', function (context) {
     if (actionExecution.canceled) return;
-    var newAction = (0, _consequence2.default)(actionExecution, context);
-    if (newAction) {
+    var result = (0, _consequence2.default)(actionExecution, context);
+    if (result.action) {
       actionExecution.history.push({ action: action, context: context });
       // $FlowFixMe
-      action = newAction;
-    } else actionExecution.canceled = true;
+      action = result.action;
+    } else if (result.resolved) {
+      actionExecution.canceled = true;
+    }
   });
 
   if (!actionExecution.canceled) {

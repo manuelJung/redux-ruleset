@@ -38,14 +38,11 @@ exports.default = {
 
     return {
       getState: store.getState,
-      dispatch: function dispatch() {
-        for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
-          args[_key] = arguments[_key];
-        }
-
-        return effect(function () {
-          return store.dispatch.apply(store, args);
+      dispatch: function dispatch(action) {
+        effect(function () {
+          return store.dispatch(action);
         });
+        return action;
       }
     };
   },
@@ -53,6 +50,7 @@ exports.default = {
     var store = _ref4.store;
 
     store.dispatch(action);
+    return action;
   }
 };
 var middleware = exports.middleware = function middleware(store) {

@@ -41,20 +41,21 @@ describe('dispatchEvent', () => {
 
   test('alter the action when consequence returns action (INSTEAD)', () => {
     const callback = jest.fn()
+    const newAction = {type:'UNIT_TEST', foo:'bar'}
     ruleDB.forEachRuleContext = jest.fn((type, position, cb) => {
       if(position === 'INSTEAD') cb(ruleContext)
     })
-    consequence.default = jest.fn(() => ({type:'UNIT_TEST', foo:'bar'}))
+    consequence.default = jest.fn(() => ({resolved:true, action:newAction}))
     dispatchEvent.default(action, callback)
-    expect(callback).toBeCalledWith({type:'UNIT_TEST', foo:'bar'})
+    expect(callback).toBeCalledWith(newAction)
   })
 
-  test('cancel the action when consequence returns null (INSTEAD)', () => {
+  test('cancel the action when consequence resolves (INSTEAD)', () => {
     const callback = jest.fn()
     ruleDB.forEachRuleContext = jest.fn((type, position, cb) => {
       if(position === 'INSTEAD') cb(ruleContext)
     })
-    consequence.default = jest.fn(() => null)
+    consequence.default = jest.fn(() => ({resolved:true}))
     dispatchEvent.default(action, callback)
     expect(callback).not.toBeCalled()
     expect(ruleDB.forEachRuleContext).toBeCalledTimes(1)

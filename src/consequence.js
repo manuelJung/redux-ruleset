@@ -27,7 +27,7 @@ export default function consequence (actionExecution:t.ActionExecution, ruleCont
   // so we totally ignore all futher consequence executions until the rule is removed
   if(concurrency.running){
     // TODO: what happens when position === INSTEAD. will actionExecution be canceled=
-    if(rule.addOnce) return null
+    if(rule.addOnce) return {resolved:false}
   }
 
   // setup ruleExecution
@@ -48,7 +48,7 @@ export default function consequence (actionExecution:t.ActionExecution, ruleCont
   const endConsequence = (logic) => {
     concurrency.running--
     ruleContext.events.trigger('CONSEQUENCE_END', ruleExecution, logic)
-    return null
+    return {resolved:false}
   }
 
   if(concurrency.running-1 > 0){
@@ -163,18 +163,18 @@ export default function consequence (actionExecution:t.ActionExecution, ruleCont
   // position:INSTEAD can extend the action if type is equal
   if(typeof result === 'object' && result !== null && result.type && rule.position === 'INSTEAD' && result.type === action.type){
     unlisten()
-    return result
+    return {resolved:true, action:result}
   }
 
   // dispatch returned action
-  if(typeof result === 'object' && result !== null && result.type){
+  else if(typeof result === 'object' && result !== null && result.type){
     unlisten()
     // $FlowFixMe
     setup.handleConsequenceReturn(result)
   }
 
   // dispatch returned (promise-wrapped) action
-  if(typeof result === 'object' && result !== null && result.then){
+  else if(typeof result === 'object' && result !== null && result.then){
     // $FlowFixMe
     result.then(action => {
       // if(rule.concurrency === 'ORDERED') effect(() => unlisten(context, execId, cancel, concurrency))
@@ -207,7 +207,7 @@ export default function consequence (actionExecution:t.ActionExecution, ruleCont
     unlisten()
   }
 
-  return null
+  return {resolved:true}
 }
 
 function matchGlob(id:string, glob:'*' | string | string[]):boolean{

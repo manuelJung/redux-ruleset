@@ -154,20 +154,20 @@ describe('return types', () => {
     ruleContext.rule.position = 'INSTEAD'
     ruleContext.rule.consequence = () => ({type:'TEST_TYPE', foo:'bar'})
     const result = consequence.default(actionExecution, ruleContext)
-    expect(result).toEqual({type:'TEST_TYPE', foo:'bar'})
+    expect(result).toEqual({resolved:true, action:{type:'TEST_TYPE', foo:'bar'}})
     expect(setup.handleConsequenceReturn).not.toBeCalled()
   })
 
   test('handle returned action', () => {
     const result = consequence.default(actionExecution, ruleContext)
-    expect(result).toBe(null)
+    expect(result).toEqual({resolved:true})
     expect(setup.handleConsequenceReturn).toBeCalledWith({type:'RETURN_TYPE'})
   })
 
   test('handle returned promise (action)', async () => {
     ruleContext.rule.consequence = () => Promise.resolve({type:'RETURN_TYPE'})
     const result = consequence.default(actionExecution, ruleContext)
-    expect(result).toBe(null)
+    expect(result).toEqual({resolved:true})
     await Promise.resolve()
     expect(expect(setup.handleConsequenceReturn).toBeCalledWith({type:'RETURN_TYPE'}))
   })
@@ -176,7 +176,7 @@ describe('return types', () => {
     const callback = jest.fn()
     ruleContext.rule.consequence = () => callback
     const result = consequence.default(actionExecution, ruleContext)
-    expect(result).toBe(null)
+    expect(result).toEqual({resolved:true})
     expect(callback).not.toBeCalled()
     ruleContext.events.trigger('REMOVE_RULE')
     expect(callback).toBeCalled()
@@ -186,7 +186,7 @@ describe('return types', () => {
     const callback = jest.fn()
     ruleContext.rule.consequence = () => callback
     const result = consequence.default(actionExecution, ruleContext)
-    expect(result).toBe(null)
+    expect(result).toEqual({resolved:true})
     expect(callback).not.toBeCalled()
     ruleContext.events.trigger('CANCEL_CONSEQUENCE', {execId:100, concurrencyId:'default'})
     expect(callback).toBeCalled()

@@ -147,6 +147,24 @@ describe('basic', () => {
     console.warn = jest.fn()
     expect(() => store.dispatch({type:'TEST_TYPE'})).toThrow('detected endless cycle')
   })
+
+  test('addOnce rules are only executed once', () => {
+    index.addRule({
+      id: 'PING_PONG',
+      target: 'PING',
+      addOnce:true,
+      consequence: () => ({type:'PONG'})
+    })
+
+    store.dispatch({type:'PING'})
+    store.dispatch({type:'PING'})
+
+    const actions = store.getActions()
+    expect(actions[0]).toEqual({type:'PING'})
+    expect(actions[1]).toEqual({type:'PONG'})
+    expect(actions[2]).toEqual({type:'PING'})
+    expect(actions[3]).toEqual(undefined)
+  })
 })
 
 describe('access state', () => {
@@ -403,5 +421,24 @@ describe('subRules', () => {
 
     store.dispatch(({type:'START'}))
     expect(rule.consequence).toBeCalled()
+  })
+})
+
+describe('bugs', () => {
+  beforeEach(initTest)
+
+  test('condition + INSTEAD does not throw away action if it does not resolve', () => {
+    index.addRule({
+      id: 'UNIT_TEST',
+      target: 'INIT_TYPE',
+      position: 'INSTEAD',
+      condition: () => false,
+      consequence: () => ({type:'FAKE_TYPE'})
+    })
+
+    store.dispatch({type:'INIT_TYPE'})
+
+    const actions = store.getActions()
+    expect(actions[0]).toEqual({type:'INIT_TYPE'})
   })
 })

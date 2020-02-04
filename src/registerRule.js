@@ -104,6 +104,11 @@ export default function registerRule (rule:t.Rule, parentContext?:t.RuleContext,
         ruleContext.publicContext.addUntil = {}
     }
   })
+
+  //remove addOnce rules
+  if(rule.addOnce){
+    ruleContext.events.on('CONSEQUENCE_END', () => removeRule(ruleContext))
+  }
   
   globalEvents.trigger('REGISTER_RULE', ruleContext)
 
@@ -126,12 +131,15 @@ export default function registerRule (rule:t.Rule, parentContext?:t.RuleContext,
   // activate
   if(rule.addWhen) startAddWhen(ruleContext)
   else {
-    debugger
     addRule(ruleContext)
     if(rule.addUntil) startAddUntil(ruleContext)
   }
 
   return rule
+}
+
+if(typeof window !== 'undefined'){
+  window.getRulesets = () => registeredDict
 }
 
 export const testing = {startAddWhen, startAddUntil, registeredDict}

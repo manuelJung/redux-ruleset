@@ -19,11 +19,15 @@ export default {
   createConsequenceArgs(effect, {store}){
     return {
       getState: store.getState,
-      dispatch: (...args) => effect(() => store.dispatch(...args))
+      dispatch: action => {
+        effect(() => store.dispatch(action))
+        return action
+      }
     }
   },
   onConsequenceActionReturn(action, {store}){
     store.dispatch(action)
+    return action
   }
 }
 

@@ -60,7 +60,7 @@ function consequence(actionExecution, ruleContext) {
   // so we totally ignore all futher consequence executions until the rule is removed
   if (concurrency.running) {
     // TODO: what happens when position === INSTEAD. will actionExecution be canceled=
-    if (rule.addOnce) return null;
+    if (rule.addOnce) return { resolved: false };
   }
 
   // setup ruleExecution
@@ -81,7 +81,7 @@ function consequence(actionExecution, ruleContext) {
   var endConsequence = function endConsequence(logic) {
     concurrency.running--;
     ruleContext.events.trigger('CONSEQUENCE_END', ruleExecution, logic);
-    return null;
+    return { resolved: false };
   };
 
   if (concurrency.running - 1 > 0) {
@@ -203,51 +203,51 @@ function consequence(actionExecution, ruleContext) {
   // position:INSTEAD can extend the action if type is equal
   if ((typeof result === 'undefined' ? 'undefined' : (0, _typeof3.default)(result)) === 'object' && result !== null && result.type && rule.position === 'INSTEAD' && result.type === action.type) {
     unlisten();
-    return result;
+    return { resolved: true, action: result };
   }
 
   // dispatch returned action
-  if ((typeof result === 'undefined' ? 'undefined' : (0, _typeof3.default)(result)) === 'object' && result !== null && result.type) {
-    unlisten();
-    // $FlowFixMe
-    setup.handleConsequenceReturn(result);
-  }
-
-  // dispatch returned (promise-wrapped) action
-  if ((typeof result === 'undefined' ? 'undefined' : (0, _typeof3.default)(result)) === 'object' && result !== null && result.then) {
-    // $FlowFixMe
-    result.then(function (action) {
-      // if(rule.concurrency === 'ORDERED') effect(() => unlisten(context, execId, cancel, concurrency))
-      // else unlisten(context, execId, cancel, concurrency)
+  else if ((typeof result === 'undefined' ? 'undefined' : (0, _typeof3.default)(result)) === 'object' && result !== null && result.type) {
       unlisten();
-      action && action.type && setup.handleConsequenceReturn(action);
-    });
-  }
-
-  // register unlisten callback
-  else if (typeof result === 'function') {
-      var _offRemoveRule = ruleContext.events.once('REMOVE_RULE', function () {
-        _offCancel();
-        unlisten();
-        // $FlowFixMe
-        result();
-      });
-      var _offCancel = ruleContext.events.once('CANCEL_CONSEQUENCE', function (newRuleExecution) {
-        if (newRuleExecution.concurrencyId !== ruleExecution.concurrencyId) return;
-        if (newRuleExecution.execId === ruleExecution.execId) return;
-        _offRemoveRule();
-        unlisten();
-        // $FlowFixMe
-        result();
-      });
+      // $FlowFixMe
+      setup.handleConsequenceReturn(result);
     }
 
-    // unlisten for void return
-    else {
-        unlisten();
+    // dispatch returned (promise-wrapped) action
+    else if ((typeof result === 'undefined' ? 'undefined' : (0, _typeof3.default)(result)) === 'object' && result !== null && result.then) {
+        // $FlowFixMe
+        result.then(function (action) {
+          // if(rule.concurrency === 'ORDERED') effect(() => unlisten(context, execId, cancel, concurrency))
+          // else unlisten(context, execId, cancel, concurrency)
+          unlisten();
+          action && action.type && setup.handleConsequenceReturn(action);
+        });
       }
 
-  return null;
+      // register unlisten callback
+      else if (typeof result === 'function') {
+          var _offRemoveRule = ruleContext.events.once('REMOVE_RULE', function () {
+            _offCancel();
+            unlisten();
+            // $FlowFixMe
+            result();
+          });
+          var _offCancel = ruleContext.events.once('CANCEL_CONSEQUENCE', function (newRuleExecution) {
+            if (newRuleExecution.concurrencyId !== ruleExecution.concurrencyId) return;
+            if (newRuleExecution.execId === ruleExecution.execId) return;
+            _offRemoveRule();
+            unlisten();
+            // $FlowFixMe
+            result();
+          });
+        }
+
+        // unlisten for void return
+        else {
+            unlisten();
+          }
+
+  return { resolved: true };
 }
 
 function matchGlob(id, glob) {

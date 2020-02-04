@@ -148,6 +148,13 @@ function registerRule(rule, parentContext, name) {
     }
   });
 
+  //remove addOnce rules
+  if (rule.addOnce) {
+    ruleContext.events.on('CONSEQUENCE_END', function () {
+      return (0, _ruleDB.removeRule)(ruleContext);
+    });
+  }
+
   _globalEvents2.default.trigger('REGISTER_RULE', ruleContext);
 
   // register sub rules
@@ -168,12 +175,17 @@ function registerRule(rule, parentContext, name) {
 
   // activate
   if (rule.addWhen) startAddWhen(ruleContext);else {
-    debugger;
     (0, _ruleDB.addRule)(ruleContext);
     if (rule.addUntil) startAddUntil(ruleContext);
   }
 
   return rule;
+}
+
+if (typeof window !== 'undefined') {
+  window.getRulesets = function () {
+    return registeredDict;
+  };
 }
 
 var testing = exports.testing = { startAddWhen: startAddWhen, startAddUntil: startAddUntil, registeredDict: registeredDict };
