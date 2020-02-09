@@ -110,9 +110,10 @@ function startSaga(sagaType, ruleContext, finCb, isReady) {
   };
 
   var saga = ruleContext.rule[sagaType];
+  var args = setup.createSagaArgs({ context: context });
   var iter = void 0;
   if (saga) {
-    iter = saga(nextFn, setup.createSagaArgs({ context: context }));
+    iter = saga(nextFn, args.getState, args.context);
     iterate(iter);
   }
 }

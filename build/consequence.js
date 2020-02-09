@@ -99,12 +99,12 @@ function consequence(actionExecution, ruleContext) {
   }
   // skip if rule condition does not match
   if (rule.condition) {
-    var conditionArgs = setup.createConditionArgs({ context: (0, _assign2.default)({}, ruleContext.publicContext, {
+    var args = setup.createConditionArgs({ context: (0, _assign2.default)({}, ruleContext.publicContext, {
         setContext: function setContext(key, value) {
           throw new Error('you cannot call setContext within condition. check rule ' + rule.id);
         }
       }) });
-    if (rule.condition && !rule.condition(action, conditionArgs)) {
+    if (rule.condition && !rule.condition(action, args.getState, args.context)) {
       return endConsequence('CONDITION_NOT_MATCHED');
     }
   }
@@ -167,7 +167,7 @@ function consequence(actionExecution, ruleContext) {
     }
   };
 
-  var consequenceArgs = setup.createConsequenceArgs(effect, { addRule: addRule, removeRule: removeRule, effect: effect, wasCanceled: wasCanceled, context: context });
+  var consequenceArgs = setup.createConsequenceArgs(effect, { action: action, addRule: addRule, removeRule: removeRule, effect: effect, wasCanceled: wasCanceled, context: context });
 
   // run the thing
   if (rule.throttle || rule.delay || rule.debounce) {
@@ -177,13 +177,13 @@ function consequence(actionExecution, ruleContext) {
       concurrency.debounceTimeoutId = setTimeout(function () {
         concurrency.debounceTimeoutId = null;
         if (canceled) return resolve();
-        var result = rule.consequence(action, consequenceArgs);
+        var result = rule.consequence(consequenceArgs);
         // $FlowFixMe
         resolve(result);
       }, rule.throttle || rule.delay || rule.debounce);
     });
   } else {
-    result = rule.consequence(action, consequenceArgs);
+    result = rule.consequence(consequenceArgs);
   }
 
   /**

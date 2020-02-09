@@ -150,8 +150,8 @@ function registerRule(rule, parentContext, name) {
 
   //remove addOnce rules
   if (rule.addOnce) {
-    ruleContext.events.on('CONSEQUENCE_END', function () {
-      return (0, _ruleDB.removeRule)(ruleContext);
+    ruleContext.events.on('CONSEQUENCE_END', function (_, status) {
+      status === 'RESOLVED' && (0, _ruleDB.removeRule)(ruleContext);
     });
   }
 

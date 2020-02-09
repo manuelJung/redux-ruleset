@@ -66,10 +66,10 @@ export default function consequence (actionExecution:t.ActionExecution, ruleCont
   }
   // skip if rule condition does not match
   if(rule.condition){
-    const conditionArgs = setup.createConditionArgs({context: Object.assign({}, ruleContext.publicContext, {
+    const args = setup.createConditionArgs({context: Object.assign({}, ruleContext.publicContext, {
       setContext: (key:string, value:mixed) => {throw new Error('you cannot call setContext within condition. check rule '+ rule.id)}
     })})
-    if(rule.condition && !rule.condition(action, conditionArgs)){
+    if(rule.condition && !rule.condition(action, args.getState, args.context)){
       return endConsequence('CONDITION_NOT_MATCHED')
     }
   }
@@ -126,7 +126,7 @@ export default function consequence (actionExecution:t.ActionExecution, ruleCont
     || ruleContext.publicContext.global[name]
   }
 
-  const consequenceArgs = setup.createConsequenceArgs(effect, {addRule, removeRule, effect, wasCanceled, context})
+  const consequenceArgs = setup.createConsequenceArgs(effect, {action, addRule, removeRule, effect, wasCanceled, context})
 
   // run the thing
   if(rule.throttle || rule.delay || rule.debounce){
@@ -136,14 +136,14 @@ export default function consequence (actionExecution:t.ActionExecution, ruleCont
       concurrency.debounceTimeoutId = setTimeout(() => {
         concurrency.debounceTimeoutId = null
         if(canceled) return resolve()
-        const result = rule.consequence(action, consequenceArgs)
+        const result = rule.consequence(consequenceArgs)
         // $FlowFixMe
         resolve(result)
       }, rule.throttle || rule.delay || rule.debounce)
     })
   }
   else {
-    result = rule.consequence(action, consequenceArgs)
+    result = rule.consequence(consequenceArgs)
   }
 
   /**

@@ -35,30 +35,36 @@ describe('consequence', () => {
 
   test('correct default args are added to consequence', () => {
     consequence.default(actionExecution, ruleContext)
-    expect(ruleContext.rule.consequence).toBeCalledWith(
-      {type:'TEST_TYPE'},
-      {addRule:any, removeRule:any, effect:any, wasCanceled:any,context:any}
-    )
+    expect(ruleContext.rule.consequence).toBeCalledWith({
+      action: {type:'TEST_TYPE'},
+      addRule:any, 
+      removeRule:any, 
+      effect:any, 
+      wasCanceled:any,
+      context:any
+    })
   })
 
   test('correct default args are added to condition', () => {
     ruleContext.rule.condition = jest.fn(() => true)
+    setup.createConditionArgs = () => ({context:'foo', getState:'state'})
     consequence.default(actionExecution, ruleContext)
     expect(ruleContext.rule.condition).toBeCalledWith(
       {type:'TEST_TYPE'},
-      {context:any}
+      'state',
+      'foo'
     )
   })
 
   test('throw error when accessing context.setContext (consequence)', () => {
-    ruleContext.rule.consequence = (_, {context}) => {
+    ruleContext.rule.consequence = ({context}) => {
       expect(() => context.setContext()).toThrow()
     }
     consequence.default(actionExecution, ruleContext)
   })
 
   test('throw error when accessing context.setContext (condition)', () => {
-    ruleContext.rule.condition = (_, {context}) => {
+    ruleContext.rule.condition = (_, __, context) => {
       expect(() => context.setContext()).toThrow()
     }
     consequence.default(actionExecution, ruleContext)
@@ -126,7 +132,7 @@ describe('cancel consequence', () => {
 
   test('abort when rule has been removed', () => {
     const callback = jest.fn()
-    ruleContext.rule.consequence = (action, {effect}) => {
+    ruleContext.rule.consequence = ({action,effect}) => {
       ruleContext.events.trigger('REMOVE_RULE')
       effect(callback)
     }
@@ -137,7 +143,7 @@ describe('cancel consequence', () => {
 
   test('abort when consequence was canceled', () => {
     const callback = jest.fn()
-    ruleContext.rule.consequence = (action, {effect}) => {
+    ruleContext.rule.consequence = ({action,effect}) => {
       ruleContext.events.trigger('CANCEL_CONSEQUENCE', {execId:100, concurrencyId:'default'})
       effect(callback)
     }
@@ -276,11 +282,11 @@ describe('concurrency', () => {
     const callback = jest.fn()
     ruleContext.rule.concurrency = 'SWITCH'
     ruleContext.rule.consequence
-      .mockImplementationOnce(async (_, {effect}) => {
+      .mockImplementationOnce(async ({effect}) => {
         await wait(50)
         effect(() => callback('ONE'))
       })
-      .mockImplementationOnce(async (_, {effect}) => {
+      .mockImplementationOnce(async ({effect}) => {
         await wait(10)
         effect(() => callback('TWO'))
       })
@@ -299,7 +305,7 @@ describe('concurrency', () => {
     const callback = jest.fn()
     let i = 100
     ruleContext.rule.concurrency = 'ONCE'
-    ruleContext.rule.consequence = (_,{effect}) => effect(() => callback(i++))
+    ruleContext.rule.consequence = ({effect}) => effect(() => callback(i++))
     consequence.default(actionExecution, ruleContext)
     consequence.default(actionExecution, ruleContext)
     expect(callback).toBeCalledTimes(1)
@@ -345,14 +351,14 @@ describe('getCurrentRuleExecId', () => {
 
   test('returns the current execId inside an effect', () => {
     const nestedRuleContext = utils.createContext()
-    nestedRuleContext.rule.consequence = (_, {effect}) => {
+    nestedRuleContext.rule.consequence = ({effect}) => {
       expect(consequence.getCurrentRuleExecId()).toBe(1)
       effect(() => {
         expect(consequence.getCurrentRuleExecId()).toBe(2)
       })
       expect(consequence.getCurrentRuleExecId()).toBe(1)
     }
-    ruleContext.rule.consequence = (_, {effect}) => {
+    ruleContext.rule.consequence = ({effect}) => {
       expect(consequence.getCurrentRuleExecId()).toBe(null)
       effect(() => {
         expect(consequence.getCurrentRuleExecId()).toBe(1)
@@ -378,7 +384,11 @@ describe('concurrencyFilter', () => {
     consequence.default(actionExecutionA, ruleContext)
     consequence.default(actionExecutionB, ruleContext)
     expect(callback).toBeCalledTimes(2)
-    expect(callback).toBeCalledWith({type:'TEST_TYPE', identifier: 'A'}, any)
-    expect(callback).toBeCalledWith({type:'TEST_TYPE', identifier: 'B'}, any)
+    expect(callback).toBeCalledWith(expect.objectContaining({
+      action: {type:'TEST_TYPE', identifier: 'A'}
+    }))
+    expect(callback).toBeCalledWith(expect.objectContaining({
+      action: {type:'TEST_TYPE', identifier: 'B'}
+    }))
   })
 })

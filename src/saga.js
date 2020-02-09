@@ -99,9 +99,10 @@ export function startSaga (
   }
 
   const saga = ruleContext.rule[sagaType]
+  const args = setup.createSagaArgs({context})
   let iter
   if(saga){
-    iter = saga(nextFn, setup.createSagaArgs({context}))
+    iter = saga(nextFn, args.getState, args.context)
     iterate(iter)
   }
 }

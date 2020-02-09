@@ -29,14 +29,12 @@ export type RemoveRule = (name:string) => void
 export type Effect = (()=>mixed)=>void
 export type Target = '*' | string | string[]
 export type Position = 'AFTER' | 'BEFORE' | 'INSTEAD'
-export type Condition = (action:Action, args:{getState:GetState, context:CTX}) => boolean
+export type Condition = (action:Action, getState:GetState, context:CTX) => boolean
 
 export type Saga<Logic> = (
   action: (target:Target, cb?:(action:Action) => mixed)=>mixed,
-  {
-    getState: GetState,
-    context: CTX
-  }
+  getState: GetState,
+  context: CTX
 ) => Generator<any,Logic,mixed>
 
 export type Rule = {
@@ -51,8 +49,8 @@ export type Rule = {
   concurrencyFilter?: (action:Action) => string,
   condition?: Condition,
   consequence: (
-    action:Action,
     {
+      action:Action,
       dispatch:Dispatch,
       getState:GetState, 
       addRule:AddRule,

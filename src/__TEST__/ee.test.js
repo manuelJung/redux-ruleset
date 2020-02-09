@@ -83,7 +83,7 @@ describe('basic', () => {
       id: 'UNIT_TEST',
       target: 'TEST_TYPE',
       position: 'INSTEAD',
-      consequence: (action) => Object.assign({}, action, {foo:'bar'})
+      consequence: ({action}) => Object.assign({}, action, {foo:'bar'})
     })
 
     store.dispatch({type:'TEST_TYPE'})
@@ -174,7 +174,7 @@ describe('access state', () => {
     const rule = index.addRule({
       id:'UNIT_TEST',
       target:'TEST_TYPE',
-      condition: jest.fn((action, {getState}) => {
+      condition: jest.fn((action, getState) => {
         const state = getState()
         expect(state.todos.filter).toBe('all')
       }),
@@ -189,7 +189,7 @@ describe('access state', () => {
     const rule = index.addRule({
       id:'UNIT_TEST',
       target:'TEST_TYPE',
-      consequence: jest.fn((action, {getState}) => {
+      consequence: jest.fn(({action,getState}) => {
         const state = getState()
         expect(state.todos.filter).toBe('all')
       })
@@ -204,13 +204,13 @@ describe('access state', () => {
       id:'UNIT_TEST',
       target:'TEST_TYPE',
       consequence: () => null,
-      addWhen: jest.fn(function*(next,{getState}){
+      addWhen: jest.fn(function*(next,getState){
         const state = getState()
         expect(state.todos.filter).toBe('all')
         yield next('ADD')
         return 'ADD_RULE'
       }),
-      addUntil: jest.fn(function*(next,{getState}){
+      addUntil: jest.fn(function*(next,getState){
         const state = getState()
         expect(state.todos.filter).toBe('all')
         yield next('REMOVE')
@@ -234,14 +234,14 @@ describe('context', () => {
     const rule = index.addRule({
       id: 'UNIT_TEST',
       target: 'TEST_TYPE',
-      consequence: jest.fn((_, {context}) => {
+      consequence: jest.fn(({context}) => {
         expect(context.getContext('foo')).toBe('bar')
       }),
-      addWhen: jest.fn(function* (next, {context}){
+      addWhen: jest.fn(function* (next, _, context){
         context.setContext('foo', 'bar')
         return 'ADD_RULE'
       }),
-      addUntil: jest.fn(function* (next, {context}){
+      addUntil: jest.fn(function* (next, _, context){
         expect(context.getContext('foo')).toBe('bar')
         yield next('UNKNOWN')
         return 'REMOVE_RULE'
@@ -259,17 +259,17 @@ describe('context', () => {
     const rule = index.addRule({
       id: 'UNIT_TEST',
       target: 'SHOW',
-      addWhen: function* (next, {context}) {
+      addWhen: function* (next, _, context) {
         context.setContext('name', 'manu')
         return 'ADD_RULE_BEFORE'
       },
-      addUntil: function* (next, {context}) {
+      addUntil: function* (next, _, context) {
         yield next('RESET')
         context.setContext('name', 'alex')
         yield next('RESET')
         return 'REAPPLY_ADD_UNTIL'
       },
-      consequence: (action, {context}) => {
+      consequence: ({action,context}) => {
         const name = context.getContext('name')
         return {type:'SHOW_NAME', name}
       }
@@ -296,7 +296,7 @@ describe('context', () => {
     const rule = index.addRule({
       id: 'UNIT_TEST',
       target: 'START',
-      consequence: jest.fn((_,{context}) => {
+      consequence: jest.fn(({context}) => {
         expect(() => context.setContext('key', 'val')).toThrow('you cannot call setContext within a consequence. check rule UNIT_TEST')
       })
     })
@@ -309,7 +309,7 @@ describe('context', () => {
     const rule = index.addRule({
       id: 'UNIT_TEST',
       target: 'START',
-      condition: jest.fn((_,{context}) => {
+      condition: jest.fn((_,__,context) => {
         expect(() => context.setContext('key', 'val')).toThrow('you cannot call setContext within condition. check rule UNIT_TEST')
       }),
       consequence: () => null
@@ -327,7 +327,7 @@ describe('subRules', () => {
     const rule = index.addRule({
       id: 'UNIT_TEST',
       target: 'TRIGGER',
-      consequence: jest.fn((_, {addRule}) => addRule('test')),
+      consequence: jest.fn(({addRule}) => addRule('test')),
       subRules: {
         test: {
           target: 'PING',
@@ -352,11 +352,11 @@ describe('subRules', () => {
     const rule = index.addRule({
       id: 'UNIT_TEST',
       target: 'TRIGGER',
-      consequence: jest.fn((_, {addRule}) => addRule('test', {foo:'bar'})),
+      consequence: jest.fn(({addRule}) => addRule('test', {foo:'bar'})),
       subRules: {
         test: {
           target: 'PING',
-          consequence: jest.fn((_, {context}) => {
+          consequence: jest.fn(({context}) => {
             expect(context.getContext('foo')).toBe('bar')
           })
         }
@@ -374,7 +374,7 @@ describe('subRules', () => {
       id: 'UNIT_TEST',
       target: 'START',
       concurrency: 'ONCE',
-      consequence: (_,{addRule}) => addRule('sub'),
+      consequence: ({addRule}) => addRule('sub'),
       addUntil: function*(next){
         yield next('STOP')
         return 'REMOVE_RULE'
@@ -407,7 +407,7 @@ describe('subRules', () => {
     const rule = index.addRule({
       id: 'UNIT_TEST',
       target: 'START',
-      consequence: jest.fn((_,{addRule}) => {
+      consequence: jest.fn(({addRule}) => {
         addRule('test')
         expect(() => addRule('test')).toThrow('you tried to add an already added rule "UNIT_TEST::test"')
       }),
@@ -440,5 +440,23 @@ describe('bugs', () => {
 
     const actions = store.getActions()
     expect(actions[0]).toEqual({type:'INIT_TYPE'})
+  })
+
+  test('addOnce is not invoked for skipped consequences', () => {
+    index.addRule({
+      id: 'UNIT_TEST',
+      target: 'PING',
+      addOnce: true,
+      condition: action => action.status === 'resolved',
+      consequence: () => ({type:'PONG'})
+    })
+
+    store.dispatch({type:'PING', status: 'not-resolved'})
+    store.dispatch({type:'PING', status: 'resolved'})
+
+    const actions = store.getActions()
+    expect(actions[0]).toEqual({type:'PING', status: 'not-resolved'})
+    expect(actions[1]).toEqual({type:'PING', status: 'resolved'})
+    expect(actions[2]).toEqual({type:'PONG'})
   })
 })
