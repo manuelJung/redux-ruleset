@@ -70,7 +70,8 @@ export type RuleContext = {
   active: boolean,
   runningSaga: null | SagaExecution,
   parentContext: null | RuleContext,
-  subRuleContexts: {[name:string]:RuleContext},
+  subRuleContextCounter: number,
+  subRuleContexts: RuleContext[],
   concurrency: {[name:string]:{
     running: number,
     debounceTimeoutId: null | TimeoutID

@@ -73,6 +73,8 @@ function dispatchEvent(action) {
       actionExecution.history.push({ action: action, context: context });
       // $FlowFixMe
       action = result.action;
+      // $FlowFixMe
+      actionExecution.action = result.action;
     } else if (result.resolved) {
       actionExecution.canceled = true;
     }

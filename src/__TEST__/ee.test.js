@@ -403,24 +403,38 @@ describe('subRules', () => {
     ])
   })
 
-  test('throw error when sub rule is added twice', () => {
-    const rule = index.addRule({
+  test('multiple instances of same subrule can be added', () => {
+    index.addRule({
       id: 'UNIT_TEST',
-      target: 'START',
-      consequence: jest.fn(({addRule}) => {
-        addRule('test')
-        expect(() => addRule('test')).toThrow('you tried to add an already added rule "UNIT_TEST::test"')
-      }),
+      target: 'INIT_TYPE',
+      consequence: ({action, addRule}) => addRule('inner', {key: action.key}),
       subRules: {
-        test: {
-          target: 'PING',
-          consequence: () => null
+        inner: {
+          target: 'INNER_TYPE',
+          consequence: ({context}) => ({
+            type: 'RETURN_TYPE', 
+            key: context.getContext('key')
+          })
         }
       }
     })
 
-    store.dispatch(({type:'START'}))
-    expect(rule.consequence).toBeCalled()
+    store.dispatch({type:'INNER_TYPE'})
+    store.dispatch({type:'INIT_TYPE', key: 'first'})
+    store.dispatch({type:'INNER_TYPE'})
+    store.dispatch({type:'INIT_TYPE', key: 'second'})
+    store.dispatch({type:'INNER_TYPE'})
+
+    const actions = store.getActions()
+    expect(actions[0]).toEqual({type: 'INNER_TYPE'})
+    expect(actions[1]).toEqual({type: 'INIT_TYPE', key: 'first'})
+    expect(actions[2]).toEqual({type: 'INNER_TYPE'})
+    expect(actions[3]).toEqual({type: 'RETURN_TYPE', key: 'first'})
+    expect(actions[4]).toEqual({type: 'INIT_TYPE', key: 'second'})
+    expect(actions[5]).toEqual({type: 'INNER_TYPE'})
+    expect(actions[6]).toEqual({type: 'RETURN_TYPE', key: 'second'})
+    expect(actions[7]).toEqual({type: 'RETURN_TYPE', key: 'first'})
+    expect(actions[8]).toBe(undefined)
   })
 })
 

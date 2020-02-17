@@ -49,9 +49,10 @@ var addRule = exports.addRule = function addRule(context) {
 
 var removeRule = exports.removeRule = function removeRule(context) {
   if (context.active === false) return;
+
   // remove child rules
-  for (var name in context.subRuleContexts) {
-    var subContext = context.subRuleContexts[name];
+  for (var i = 0; i < context.subRuleContexts.length; i++) {
+    var subContext = context.subRuleContexts[i];
     if (subContext.active) removeRule(subContext);
   }
 
@@ -63,9 +64,9 @@ var removeRule = exports.removeRule = function removeRule(context) {
   if (context.rule.target === '*') targets = [GLOBAL_TYPE];else if (typeof context.rule.target === 'string') targets = [context.rule.target];else targets = context.rule.target;
 
   // remove context from activeRules by targets
-  for (var i = 0; i < targets.length; i++) {
-    if (!activeRules[position][targets[i]]) activeRules[position][targets[i]] = [];
-    (0, _utils.removeItem)(activeRules[position][targets[i]], context);
+  for (var _i = 0; _i < targets.length; _i++) {
+    if (!activeRules[position][targets[_i]]) activeRules[position][targets[_i]] = [];
+    (0, _utils.removeItem)(activeRules[position][targets[_i]], context);
   }
 
   context.events.trigger('REMOVE_RULE');

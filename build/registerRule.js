@@ -4,6 +4,15 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.testing = undefined;
+
+var _assign = require('babel-runtime/core-js/object/assign');
+
+var _assign2 = _interopRequireDefault(_assign);
+
+var _typeof2 = require('babel-runtime/helpers/typeof');
+
+var _typeof3 = _interopRequireDefault(_typeof2);
+
 exports.activateSubRule = activateSubRule;
 exports.default = registerRule;
 
@@ -21,9 +30,9 @@ var _globalEvents = require('./globalEvents');
 
 var _globalEvents2 = _interopRequireDefault(_globalEvents);
 
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var registeredDict = {};
 
@@ -104,34 +113,33 @@ var startAddUntil = function startAddUntil(context) {
   });
 };
 
-function activateSubRule(ruleContext, name) {
-  var parameters = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
-
-  var subContext = ruleContext.subRuleContexts[name];
-
-  if (!subContext) {
-    throw new Error('you tried to add sub-rule "' + name + '" but rule "' + ruleContext.rule.id + '" does not have such an sub-rule');
+function activateSubRule(parentContext, name, parameters) {
+  if ((typeof name === 'undefined' ? 'undefined' : (0, _typeof3.default)(name)) === 'object') {
+    throw new Error('sub-rules must be a string. please see docs: https://redux-ruleset.netlify.com/docs/advancedConcepts/sub_rules.html');
   }
 
-  subContext.publicContext.global = parameters;
-
-  if (subContext.rule.addWhen) startAddWhen(subContext);else {
-    (0, _ruleDB.addRule)(subContext);
-    if (subContext.rule.addUntil) startAddUntil(subContext);
+  if (!parentContext.rule.subRules || !parentContext.rule.subRules[name]) {
+    throw new Error('you tried to add sub-rule "' + name + '" but rule "' + parentContext.rule.id + '" does not have such an sub-rule');
   }
+
+  var id = parentContext.rule.id + ':' + name + '-' + parentContext.subRuleContextCounter++;
+
+  var rule = (0, _assign2.default)({}, parentContext.rule.subRules[name], { id: id });
+  registerRule(rule, parentContext, parameters);
 }
 
-function registerRule(rule, parentContext, name) {
+function registerRule(rule, parentContext, parameters) {
 
   // check if rule is already registered
   if (registeredDict[rule.id]) {
     if (process.env.NODE_ENV !== 'production') {
       throw new Error('the rule-id "' + rule.id + '" is already registered. Either you want to register the same rule twice or you have two rules with the same id');
     }
-    return;
+    return rule;
   }
 
   var ruleContext = (0, _utils.createRuleContext)(rule);
+
   registeredDict[rule.id] = ruleContext;
 
   // clear public context
@@ -157,20 +165,10 @@ function registerRule(rule, parentContext, name) {
 
   _globalEvents2.default.trigger('REGISTER_RULE', ruleContext);
 
-  // register sub rules
-  if (rule.subRules) {
-    for (var _name in rule.subRules) {
-      var subRule = rule.subRules[_name];
-      subRule.id = rule.id + '::' + _name;
-      registerRule(subRule, ruleContext, _name);
-    }
-  }
-
-  // subrules are not active initially
-  if (parentContext && name) {
+  if (parentContext) {
+    ruleContext.publicContext.global = parameters || {};
     ruleContext.parentContext = parentContext;
-    parentContext.subRuleContexts[name] = ruleContext;
-    return rule;
+    parentContext.subRuleContexts.push(ruleContext);
   }
 
   // activate
@@ -180,12 +178,6 @@ function registerRule(rule, parentContext, name) {
   }
 
   return rule;
-}
-
-if (typeof window !== 'undefined') {
-  window.getRulesets = function () {
-    return registeredDict;
-  };
 }
 
 var testing = exports.testing = { startAddWhen: startAddWhen, startAddUntil: startAddUntil, registeredDict: registeredDict };

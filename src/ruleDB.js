@@ -40,9 +40,10 @@ export const addRule = (context:t.RuleContext) => {
 
 export const removeRule = (context:t.RuleContext) => {
   if(context.active === false) return
+  
   // remove child rules
-  for(let name in context.subRuleContexts){
-    const subContext = context.subRuleContexts[name]
+  for(let i=0;i<context.subRuleContexts.length;i++){
+    const subContext = context.subRuleContexts[i]
     if(subContext.active) removeRule(subContext)
   }
   

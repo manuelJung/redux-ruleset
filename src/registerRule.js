@@ -61,34 +61,34 @@ const startAddUntil = (context:t.RuleContext) => startSaga('addUntil', context, 
   }
 })
 
-export function activateSubRule (ruleContext:t.RuleContext, name:string, parameters:Object={}) {
-  const subContext = ruleContext.subRuleContexts[name]
-
-  if(!subContext){
-    throw new Error(`you tried to add sub-rule "${name}" but rule "${ruleContext.rule.id}" does not have such an sub-rule`)
+export function activateSubRule (parentContext:t.RuleContext, name:string, parameters?:Object) {
+  if(typeof name === 'object'){
+    throw new Error(`sub-rules must be a string. please see docs: https://redux-ruleset.netlify.com/docs/advancedConcepts/sub_rules.html`)
   }
 
-  subContext.publicContext.global = parameters
-
-  if(subContext.rule.addWhen) startAddWhen(subContext)
-  else {
-    addRule(subContext)
-    if(subContext.rule.addUntil) startAddUntil(subContext)
+  if(!parentContext.rule.subRules || !parentContext.rule.subRules[name]){
+    throw new Error(`you tried to add sub-rule "${name}" but rule "${parentContext.rule.id}" does not have such an sub-rule`)
   }
+
+  let id = parentContext.rule.id + ':' + name + '-' + parentContext.subRuleContextCounter++
+
+  const rule = Object.assign({}, parentContext.rule.subRules[name], { id })
+  registerRule(rule, parentContext, parameters)
 }
 
 
-export default function registerRule (rule:t.Rule, parentContext?:t.RuleContext, name?:string) {
+export default function registerRule (rule:t.Rule, parentContext?:t.RuleContext, parameters?:Object) {
 
   // check if rule is already registered
   if(registeredDict[rule.id]){
     if(process.env.NODE_ENV !== 'production'){
       throw new Error('the rule-id "'+rule.id+'" is already registered. Either you want to register the same rule twice or you have two rules with the same id')
     }
-    return
+    return rule
   }
 
   const ruleContext = createRuleContext(rule)
+
   registeredDict[rule.id] = ruleContext
 
   // clear public context
@@ -114,20 +114,10 @@ export default function registerRule (rule:t.Rule, parentContext?:t.RuleContext,
   
   globalEvents.trigger('REGISTER_RULE', ruleContext)
 
-  // register sub rules
-  if(rule.subRules) {
-    for(let name in rule.subRules) {
-      const subRule = rule.subRules[name]
-      subRule.id = rule.id + '::' + name
-      registerRule(subRule, ruleContext, name)
-    }
-  }
-
-  // subrules are not active initially
-  if(parentContext && name) {
+  if(parentContext) {
+    ruleContext.publicContext.global = parameters || {}
     ruleContext.parentContext = parentContext
-    parentContext.subRuleContexts[name] = ruleContext
-    return rule
+    parentContext.subRuleContexts.push(ruleContext)
   }
 
   // activate
@@ -138,10 +128,6 @@ export default function registerRule (rule:t.Rule, parentContext?:t.RuleContext,
   }
 
   return rule
-}
-
-if(typeof window !== 'undefined'){
-  window.getRulesets = () => registeredDict
 }
 
 export const testing = {startAddWhen, startAddUntil, registeredDict}

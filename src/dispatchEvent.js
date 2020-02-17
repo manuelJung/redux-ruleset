@@ -46,6 +46,8 @@ export default function dispatchEvent (action:t.Action, cb:Function=()=>null) {
       actionExecution.history.push({action, context})
       // $FlowFixMe
       action = result.action
+      // $FlowFixMe
+      actionExecution.action = result.action
     }
     else if(result.resolved){
       actionExecution.canceled = true

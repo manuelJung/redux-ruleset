@@ -88,7 +88,8 @@ function createRuleContext(rule) {
     runningSaga: null,
     events: createEventContainer(),
     parentContext: null,
-    subRuleContexts: {},
+    subRuleContextCounter: 0,
+    subRuleContexts: [],
     concurrency: {},
     publicContext: {
       global: {},

@@ -253,39 +253,28 @@ describe('subRules', () => {
     }
   })
 
-  test('register subRules without activating it', () => {
-    registerRule.default(rule)
-
-    expect(globalEvents.default.trigger).toBeCalledWith('REGISTER_RULE', expect.objectContaining({
-      rule: expect.objectContaining({
-        id: 'TEST_RULE::test'
-      })
-    }))
-
-    const subRuleContext = registerRule.testing.registeredDict['TEST_RULE::test']
-    expect(subRuleContext.active).toBe(false)
-  })
-
   test('subRule and parentRule contexts are connected', () => {
     registerRule.default(rule)
     const ruleContext = registerRule.testing.registeredDict['TEST_RULE']
-    const subRuleContext = ruleContext.subRuleContexts.test
+    registerRule.activateSubRule(ruleContext, 'test')
     expect(ruleContext.parentContext).toBe(null)
-    expect(ruleContext.subRuleContexts['test']).toBe(subRuleContext)
+    expect(ruleContext.subRuleContexts.length).toBe(1)
+    const subRuleContext = ruleContext.subRuleContexts[0]
     expect(subRuleContext.parentContext).toBe(ruleContext)
   })
 
   test('throw error when trying to add unknown sub-rule', () => {
     registerRule.default(rule)
     const ruleContext = registerRule.testing.registeredDict['TEST_RULE']
-    expect(() => registerRule.activateSubRule(ruleContext, 'unknown')).toThrow()
+    expect(() => registerRule.activateSubRule(ruleContext, 'unknown'))
+      .toThrow('you tried to add sub-rule "unknown" but rule "TEST_RULE" does not have such an sub-rule')
   })
 
   test('when subRules are added parameters are saved on global context', () => {
     registerRule.default(rule)
     const ruleContext = registerRule.testing.registeredDict['TEST_RULE']
-    const subRuleContext = ruleContext.subRuleContexts.test
     registerRule.activateSubRule(ruleContext, 'test', {foo:'bar'})
+    const subRuleContext = ruleContext.subRuleContexts[0]
 
     expect(subRuleContext.publicContext.global).toEqual({foo:'bar'})
   })
@@ -294,7 +283,7 @@ describe('subRules', () => {
     registerRule.default(rule)
     const ruleContext = registerRule.testing.registeredDict['TEST_RULE']
     registerRule.activateSubRule(ruleContext, 'test')
-    expect(ruleDB.addRule).toBeCalledWith(ruleContext.subRuleContexts.test)
+    expect(ruleDB.addRule).toBeCalledWith(ruleContext.subRuleContexts[0])
   })
 
   test('start addWhen saga of sub-rule', () => {
@@ -302,8 +291,8 @@ describe('subRules', () => {
     saga.startSaga = jest.fn()
     registerRule.default(rule)
     const ruleContext = registerRule.testing.registeredDict['TEST_RULE']
-    const subRuleContext = ruleContext.subRuleContexts.test
     registerRule.activateSubRule(ruleContext, 'test')
+    const subRuleContext = ruleContext.subRuleContexts[0]
     expect(ruleDB.addRule).not.toBeCalledWith(subRuleContext)
     expect(saga.startSaga).toBeCalledWith('addWhen', subRuleContext, any)
   })

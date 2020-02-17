@@ -61,7 +61,8 @@ export function createRuleContext (rule:t.Rule):t.RuleContext {
     runningSaga: null,
     events: createEventContainer(),
     parentContext: null,
-    subRuleContexts: {},
+    subRuleContextCounter: 0,
+    subRuleContexts: [],
     concurrency: {},
     publicContext: {
       global: {},
