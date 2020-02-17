@@ -297,7 +297,7 @@ describe('context', () => {
       id: 'UNIT_TEST',
       target: 'START',
       consequence: jest.fn(({context}) => {
-        expect(() => context.setContext('key', 'val')).toThrow('you cannot call setContext within a consequence. check rule UNIT_TEST')
+        expect(() => context.setContext('key', 'val')).toThrow('you cannot call setContext within a consequence or condition. check rule UNIT_TEST')
       })
     })
 
@@ -310,7 +310,7 @@ describe('context', () => {
       id: 'UNIT_TEST',
       target: 'START',
       condition: jest.fn((_,__,context) => {
-        expect(() => context.setContext('key', 'val')).toThrow('you cannot call setContext within condition. check rule UNIT_TEST')
+        expect(() => context.setContext('key', 'val')).toThrow('you cannot call setContext within a consequence or condition. check rule UNIT_TEST')
       }),
       consequence: () => null
     })

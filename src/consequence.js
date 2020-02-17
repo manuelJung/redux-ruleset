@@ -40,6 +40,13 @@ export default function consequence (actionExecution:t.ActionExecution, ruleCont
   ruleContext.events.trigger('CONSEQUENCE_START', ruleExecution)
   concurrency.running++
 
+  const context = {
+    setContext: () => {throw new Error('you cannot call setContext within a consequence or condition. check rule '+ rule.id)},
+    getContext: (name:string) => ruleContext.publicContext.addUntil[name] 
+    || ruleContext.publicContext.addWhen[name]
+    || ruleContext.publicContext.global[name]
+  }
+
   /**
    * Check concurrency and conditions
    */
@@ -66,9 +73,7 @@ export default function consequence (actionExecution:t.ActionExecution, ruleCont
   }
   // skip if rule condition does not match
   if(rule.condition){
-    const args = setup.createConditionArgs({context: Object.assign({}, ruleContext.publicContext, {
-      setContext: (key:string, value:mixed) => {throw new Error('you cannot call setContext within condition. check rule '+ rule.id)}
-    })})
+    const args = setup.createConditionArgs({context})
     if(rule.condition && !rule.condition(action, args.getState, args.context)){
       return endConsequence('CONDITION_NOT_MATCHED')
     }
@@ -118,12 +123,6 @@ export default function consequence (actionExecution:t.ActionExecution, ruleCont
     const context = ruleContext.subRuleContexts[name]
     if(!context || !context.active) return
     removeRuleFromRuleDB(context)
-  }
-  const context = {
-    setContext: () => {throw new Error('you cannot call setContext within a consequence. check rule '+ rule.id)},
-    getContext: (name:string) => ruleContext.publicContext.addUntil[name] 
-    || ruleContext.publicContext.addWhen[name]
-    || ruleContext.publicContext.global[name]
   }
 
   const consequenceArgs = setup.createConsequenceArgs(effect, {action, addRule, removeRule, effect, wasCanceled, context})

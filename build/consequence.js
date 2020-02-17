@@ -13,10 +13,6 @@ var _promise = require('babel-runtime/core-js/promise');
 
 var _promise2 = _interopRequireDefault(_promise);
 
-var _assign = require('babel-runtime/core-js/object/assign');
-
-var _assign2 = _interopRequireDefault(_assign);
-
 exports.default = consequence;
 
 var _types = require('./types');
@@ -73,12 +69,20 @@ function consequence(actionExecution, ruleContext) {
   ruleContext.events.trigger('CONSEQUENCE_START', ruleExecution);
   concurrency.running++;
 
-  /**
-   * Check concurrency and conditions
-   */
+  var context = {
+    setContext: function setContext() {
+      throw new Error('you cannot call setContext within a consequence or condition. check rule ' + rule.id);
+    },
+    getContext: function getContext(name) {
+      return ruleContext.publicContext.addUntil[name] || ruleContext.publicContext.addWhen[name] || ruleContext.publicContext.global[name];
+    }
 
-  // trigger when consequence should not be invoked (e.g condition does not match)
-  var endConsequence = function endConsequence(logic) {
+    /**
+     * Check concurrency and conditions
+     */
+
+    // trigger when consequence should not be invoked (e.g condition does not match)
+  };var endConsequence = function endConsequence(logic) {
     concurrency.running--;
     ruleContext.events.trigger('CONSEQUENCE_END', ruleExecution, logic);
     return { resolved: false };
@@ -99,11 +103,7 @@ function consequence(actionExecution, ruleContext) {
   }
   // skip if rule condition does not match
   if (rule.condition) {
-    var args = setup.createConditionArgs({ context: (0, _assign2.default)({}, ruleContext.publicContext, {
-        setContext: function setContext(key, value) {
-          throw new Error('you cannot call setContext within condition. check rule ' + rule.id);
-        }
-      }) });
+    var args = setup.createConditionArgs({ context: context });
     if (rule.condition && !rule.condition(action, args.getState, args.context)) {
       return endConsequence('CONDITION_NOT_MATCHED');
     }
@@ -157,14 +157,6 @@ function consequence(actionExecution, ruleContext) {
     var context = ruleContext.subRuleContexts[name];
     if (!context || !context.active) return;
     (0, _ruleDB.removeRule)(context);
-  };
-  var context = {
-    setContext: function setContext() {
-      throw new Error('you cannot call setContext within a consequence. check rule ' + rule.id);
-    },
-    getContext: function getContext(name) {
-      return ruleContext.publicContext.addUntil[name] || ruleContext.publicContext.addWhen[name] || ruleContext.publicContext.global[name];
-    }
   };
 
   var consequenceArgs = setup.createConsequenceArgs(effect, { action: action, addRule: addRule, removeRule: removeRule, effect: effect, wasCanceled: wasCanceled, context: context });
