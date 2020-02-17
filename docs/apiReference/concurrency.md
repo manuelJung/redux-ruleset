@@ -27,7 +27,7 @@ The *concurrency* defines what should happen when a new consequence should be in
 - [**LAST**](#last): As soon as a concurrency is called, all running concurrencies are instantly canceled
 - [**ONCE**](#once): Same as FIRST, but even when the first concurrency is canceled no other concurrency will get called ever
 - [**SWITCH**](#switch): All concurrencies are normally called. As soon as a later called concurrency dispatches (or send a event) all previous concurrencies are canceled
-- [**ORDERED**](#ordered): All consequences dispatch in the order they are innvoked
+<!-- - [**ORDERED**](#ordered): All consequences dispatch in the order they are innvoked -->
 
 ### DEFAULT
 
@@ -129,7 +129,7 @@ dispatch({type: 'products/FETCH_REQUEST'}) // E4: consequence gets invoked
 
 The rule executes the consequence everytime the target matches. However it is canceled (no dispatch gets invoked) when a later called consequence dispatches or resolves (or sends an [effect](../basicConcepts/dispatching_actions.md#effects)). This is super usefull when you fetch data and only want to keep the last response (e.g you set a filter within a product-list). With the concurrency *SWITCH* you can be shure that a slow response won't override a faster one
 
-### ORDERED
+<!-- ### ORDERED
 
 ```javascript
 addRule({
@@ -151,4 +151,4 @@ dispatch({type: 'products/FETCH_REQUEST'}) // E4: consequence gets invoked
 // fetchProductSuccess will be called in the following order: E1 -> E2 -> E3 -> E4
 ```
 
-With the consequence *ORDERED* you can be shure that a fast response won't get dispatched before a slow one. The rule will delay the dispatch of the fast one until the slow one gets dispatched. This is usefull when you need all data fetched, but in the right order
+With the consequence *ORDERED* you can be shure that a fast response won't get dispatched before a slow one. The rule will delay the dispatch of the fast one until the slow one gets dispatched. This is usefull when you need all data fetched, but in the right order -->

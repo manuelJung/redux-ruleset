@@ -46,7 +46,7 @@ There are many more concurrency patterns.
 |LAST| as soon as the second consequence starts to execute, all previous consequences are canceled|
 |ONCE| the consequence can only be called once during the lifetime of a rule. Only usefull when it comes to [rule-nesting](../advancedConcepts/nest_rules.md) or [data streams](../advancedConcepts/handle_streams.md)|
 |SWITCH| as soon as the second consequence dispatches (or triggers an effect) the first one will be canceled|
-|ORDERED| if second rule dispatches (or triggers an effect) before first rule, it waits with the dispatch, until the first one dispatches|
+<!-- |ORDERED| if second rule dispatches (or triggers an effect) before first rule, it waits with the dispatch, until the first one dispatches| -->
 
 ##### debounce and throttle
 
