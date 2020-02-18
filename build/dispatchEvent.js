@@ -93,6 +93,8 @@ function dispatchEvent(action) {
     (0, _ruleDB.forEachRuleContext)(action.type, 'AFTER', function (context) {
       (0, _consequence2.default)(actionExecution, context);
     });
+  } else {
+    _globalEvents2.default.trigger('DISPATCH_ACTION', actionExecution);
   }
 
   _globalEvents2.default.trigger('END_ACTION_EXECUTION', actionExecution);

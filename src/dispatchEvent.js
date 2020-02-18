@@ -68,6 +68,9 @@ export default function dispatchEvent (action:t.Action, cb:Function=()=>null) {
       consequence(actionExecution, context)
     })
   }
+  else {
+    globalEvents.trigger('DISPATCH_ACTION', actionExecution)
+  }
 
   globalEvents.trigger('END_ACTION_EXECUTION', actionExecution)
 }

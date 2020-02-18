@@ -57,7 +57,7 @@ function addActionListener(target, ruleContext, cb) {
 function yieldFn(target, condition, ruleContext, onYield) {
   addActionListener(target, ruleContext, function (actionExecution) {
     var result = condition ? condition(actionExecution.action) : actionExecution.action;
-    if (result) onYield(result);
+    if (result) onYield(result, actionExecution);
   });
 }
 
@@ -83,14 +83,14 @@ function startSaga(sagaType, ruleContext, finCb, isReady) {
   };
 
   var nextFn = function nextFn(target, condition) {
-    yieldFn(target, condition, ruleContext, function (result) {
-      ruleContext.events.trigger('SAGA_YIELD', sagaExecution, result);
+    yieldFn(target, condition, ruleContext, function (result, actionExecution) {
+      ruleContext.events.trigger('SAGA_YIELD', sagaExecution, actionExecution, result);
       iterate(iter, result);
     });
   };
 
   var cancel = function cancel() {
-    ruleContext.events.trigger('SAGA_YIELD', 'CANCELED', sagaType);
+    ruleContext.events.trigger('SAGA_YIELD', sagaExecution, null, 'CANCELED');
     iter.return('CANCELED');
     iterate(iter, 'CANCELED');
   };

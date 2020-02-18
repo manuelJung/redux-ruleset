@@ -41,11 +41,11 @@ function yieldFn (
   target:t.Target, 
   condition?:(action:t.Action) => mixed, 
   ruleContext:t.RuleContext, 
-  onYield:(result:mixed)=>void
+  onYield:(result:mixed, actionExecution:t.ActionExecution|null)=>void
 ) {
   addActionListener(target, ruleContext, actionExecution => {
     const result = condition ? condition(actionExecution.action) : actionExecution.action
-    if(result) onYield(result)
+    if(result) onYield(result, actionExecution)
   })
 }
 
@@ -74,14 +74,14 @@ export function startSaga (
   }
 
   const nextFn = (target, condition) => {
-    yieldFn(target, condition, ruleContext, result => {
-      ruleContext.events.trigger('SAGA_YIELD', sagaExecution, result)
+    yieldFn(target, condition, ruleContext, (result, actionExecution) => {
+      ruleContext.events.trigger('SAGA_YIELD', sagaExecution, actionExecution, result)
       iterate(iter, result)
     })
   }
 
   const cancel = () => {
-    ruleContext.events.trigger('SAGA_YIELD', 'CANCELED', sagaType)
+    ruleContext.events.trigger('SAGA_YIELD', sagaExecution, null, 'CANCELED')
     iter.return('CANCELED')
     iterate(iter, 'CANCELED')
   }

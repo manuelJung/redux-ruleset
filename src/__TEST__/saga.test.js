@@ -104,7 +104,11 @@ describe('startSaga-fn', () => {
     saga.startSaga('addWhen', ruleContext, () => null)
     expect(ruleContext.events.trigger).not.toBeCalledWith('SAGA_YIELD', {type:'MY_TYPE'}, 'addWhen')
     saga.yieldAction({action:{type:'MY_TYPE'}})
-    expect(ruleContext.events.trigger).toBeCalledWith('SAGA_YIELD', {execId: 1, sagaType: "addWhen"}, {type:'MY_TYPE'})
+    expect(ruleContext.events.trigger).toBeCalledWith('SAGA_YIELD', 
+      {execId: 1, sagaType: "addWhen"}, 
+      {action: {type:'MY_TYPE'}}, 
+      {type:'MY_TYPE'}
+    )
   })
 
   test('add setup.sagaArgs as second arg for each saga', () => {
@@ -173,7 +177,7 @@ describe('yield-fn', () => {
     const callback = jest.fn()
     saga.testing.yieldFn('MY_TYPE', null, ruleContext, callback)
     saga.yieldAction({action:{type:'MY_TYPE'}})
-    expect(callback).toBeCalledWith({type:'MY_TYPE'})
+    expect(callback).toBeCalledWith({type:'MY_TYPE'}, {"action": {"type": "MY_TYPE"}})
   })
 
   test('yield only when condition returns truthy value', () => {
@@ -189,6 +193,6 @@ describe('yield-fn', () => {
     const condition = action => action.type
     saga.testing.yieldFn('MY_TYPE', condition, ruleContext, callback)
     saga.yieldAction({action:{type:'MY_TYPE'}})
-    expect(callback).toBeCalledWith('MY_TYPE')
+    expect(callback).toBeCalledWith('MY_TYPE', {"action": {"type": "MY_TYPE"}})
   })
 })
