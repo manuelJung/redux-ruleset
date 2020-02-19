@@ -6,7 +6,8 @@ var _globalEvents2 = _interopRequireDefault(_globalEvents);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-if (typeof window !== 'undefined' && window.__REDUX_RULESET_DEVTOOLS__ || process.env.NODE_ENV === 'test') {
+if (typeof window !== 'undefined' && window.RULESET_DEVTOOLS || process.env.NODE_ENV === 'test') {
+  var buffer = [];
 
   var send = function send(e) {
     var testFn = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : function () {
@@ -16,7 +17,17 @@ if (typeof window !== 'undefined' && window.__REDUX_RULESET_DEVTOOLS__ || proces
     if (process.env.NODE_ENV === 'test') {
       return testFn();
     }
-    window.__REDUX_RULESET_DEVTOOLS__(e);
+    if (window.__REDUX_RULESET_DEVTOOLS__) {
+      if (buffer.length) {
+        buffer.forEach(function (row) {
+          return window.__REDUX_RULESET_DEVTOOLS__(row);
+        });
+        buffer.length = [];
+      }
+      window.__REDUX_RULESET_DEVTOOLS__(e);
+    } else {
+      buffer.push(e);
+    }
   };
 
   // globalEvents.on('DISPATCH_ACTION', actionExecution => send({

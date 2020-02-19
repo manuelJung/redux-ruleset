@@ -1,12 +1,22 @@
 import globalEvents from './globalEvents'
 
-if((typeof window !== 'undefined' && window.__REDUX_RULESET_DEVTOOLS__) || process.env.NODE_ENV === 'test'){
+if((typeof window !== 'undefined' && window.RULESET_DEVTOOLS) || process.env.NODE_ENV === 'test'){
+  let buffer = []
   
   const send = (e,testFn=()=>null) => {
     if(process.env.NODE_ENV === 'test') {
       return testFn()
     }
-    window.__REDUX_RULESET_DEVTOOLS__(e)
+    if(window.__REDUX_RULESET_DEVTOOLS__){
+      if(buffer.length) {
+        buffer.forEach(row => window.__REDUX_RULESET_DEVTOOLS__(row))
+        buffer.length = []
+      }
+      window.__REDUX_RULESET_DEVTOOLS__(e)
+    }
+    else {
+      buffer.push(e)
+    }
   }
 
   // globalEvents.on('DISPATCH_ACTION', actionExecution => send({
