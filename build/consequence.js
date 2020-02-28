@@ -244,5 +244,9 @@ function consequence(actionExecution, ruleContext) {
 
 function matchGlob(id, glob) {
   if (glob === '*') return true;
-  if (typeof glob === 'string') return glob === id;else return glob.includes(id);
+  if (typeof glob === 'string') glob = [glob];
+  for (var i = 0; i < glob.length; i++) {
+    if (id.includes(glob[i])) return true;
+  }
+  return false;
 }

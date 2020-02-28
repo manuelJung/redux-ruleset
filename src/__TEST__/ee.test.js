@@ -165,6 +165,27 @@ describe('basic', () => {
     expect(actions[2]).toEqual({type:'PING'})
     expect(actions[3]).toEqual(undefined)
   })
+
+  test('skip rule', () => {
+    index.addRule({
+      id: 'PING_PONG',
+      target: 'PING',
+      consequence: () => ({type:'PONG'})
+    })
+
+    const action = {type:'PING'}
+    store.dispatch(index.skipRule('*', action)) // all
+    store.dispatch(index.skipRule('PING_PONG', action)) // single
+    store.dispatch(index.skipRule(['PING_PONG'], action)) // multi
+    store.dispatch(index.skipRule('G_P', action)) // partial
+
+    const actions = store.getActions()
+    expect(actions[0]).toEqual({type:'PING', meta: {skipRule:'*'}})
+    expect(actions[1]).toEqual({type:'PING', meta: {skipRule:'PING_PONG'}})
+    expect(actions[2]).toEqual({type:'PING', meta: {skipRule:['PING_PONG']}})
+    expect(actions[3]).toEqual({type:'PING', meta: {skipRule:'G_P'}})
+    expect(actions[4]).toEqual(undefined)
+  })
 })
 
 describe('access state', () => {

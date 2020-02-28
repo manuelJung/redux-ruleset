@@ -28,6 +28,8 @@ addRule({
 - Sub-rules have read-only access to the parent context.
 - Sub-rules are removed when parent rule gets removed or recreated
 
+TODO more detailed explanation
+
 
 
 ## Real World Example

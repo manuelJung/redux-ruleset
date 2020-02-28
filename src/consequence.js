@@ -211,6 +211,9 @@ export default function consequence (actionExecution:t.ActionExecution, ruleCont
 
 function matchGlob(id:string, glob:'*' | string | string[]):boolean{
   if(glob === '*') return true
-  if(typeof glob === 'string') return glob === id
-  else return glob.includes(id)
+  if(typeof glob === 'string') glob = [glob]
+  for(let i=0;i<glob.length;i++){
+    if(id.includes(glob[i])) return true
+  }
+  return false
 }

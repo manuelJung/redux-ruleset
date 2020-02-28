@@ -83,37 +83,34 @@ and trigger one, as soon as the user refines and closes the dropdown
 addRule({
   id: 'feature/FETCH_ON_DROPDOWN_CLOSE',
   target: 'FilterDropdown/OPEN',
-  consequence: ({addRule, action}) => {
-    const {filterKey} = action.meta
-    const removeOnDropdownClose = function* (next) {
-      yield next('FilterDropdown/CLOSE')
-      return 'REMOVE_RULE'
+  addUntil: function* (next) {
+    const action = yield next(['FilterDropdown/CLOSE', 'FilterDropdown/OPEN'])
+    if(action.type === 'FilterDropdown/OPEN'){
+      return 'RECREATE_RULE_BEFORE'
     }
-    // abort request
-    const abortRule = addRule({
-      id: 'feature/FETCH_ON_DROPDOWN_CLOSE/PREVENT_SEARCH/' + filterKey,
+    return 'RECREATE_RULE'
+  },
+  consequence: ({addRule, action}) => {
+    addRule('preventSearch')
+    addRule('triggerSearch')
+  },
+  subRules: {
+    preventSearch: {
       target: 'products/FETCH_REQUEST',
       position: 'INSTEAD',
-      addUntil: removeOnDropdownClose,
       consequence: () => null
-    })
-    // trigger request after refinement
-    addRule({
-      id: 'feature/FETCH_ON_DROPDOWN_CLOSE/TRIGGER_SEARCH' + filterKey,
+    },
+    triggerSearch: {
       target: 'FilterDropdown/CLOSE',
       addWhen: function* (next) {
-        const action = yield next(['products/SET_FILTER', 'FilterDropdown/CLOSE'])
-        if(action.type === 'products/SET_FILTER'){
-          return 'ADD_RULE'
-        }
-        else return 'ABORT'
+        const action = yield next(['products/SET_FILTER'])
+        return 'ADD_RULE'
       },
-      addUntil: removeOnDropdownClose,
       consequence: () => {
         const action = productActions.fetchProductsRequest()
-        return skipRule(abortRule.id, action)
+        return skipRule('feature/FETCH_ON_DROPDOWN_CLOSE', action)
       }
-    })
+    }
   }
 })
 ```
@@ -123,13 +120,15 @@ Quite a few things happen here, so let's analyze this rule step by step. The `ta
 - all `products/FETCH_REQUEST` actions should be discarded
 - when the user refines, we want to fetch after the dropdown closes
 
-To prevent all requests we add the *abortRule*. This rule listens to the `target` *products/FETCH_REQUEST* and totally throw it away (`position` *INSTEAD* and `consequence` returns null). That means that no *products/FETCH_REQUEST* will get dispatched as long as this rule is active. We will talk about the `addUntil` method later.
+To prevent all requests we add the subRule *preventSearch*. This rule listens to the `target` *products/FETCH_REQUEST* and totally throw it away (`position` *INSTEAD* and `consequence` returns null). That means that no *products/FETCH_REQUEST* will get dispatched as long as this rule is active. 
 
-The next rule is resposible for fetching after the dropdown closes. The `addWhen` saga tells us, that we wait for two possible actions. If the user sets a filter we want to add the rule. If the user closes the dropdown we want to throw away the rule. This is important because otherwise the rule will wait in a pending status after the dropdown closes and the user did not set a filter.
+The next rule is resposible for fetching after the dropdown closes. The `addWhen` saga tells us, that we wait for the next *products/SET_FILTER*. If the user sets a filter we want to add the rule. 
 
-When the second rule is added, it listens for the next *FilterDropdown/CLOSE* state event. As a consequence we will dispatch a product-request. Notice the `skipRule` wrapper. We skip the *abortRule* so the product-request actions will be dispatched and not thrown away by the *abortRule*.
+When the second rule is added, it listens for the next *FilterDropdown/CLOSE* state event. As a consequence we will dispatch a product-request. 
 
-Both rules use the same `addUntil` saga. The rules will be removed after the dropdown closes. You may ask yourself why we don't add the `addUntil` saga to the wrapper rule and return a *RECREATE_RULE* after the dropdown closes. Let's image the following scenario: The user opens the *color* dropdown sets a filter and clicks on the *size* dropdown. Now we would have the following actions:
+
+
+<!-- Both rules use the same `addUntil` saga. The rules will be removed after the dropdown closes. You may ask yourself why we don't add the `addUntil` saga to the wrapper rule and return a *RECREATE_RULE* after the dropdown closes. Let's image the following scenario: The user opens the *color* dropdown sets a filter and clicks on the *size* dropdown. Now we would have the following actions:
 
 - FilterDropdown/OPEN (color)
 - products/SET_FILTER (color)
@@ -137,7 +136,7 @@ Both rules use the same `addUntil` saga. The rules will be removed after the dro
 - FilterDropdown/CLOSE (color)
 - products/FETCH_REQUEST (color)
 
-The *open* event of the size dropdown will come before the *close* event of the color dropdown. If we would handle the remove-logic in the `addUntil` saga of the root rule we would recreate the dropdown closes. Therefore the rule won't work for the size dropdown. This won't happen in the presented solution
+The *open* event of the size dropdown will come before the *close* event of the color dropdown. If we would handle the remove-logic in the `addUntil` saga of the root rule we would recreate the dropdown closes. Therefore the rule won't work for the size dropdown. This won't happen in the presented solution -->
 
 <!-- ### Scenarios
 

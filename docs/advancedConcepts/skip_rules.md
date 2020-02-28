@@ -23,7 +23,7 @@ const action = skipRule('PING_PONG', {type: 'PING'})
 
 ```
 
-Redux-ruleset exports a special utility function `skipRule` for this. It takes a ruleId (or array of ruleIds) and adds them to the skipRule meta key of an action. The original action won't get touched. You can also call the skipRule utility on actions that already skip rules:
+Redux-ruleset exports a special utility function `skipRule` for this. It takes a ruleId (or array of ruleIds) or a substring of a ruleId and adds them to the skipRule meta key of an action. The original action won't get touched. You can also call the skipRule utility on actions that already skip rules:
 
 ```javascript
 import {skipRule} from 'redux-ruleset'
