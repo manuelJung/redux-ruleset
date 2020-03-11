@@ -7,8 +7,8 @@ type Consequence = ({
   dispatch:Dispatch,
   getState:GetState, 
   action?:Action, 
-  addRule: (rule:Rule) => Rule,
-  removeRule: (rule:Rule) => void, 
+  addRule: (ruleId:string, context:Object) => void,
+  removeRule: (ruleId:string) => void, 
   effect: (()=>mixed) => void
   context: {
     getContext: (key:string) => mixed
