@@ -1,13 +1,14 @@
 import globalEvents from './globalEvents'
 
+let buffer = []
+
 if((typeof window !== 'undefined' && window.RULESET_DEVTOOLS) || process.env.NODE_ENV === 'test'){
-  let buffer = []
   
-  const send = (e,testFn=()=>null) => {
+  const send = e => {
     if(process.env.NODE_ENV === 'test') {
-      return testFn()
+      buffer.push(e)
     }
-    if(window.__REDUX_RULESET_DEVTOOLS__){
+    else if(window.__REDUX_RULESET_DEVTOOLS__){
       if(buffer.length) {
         buffer.forEach(row => window.__REDUX_RULESET_DEVTOOLS__(row))
         buffer.length = []
@@ -162,4 +163,8 @@ if((typeof window !== 'undefined' && window.RULESET_DEVTOOLS) || process.env.NOD
         : 'REJECT'
     }))
   })
+}
+
+export const testing = {
+  getBuffer: () => buffer
 }

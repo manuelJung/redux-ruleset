@@ -167,7 +167,7 @@ describe('return types', () => {
   test('handle returned action', () => {
     const result = consequence.default(actionExecution, ruleContext)
     expect(result).toEqual({resolved:true})
-    expect(setup.handleConsequenceReturn).toBeCalledWith({type:'RETURN_TYPE'})
+    expect(setup.handleConsequenceReturn).toBeCalledWith(any, {type:'RETURN_TYPE'})
   })
 
   test('handle returned promise (action)', async () => {
@@ -175,7 +175,7 @@ describe('return types', () => {
     const result = consequence.default(actionExecution, ruleContext)
     expect(result).toEqual({resolved:true})
     await Promise.resolve()
-    expect(expect(setup.handleConsequenceReturn).toBeCalledWith({type:'RETURN_TYPE'}))
+    expect(expect(setup.handleConsequenceReturn).toBeCalledWith(any, {type:'RETURN_TYPE'}))
   })
 
   test('call returned function after rule gets removed', () => {

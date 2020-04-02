@@ -27,7 +27,7 @@ function postSetup(plugin) {
   if(plugin.createSagaArgs) Object.assign(sagaArgs, plugin.createSagaArgs(setupArgs))
   if(plugin.createConditionArgs) Object.assign(conditionArgs, plugin.createConditionArgs(setupArgs))
   if(plugin.createConsequenceArgs) createConsequenceArgsFn = plugin.createConsequenceArgs
-  if(plugin.onConsequenceActionReturn) consequenceReturnFn = (result:any) => plugin.onConsequenceActionReturn(result, setupArgs)
+  if(plugin.onConsequenceActionReturn) consequenceReturnFn = (effect:t.Effect,result:any) => plugin.onConsequenceActionReturn(effect, result, setupArgs)
 
   setupFinished = true
   for(let j=0;j<setupFinishedListeners.length;j++){
@@ -46,8 +46,8 @@ export function createConsequenceArgs(effect:t.Effect, defaultArgs?:Object){
   return Object.assign({}, defaultArgs, args)
 }
 
-export function handleConsequenceReturn(action:t.Action){
-  consequenceReturnFn(action)
+export function handleConsequenceReturn(effect:t.Effect, action:t.Action){
+  consequenceReturnFn(effect, action)
 }
 
 export function createConditionArgs(defaultArgs?:Object){

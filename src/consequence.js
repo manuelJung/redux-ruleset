@@ -26,7 +26,7 @@ export default function consequence (actionExecution:t.ActionExecution, ruleCont
   // addOnce rules may not be removed when they return a promise
   // so we totally ignore all futher consequence executions until the rule is removed
   if(concurrency.running){
-    // TODO: what happens when position === INSTEAD. will actionExecution be canceled=
+    // TODO: what happens when position === INSTEAD. will actionExecution be canceled?
     if(rule.addOnce) return {resolved:false}
   }
 
@@ -167,9 +167,9 @@ export default function consequence (actionExecution:t.ActionExecution, ruleCont
 
   // dispatch returned action
   else if(typeof result === 'object' && result !== null && result.type){
-    unlisten()
     // $FlowFixMe
-    setup.handleConsequenceReturn(result)
+    setup.handleConsequenceReturn(effect,result)
+    unlisten()
   }
 
   // dispatch returned (promise-wrapped) action
@@ -178,26 +178,26 @@ export default function consequence (actionExecution:t.ActionExecution, ruleCont
     result.then(action => {
       // if(rule.concurrency === 'ORDERED') effect(() => unlisten(context, execId, cancel, concurrency))
       // else unlisten(context, execId, cancel, concurrency)
+      action && action.type && setup.handleConsequenceReturn(effect,action)
       unlisten()
-      action && action.type && setup.handleConsequenceReturn(action)
     })
   }
 
   // register unlisten callback
   else if(typeof result === 'function'){
     const offRemoveRule = ruleContext.events.once('REMOVE_RULE', () => {
-      offCancel()
-      unlisten()
       // $FlowFixMe
       result()
+      offCancel()
+      unlisten()
     })
     const offCancel = ruleContext.events.once('CANCEL_CONSEQUENCE', newRuleExecution => {
       if(newRuleExecution.concurrencyId !== ruleExecution.concurrencyId) return
       if(newRuleExecution.execId === ruleExecution.execId) return
       offRemoveRule()
-      unlisten()
       // $FlowFixMe
       result()
+      unlisten()
     })
   }
 

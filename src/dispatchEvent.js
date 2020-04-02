@@ -25,8 +25,8 @@ export default function dispatchEvent (action:t.Action, cb:Function=()=>null) {
         cycle.step = 0
       })
     }
-    if(cycle.step > 800) console.warn('detected endless cycle with action', action)
-    if(cycle.step > 810) throw new Error('detected endless cycle')
+    if(cycle.step > 500) console.warn('detected endless cycle with action', action)
+    if(cycle.step > 510) throw new Error('detected endless cycle')
   }
   
   const actionExecution = {

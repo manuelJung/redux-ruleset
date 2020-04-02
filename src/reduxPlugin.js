@@ -25,8 +25,10 @@ export default {
       }
     }
   },
-  onConsequenceActionReturn(action, {store}){
-    store.dispatch(action)
+  onConsequenceActionReturn(effect, action, {store}){
+    effect(() => {
+      store.dispatch(action)
+    })
     return action
   }
 }
