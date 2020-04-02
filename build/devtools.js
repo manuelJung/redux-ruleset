@@ -1,23 +1,24 @@
 'use strict';
 
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.testing = undefined;
+
 var _globalEvents = require('./globalEvents');
 
 var _globalEvents2 = _interopRequireDefault(_globalEvents);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+var buffer = [];
+
 if (typeof window !== 'undefined' && window.RULESET_DEVTOOLS || process.env.NODE_ENV === 'test') {
-  var buffer = [];
 
   var send = function send(e) {
-    var testFn = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : function () {
-      return null;
-    };
-
     if (process.env.NODE_ENV === 'test') {
-      return testFn();
-    }
-    if (window.__REDUX_RULESET_DEVTOOLS__) {
+      buffer.push(e);
+    } else if (window.__REDUX_RULESET_DEVTOOLS__) {
       if (buffer.length) {
         buffer.forEach(function (row) {
           return window.__REDUX_RULESET_DEVTOOLS__(row);
@@ -191,3 +192,9 @@ if (typeof window !== 'undefined' && window.RULESET_DEVTOOLS || process.env.NODE
     });
   });
 }
+
+var testing = exports.testing = {
+  getBuffer: function getBuffer() {
+    return buffer;
+  }
+};

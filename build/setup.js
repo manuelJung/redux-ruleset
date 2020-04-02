@@ -57,8 +57,8 @@ function postSetup(plugin) {
   if (plugin.createSagaArgs) (0, _assign2.default)(sagaArgs, plugin.createSagaArgs(setupArgs));
   if (plugin.createConditionArgs) (0, _assign2.default)(conditionArgs, plugin.createConditionArgs(setupArgs));
   if (plugin.createConsequenceArgs) createConsequenceArgsFn = plugin.createConsequenceArgs;
-  if (plugin.onConsequenceActionReturn) consequenceReturnFn = function consequenceReturnFn(result) {
-    return plugin.onConsequenceActionReturn(result, setupArgs);
+  if (plugin.onConsequenceActionReturn) consequenceReturnFn = function consequenceReturnFn(effect, result) {
+    return plugin.onConsequenceActionReturn(effect, result, setupArgs);
   };
 
   setupFinished = true;
@@ -77,8 +77,8 @@ function createConsequenceArgs(effect, defaultArgs) {
   return (0, _assign2.default)({}, defaultArgs, args);
 }
 
-function handleConsequenceReturn(action) {
-  consequenceReturnFn(action);
+function handleConsequenceReturn(effect, action) {
+  consequenceReturnFn(effect, action);
 }
 
 function createConditionArgs(defaultArgs) {

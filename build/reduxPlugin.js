@@ -46,10 +46,12 @@ exports.default = {
       }
     };
   },
-  onConsequenceActionReturn: function onConsequenceActionReturn(action, _ref4) {
+  onConsequenceActionReturn: function onConsequenceActionReturn(effect, action, _ref4) {
     var store = _ref4.store;
 
-    store.dispatch(action);
+    effect(function () {
+      store.dispatch(action);
+    });
     return action;
   }
 };

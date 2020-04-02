@@ -55,7 +55,7 @@ function consequence(actionExecution, ruleContext) {
   // addOnce rules may not be removed when they return a promise
   // so we totally ignore all futher consequence executions until the rule is removed
   if (concurrency.running) {
-    // TODO: what happens when position === INSTEAD. will actionExecution be canceled=
+    // TODO: what happens when position === INSTEAD. will actionExecution be canceled?
     if (rule.addOnce) return { resolved: false };
   }
 
@@ -200,9 +200,9 @@ function consequence(actionExecution, ruleContext) {
 
   // dispatch returned action
   else if ((typeof result === 'undefined' ? 'undefined' : (0, _typeof3.default)(result)) === 'object' && result !== null && result.type) {
-      unlisten();
       // $FlowFixMe
-      setup.handleConsequenceReturn(result);
+      setup.handleConsequenceReturn(effect, result);
+      unlisten();
     }
 
     // dispatch returned (promise-wrapped) action
@@ -211,26 +211,26 @@ function consequence(actionExecution, ruleContext) {
         result.then(function (action) {
           // if(rule.concurrency === 'ORDERED') effect(() => unlisten(context, execId, cancel, concurrency))
           // else unlisten(context, execId, cancel, concurrency)
+          action && action.type && setup.handleConsequenceReturn(effect, action);
           unlisten();
-          action && action.type && setup.handleConsequenceReturn(action);
         });
       }
 
       // register unlisten callback
       else if (typeof result === 'function') {
           var _offRemoveRule = ruleContext.events.once('REMOVE_RULE', function () {
-            _offCancel();
-            unlisten();
             // $FlowFixMe
             result();
+            _offCancel();
+            unlisten();
           });
           var _offCancel = ruleContext.events.once('CANCEL_CONSEQUENCE', function (newRuleExecution) {
             if (newRuleExecution.concurrencyId !== ruleExecution.concurrencyId) return;
             if (newRuleExecution.execId === ruleExecution.execId) return;
             _offRemoveRule();
-            unlisten();
             // $FlowFixMe
             result();
+            unlisten();
           });
         }
 
