@@ -90,7 +90,7 @@ addRule({
     }
     return 'RECREATE_RULE'
   },
-  consequence: ({addRule, action}) => {
+  consequence: (action, {addRule}) => {
     addRule('preventSearch')
     addRule('triggerSearch')
   },

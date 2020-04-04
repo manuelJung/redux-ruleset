@@ -10,8 +10,8 @@ import {addRule} from 'redux-ruleset``
 addRule({
   id: 'feature/LOG_NEXT_COLOR',
   target: 'products/SET_FILTER',
-  condition: (action, getState, context) => action.meta.filterKey === 'color',
-  consequence: ({action}) console.log('next color:', action.payload)
+  condition: (action, {getState, context}) => action.meta.filterKey === 'color',
+  consequence: action => console.log('next color:', action.payload)
 })
 
 dispatch({ type: 'products/SET_FILTER', meta: {filterKey: 'color'}, payload: 'red' })

@@ -1,7 +1,7 @@
 # Advanced Concepts
 
 * [Manipulating actions](./manipulating_actions.md)
-* [Nesting rules](./nest_rules.md)
+* [Sub rules](./sub_rules.md)
 * [skip rules](./skip_rules.md)
 * [Handling streams](./handle_streams.md)
 * [Cancel rules](./cancel_rules.md)

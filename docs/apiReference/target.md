@@ -14,13 +14,13 @@ addRule({
 addRule({
   id: 'feature/USER_STATUS_NOTIFIER',
   target: ['LOGIN_SUCCESS', 'LOGOUT_SUCCESS'],
-  consequence: ({action}) => console.log('auth state change', action.type)
+  consequence: action => console.log('auth state change', action.type)
 })
 
 addRule({
   id: 'feature/LOGGER',
   target: '*',
-  consequence: ({action}) => console.log('following action was dispatched:', action.type)
+  consequence: action => console.log('following action was dispatched:', action.type)
 })
 ```
 

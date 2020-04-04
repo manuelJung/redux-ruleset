@@ -9,7 +9,7 @@ import {addRule} from 'redux-ruleset'
 
 addRule({
   id: 'ACTION_RETURN',
-  consequence: ({dispatch}) => {
+  consequence: (_,{dispatch}) => {
     // dispatch an action
     dispatch({type: 'ACTION_1'})
     // when returning an action it will be dispatched
@@ -42,7 +42,7 @@ type effect = (fn:Function) => void
 addRule({
   id: 'SAVE_STATE',
   target: '*' // react to any action,
-  consequence: ({effect, getState}) => {
+  consequence: (_,{effect, getState}) => {
     effect(() => {
       const state = getState()
       window.localStorage.setItem('redux-state', state)
@@ -59,7 +59,7 @@ import {addRule} from 'redux-ruleset'
 // WRONG
 addRule({
   id: 'DO_SOME_STUFF',
-  consequence: async ({effect}) => {
+  consequence: async (_,{effect}) => {
     effect(() => {
       const data = await fetchData()
       // will be callled, even if the consequence was canceled during fetchData()
@@ -72,7 +72,7 @@ addRule({
 // CORRECT
 addRule({
   id: 'DO_SOME_STUFF',
-  consequence: async ({effect}) => {
+  consequence: async (_,{effect}) => {
     const data = await fetchData()
     effect(() => doStuff(data))
     effect(() => doOtherStuff(data))
@@ -85,7 +85,7 @@ Alternatively you can ask manually, if the rule is still running after an async 
 ```javascript
 addRule({
   id: 'DO_SOME_STUFF',
-  consequence: async ({wasCanceled}) => {
+  consequence: async (_,{wasCanceled}) => {
     const data = await fetchData()
     if(wasCanceled()) {
       return
@@ -126,7 +126,7 @@ addRule({
       return true
     }
   },
-  consequence: ({action}) => {
+  consequence: action => {
     const fields = actions.payload
     return {
       type: 'TRIGGER_MISSING_FIELDS_ALERT',

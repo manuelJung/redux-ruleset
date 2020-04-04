@@ -12,11 +12,11 @@ This becomes possible with sub-rules:
 addRule({
   id: 'RULE_ID',
   target: 'ACTION_1',
-  consequence: ({addRule}) => addRule('cleanup', {foo:'bar'}),
+  consequence: (_,{addRule}) => addRule('cleanup', {foo:'bar'}),
   subRules: {
     cleanup: {
       target: 'ACTION_2',
-      consequence: ({context}) => console.log(context.getContext('foo'))
+      consequence: (_,{context}) => console.log(context.getContext('foo'))
     }
   }
 })
@@ -47,7 +47,7 @@ addRule({
   id: 'ENFORCE_LOGIN_FOR_PROTECTED_PAGES',
   target: 'LOCATION_CHANGE',
   position: 'INSTEAD',
-  addWhen: function* (next, getState){
+  addWhen: function* (next, {getState}){
     // when the user is not logged in initially, we want to add the rule
     const state = getState()
     const loggedIn = userIsLoggedIn(state.user) // check if the user is logged in
@@ -67,7 +67,7 @@ addRule({
     const requiresLogin = pageRequiresLogin(pathname) // true, if the current page requires a login
     return requiresLogin
   },
-  consequence: ({action, addRule}) => {
+  consequence: (action, {addRule}) => {
     // add subrule with initial context
     addRule('redirect', {
       originalUrl: action.payload.pathname
@@ -83,7 +83,7 @@ addRule({
         yield next('LOCATION_CHANGE')
         return 'REMOVE_RULE'
       },
-      consequence: ({context}) => {
+      consequence: (_,{context}) => {
         const pathname = context.getContext('originalUrl')
       // { type: 'LOCATION_CHANGE', payload: { method: 'REPLACE', pathname: pathname }}
         historyReplaceAction(pathname) // navigate to original target

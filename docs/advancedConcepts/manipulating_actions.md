@@ -11,7 +11,7 @@ addRule({
   id: 'DOUBLE_PLAYER_DAMAGE',
   target: 'PLAYER_DAMAGE', // {type: 'PLAYER_DAMAGE', payload: 10 }
   position: 'INSTEAD',
-  consequence: ({action}) => ({ type: 'PLAYER_DAMAGE', payload: action.payload*2 }),
+  consequence: action => ({ type: 'PLAYER_DAMAGE', payload: action.payload*2 }),
   ...
 })
 ```
@@ -47,7 +47,7 @@ addRule({
     if(!hpp) return 'ABORT'
     else return 'ADD_RULE'
   },
-  consequence: ({action}) => {
+  consequence: action => {
     const hpp = getUrlParameterByName('hpp', search)
     return {
       ...action,

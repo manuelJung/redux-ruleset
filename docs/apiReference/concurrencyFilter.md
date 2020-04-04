@@ -9,7 +9,7 @@ addRule({
   target: 'products/FETCH_REQUEST',
   concurrency: 'FIRST', // as long as the the concurrency is running, no new concurrency will start
   concurrencyFilter: action => action.meta.id, // the concurrency is only applied to actions with the same meta.id
-  consequence: ({action}) => api.fetchProduct(action.meta.id).then(
+  consequence: action => api.fetchProduct(action.meta.id).then(
     product => actions.fetchProductSuccess(action.meta.id, product),
     error => actions.fetchProductFailure(action.meta.id, error)
   )

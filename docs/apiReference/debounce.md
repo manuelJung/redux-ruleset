@@ -8,7 +8,7 @@ addRule({
   target: 'search/SET_SEARCH',
   debounce: 300,
   concurrency: 'SWITCH',
-  consequence: ({action}) => api.searchSuggestions(action.payload).then(
+  consequence: action => api.searchSuggestions(action.payload).then(
     suggestions => actions.setSuggestions(suggestions),
     error => actions.setSuggestions([])
   )

@@ -21,7 +21,7 @@ addRule({
   id: 'FETCH_PRODUCTS',
   target: 'FETCH_PRODUCTS_REQUEST',
   concurrency: 'SWITCH', // when a later fetch resolves first, all previous ones will be canceled
-  consequence: ({getState}) => {
+  consequence: (_,{getState}) => {
     const state = getState()
     const filters = getProductListFilters(state.products)
     return api.fetchProducts(filters).then(
@@ -95,7 +95,7 @@ addRule({
   target: 'FETCH_STATIC_BLOCK_REQUEST',
   concurrencyFilter: action => action.meta.identifier, // concurrency only works for actions with same identifier
   concurrency: 'FIRST', // as long the a static block is fetching, the same static block cannot be fetched again
-  consequence: ({action}) => api.fetchStaticBlock(action.meta.identifier).then(
+  consequence: action => api.fetchStaticBlock(action.meta.identifier).then(
     result => /* dispatch success */,
     error => /* dispatch error */
   )

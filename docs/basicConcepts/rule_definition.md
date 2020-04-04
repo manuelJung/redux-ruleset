@@ -8,7 +8,7 @@ import {addRule} from 'redux-ruleset'
 addRule({
   id: 'LOG_ACTIONS',
   target: '*',
-  consequence: ({action}) => console.log(action)
+  consequence: action => console.log(action)
 })
 ```
 

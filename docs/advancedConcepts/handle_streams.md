@@ -18,7 +18,7 @@ addRule({
     yield next('STOP_GAME')
     return 'RECREATE_RULE'
   },
-  consequence: ({dispatch}) => {
+  consequence: (_,{dispatch}) => {
     const intervalId = setInterval(() => {
       dispatch({ type: 'SPAWN_MONSTER' })
     }, 1000)

@@ -3,17 +3,19 @@
 The `consequence` is the heart of each rule. Here is the only place you can perform side-effects. It is a required key
 
 ```javascript
-type Consequence = ({
-  dispatch:Dispatch,
-  getState:GetState, 
-  action?:Action, 
-  addRule: (ruleId:string, context:Object) => void,
-  removeRule: (ruleId:string) => void, 
-  effect: (()=>mixed) => void
-  context: {
-    getContext: (key:string) => mixed
+type Consequence = (
+  Action,
+  {
+    dispatch:Dispatch,
+    getState:GetState,
+    addRule: (ruleId:string, context:Object) => void,
+    removeRule: (ruleId:string) => void,
+    effect: (()=>mixed) => void
+    context: {
+      getContext: (key:string) => mixed
+    }
   }
-}) => Action | Promise<Action> | Promise<void> | void | () => void
+) => Action | Promise<Action> | Promise<void> | void | () => void
 ```
 
 To perform side-effects you should only use methods provided in the arguments. These methods (like *dispatch, addRule*) are overloaded versions that are able to be canceled. If you use e.g the global *addRule* function it can lead to unwanted behaviour. Read more about how to perform side-effects in the [dispatching actions](../basicConcepts/dispatching_actions.md) section.

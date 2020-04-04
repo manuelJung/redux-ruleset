@@ -9,11 +9,11 @@ import {addRule} from 'redux-ruleset'
 addRule({
   id: 'PING_PONG',
   target: 'PING',
-  addWhen: function* (next, getState){
+  addWhen: function* (next){
     yield next('START_GAME') // wait for next action with type START_GAME
     return 'ADD_RULE' // set the rule to active
   },
-  addUntil: function* (next, getState){
+  addUntil: function* (next){
     yield next('STOP_GAME') // wait for next action with type STOP_GAME
     return 'RECREATE_RULE' // remove the rule and reapply addWhen
   },

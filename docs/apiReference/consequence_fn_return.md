@@ -12,7 +12,7 @@ addRule({
   id: 'LOGIN_OBSERVER',
   target: '*',
   concurrency: 'FIRST',
-  consequence: ({dispatch}) => {
+  consequence: (_,{dispatch}) => {
     const unlisten = authApi.onAuthStateChange(user => {
       if(user) dispatch({ type: 'LOGIN', payload: user })
       else dispatch({ type: 'LOGOUT' })

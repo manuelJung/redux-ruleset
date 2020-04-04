@@ -5,8 +5,6 @@ The main purpose of redux-ruleset is to react to dispatched actions. You can def
 ```javascript
 import {addRule} from 'redux-ruleset'
 
-type target = ActionType | ActionType[] | '*'
-
 addRule({
   id: 'PING_PONG',
   target: 'PING', // rule will be executed for every action with type PING
@@ -22,7 +20,7 @@ addRule({
 addRule({
   id: 'LOGGER',
   target: '*', // rule will be executed for every action
-  consequence: ({action}) => console.log(action)
+  consequence: action => console.log(action)
 })
 ```
 
@@ -33,13 +31,11 @@ In addition, it's possible to add conditions, when a rule should be executed. Wh
 ```javascript
 import {addRule} from 'redux-ruleset'
 
-type condition = (action, getState) => boolean
-
 addRule({
   id: 'LOG_COLOR',
   target: 'SET_FILTER',
   condition: action => action.meta.filterKey === 'COLOR',
-  consequence: ({action}) => console.log('you set color to' + action.payload)
+  consequence: action => console.log('you set color to' + action.payload)
 })
 
 dispatch({ type: 'SET_FILTER', meta: {filterKey: 'COLOR'}, payload: 'silver' })

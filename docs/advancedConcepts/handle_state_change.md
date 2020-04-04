@@ -35,7 +35,7 @@ class Dropdown extends React.Component {
 addRule({
   id: 'LOG_DROPDOWN_STATE',
   target: ['Dropdown/OPEN', 'Dropdown/CLOSE'],
-  consequence: ({action}) => {
+  consequence: action => {
     if(action.type === 'Dropdown/OPEN') console.log('opened dropdown')
     else console.log('closed dropdown')
   }
