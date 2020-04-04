@@ -74,7 +74,7 @@ export default function consequence (actionExecution:t.ActionExecution, ruleCont
   // skip if rule condition does not match
   if(rule.condition){
     const args = setup.createConditionArgs({context})
-    if(rule.condition && !rule.condition(action, args.getState, args.context)){
+    if(rule.condition && !rule.condition(action, args)){
       return endConsequence('CONDITION_NOT_MATCHED')
     }
   }
@@ -125,7 +125,7 @@ export default function consequence (actionExecution:t.ActionExecution, ruleCont
     removeRuleFromRuleDB(context)
   }
 
-  const consequenceArgs = setup.createConsequenceArgs(effect, {action, addRule, removeRule, effect, wasCanceled, context})
+  const consequenceArgs = setup.createConsequenceArgs(effect, {addRule, removeRule, effect, wasCanceled, context})
 
   // run the thing
   if(rule.throttle || rule.delay || rule.debounce){
@@ -135,14 +135,14 @@ export default function consequence (actionExecution:t.ActionExecution, ruleCont
       concurrency.debounceTimeoutId = setTimeout(() => {
         concurrency.debounceTimeoutId = null
         if(canceled) return resolve()
-        const result = rule.consequence(consequenceArgs)
+        const result = rule.consequence(action, consequenceArgs)
         // $FlowFixMe
         resolve(result)
       }, rule.throttle || rule.delay || rule.debounce)
     })
   }
   else {
-    result = rule.consequence(consequenceArgs)
+    result = rule.consequence(action, consequenceArgs)
   }
 
   /**

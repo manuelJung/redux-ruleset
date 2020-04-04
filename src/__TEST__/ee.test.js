@@ -83,7 +83,7 @@ describe('basic', () => {
       id: 'UNIT_TEST',
       target: 'TEST_TYPE',
       position: 'INSTEAD',
-      consequence: ({action}) => Object.assign({}, action, {foo:'bar'})
+      consequence: action => Object.assign({}, action, {foo:'bar'})
     })
 
     store.dispatch({type:'TEST_TYPE'})
@@ -195,7 +195,7 @@ describe('access state', () => {
     const rule = index.addRule({
       id:'UNIT_TEST',
       target:'TEST_TYPE',
-      condition: jest.fn((action, getState) => {
+      condition: jest.fn((action, {getState}) => {
         const state = getState()
         expect(state.todos.filter).toBe('all')
       }),
@@ -210,7 +210,7 @@ describe('access state', () => {
     const rule = index.addRule({
       id:'UNIT_TEST',
       target:'TEST_TYPE',
-      consequence: jest.fn(({action,getState}) => {
+      consequence: jest.fn((action,{getState}) => {
         const state = getState()
         expect(state.todos.filter).toBe('all')
       })
@@ -255,7 +255,7 @@ describe('context', () => {
     const rule = index.addRule({
       id: 'UNIT_TEST',
       target: 'TEST_TYPE',
-      consequence: jest.fn(({context}) => {
+      consequence: jest.fn((_,{context}) => {
         expect(context.getContext('foo')).toBe('bar')
       }),
       addWhen: jest.fn(function* (next, _, context){
@@ -290,7 +290,7 @@ describe('context', () => {
         yield next('RESET')
         return 'REAPPLY_ADD_UNTIL'
       },
-      consequence: ({action,context}) => {
+      consequence: (action,{context}) => {
         const name = context.getContext('name')
         return {type:'SHOW_NAME', name}
       }
@@ -317,7 +317,7 @@ describe('context', () => {
     const rule = index.addRule({
       id: 'UNIT_TEST',
       target: 'START',
-      consequence: jest.fn(({context}) => {
+      consequence: jest.fn((_,{context}) => {
         expect(() => context.setContext('key', 'val')).toThrow('you cannot call setContext within a consequence or condition. check rule UNIT_TEST')
       })
     })
@@ -330,7 +330,7 @@ describe('context', () => {
     const rule = index.addRule({
       id: 'UNIT_TEST',
       target: 'START',
-      condition: jest.fn((_,__,context) => {
+      condition: jest.fn((_,{context}) => {
         expect(() => context.setContext('key', 'val')).toThrow('you cannot call setContext within a consequence or condition. check rule UNIT_TEST')
       }),
       consequence: () => null
@@ -348,7 +348,7 @@ describe('subRules', () => {
     const rule = index.addRule({
       id: 'UNIT_TEST',
       target: 'TRIGGER',
-      consequence: jest.fn(({addRule}) => addRule('test')),
+      consequence: jest.fn((_,{addRule}) => addRule('test')),
       subRules: {
         test: {
           target: 'PING',
@@ -373,11 +373,11 @@ describe('subRules', () => {
     const rule = index.addRule({
       id: 'UNIT_TEST',
       target: 'TRIGGER',
-      consequence: jest.fn(({addRule}) => addRule('test', {foo:'bar'})),
+      consequence: jest.fn((_,{addRule}) => addRule('test', {foo:'bar'})),
       subRules: {
         test: {
           target: 'PING',
-          consequence: jest.fn(({context}) => {
+          consequence: jest.fn((_,{context}) => {
             expect(context.getContext('foo')).toBe('bar')
           })
         }
@@ -395,7 +395,7 @@ describe('subRules', () => {
       id: 'UNIT_TEST',
       target: 'START',
       concurrency: 'ONCE',
-      consequence: ({addRule}) => addRule('sub'),
+      consequence: (_,{addRule}) => addRule('sub'),
       addUntil: function*(next){
         yield next('STOP')
         return 'REMOVE_RULE'
@@ -428,11 +428,11 @@ describe('subRules', () => {
     index.addRule({
       id: 'UNIT_TEST',
       target: 'INIT_TYPE',
-      consequence: ({action, addRule}) => addRule('inner', {key: action.key}),
+      consequence: (action, {addRule}) => addRule('inner', {key: action.key}),
       subRules: {
         inner: {
           target: 'INNER_TYPE',
-          consequence: ({context}) => ({
+          consequence: (_,{context}) => ({
             type: 'RETURN_TYPE', 
             key: context.getContext('key')
           })

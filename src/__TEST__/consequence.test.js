@@ -35,8 +35,9 @@ describe('consequence', () => {
 
   test('correct default args are added to consequence', () => {
     consequence.default(actionExecution, ruleContext)
-    expect(ruleContext.rule.consequence).toBeCalledWith({
-      action: {type:'TEST_TYPE'},
+    expect(ruleContext.rule.consequence).toBeCalledWith(
+    {type:'TEST_TYPE'},
+    {
       addRule:any, 
       removeRule:any, 
       effect:any, 
@@ -51,8 +52,10 @@ describe('consequence', () => {
     consequence.default(actionExecution, ruleContext)
     expect(ruleContext.rule.condition).toBeCalledWith(
       {type:'TEST_TYPE'},
-      'state',
-      'foo'
+      {
+        context: "foo", 
+        getState: "state"
+      }
     )
   })
 
@@ -132,7 +135,7 @@ describe('cancel consequence', () => {
 
   test('abort when rule has been removed', () => {
     const callback = jest.fn()
-    ruleContext.rule.consequence = ({action,effect}) => {
+    ruleContext.rule.consequence = (action, {effect}) => {
       ruleContext.events.trigger('REMOVE_RULE')
       effect(callback)
     }
@@ -143,7 +146,7 @@ describe('cancel consequence', () => {
 
   test('abort when consequence was canceled', () => {
     const callback = jest.fn()
-    ruleContext.rule.consequence = ({action,effect}) => {
+    ruleContext.rule.consequence = (action,{effect}) => {
       ruleContext.events.trigger('CANCEL_CONSEQUENCE', {execId:100, concurrencyId:'default'})
       effect(callback)
     }
@@ -282,11 +285,11 @@ describe('concurrency', () => {
     const callback = jest.fn()
     ruleContext.rule.concurrency = 'SWITCH'
     ruleContext.rule.consequence
-      .mockImplementationOnce(async ({effect}) => {
+      .mockImplementationOnce(async (_,{effect}) => {
         await wait(50)
         effect(() => callback('ONE'))
       })
-      .mockImplementationOnce(async ({effect}) => {
+      .mockImplementationOnce(async (_,{effect}) => {
         await wait(10)
         effect(() => callback('TWO'))
       })
@@ -305,7 +308,7 @@ describe('concurrency', () => {
     const callback = jest.fn()
     let i = 100
     ruleContext.rule.concurrency = 'ONCE'
-    ruleContext.rule.consequence = ({effect}) => effect(() => callback(i++))
+    ruleContext.rule.consequence = (_,{effect}) => effect(() => callback(i++))
     consequence.default(actionExecution, ruleContext)
     consequence.default(actionExecution, ruleContext)
     expect(callback).toBeCalledTimes(1)
@@ -351,14 +354,14 @@ describe('getCurrentRuleExecId', () => {
 
   test('returns the current execId inside an effect', () => {
     const nestedRuleContext = utils.createContext()
-    nestedRuleContext.rule.consequence = ({effect}) => {
+    nestedRuleContext.rule.consequence = (_, {effect}) => {
       expect(consequence.getCurrentRuleExecId()).toBe(1)
       effect(() => {
         expect(consequence.getCurrentRuleExecId()).toBe(2)
       })
       expect(consequence.getCurrentRuleExecId()).toBe(1)
     }
-    ruleContext.rule.consequence = ({effect}) => {
+    ruleContext.rule.consequence = (_,{effect}) => {
       expect(consequence.getCurrentRuleExecId()).toBe(null)
       effect(() => {
         expect(consequence.getCurrentRuleExecId()).toBe(1)
@@ -384,11 +387,7 @@ describe('concurrencyFilter', () => {
     consequence.default(actionExecutionA, ruleContext)
     consequence.default(actionExecutionB, ruleContext)
     expect(callback).toBeCalledTimes(2)
-    expect(callback).toBeCalledWith(expect.objectContaining({
-      action: {type:'TEST_TYPE', identifier: 'A'}
-    }))
-    expect(callback).toBeCalledWith(expect.objectContaining({
-      action: {type:'TEST_TYPE', identifier: 'B'}
-    }))
+    expect(callback).toBeCalledWith({type:'TEST_TYPE', identifier: 'A'}, any)
+    expect(callback).toBeCalledWith({type:'TEST_TYPE', identifier: 'B'}, any)
   })
 })
