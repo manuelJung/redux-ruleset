@@ -70,10 +70,10 @@ function consequence(actionExecution, ruleContext) {
   concurrency.running++;
 
   var context = {
-    setContext: function setContext() {
+    set: function set() {
       throw new Error('you cannot call setContext within a consequence or condition. check rule ' + rule.id);
     },
-    getContext: function getContext(name) {
+    get: function get(name) {
       return ruleContext.publicContext.addUntil[name] || ruleContext.publicContext.addWhen[name] || ruleContext.publicContext.global[name];
     }
 
@@ -104,7 +104,7 @@ function consequence(actionExecution, ruleContext) {
   // skip if rule condition does not match
   if (rule.condition) {
     var args = setup.createConditionArgs({ context: context });
-    if (rule.condition && !rule.condition(action, args.getState, args.context)) {
+    if (rule.condition && !rule.condition(action, args)) {
       return endConsequence('CONDITION_NOT_MATCHED');
     }
   }
@@ -159,7 +159,7 @@ function consequence(actionExecution, ruleContext) {
     (0, _ruleDB.removeRule)(context);
   };
 
-  var consequenceArgs = setup.createConsequenceArgs(effect, { action: action, addRule: addRule, removeRule: removeRule, effect: effect, wasCanceled: wasCanceled, context: context });
+  var consequenceArgs = setup.createConsequenceArgs(effect, { addRule: addRule, removeRule: removeRule, effect: effect, wasCanceled: wasCanceled, context: context });
 
   // run the thing
   if (rule.throttle || rule.delay || rule.debounce) {
@@ -169,13 +169,13 @@ function consequence(actionExecution, ruleContext) {
       concurrency.debounceTimeoutId = setTimeout(function () {
         concurrency.debounceTimeoutId = null;
         if (canceled) return resolve();
-        var result = rule.consequence(consequenceArgs);
+        var result = rule.consequence(action, consequenceArgs);
         // $FlowFixMe
         resolve(result);
       }, rule.throttle || rule.delay || rule.debounce);
     });
   } else {
-    result = rule.consequence(consequenceArgs);
+    result = rule.consequence(action, consequenceArgs);
   }
 
   /**

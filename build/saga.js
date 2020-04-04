@@ -101,10 +101,10 @@ function startSaga(sagaType, ruleContext, finCb, isReady) {
   ruleContext.events.once('REMOVE_RULE', cancel);
 
   var context = {
-    setContext: function setContext(name, value) {
+    set: function set(name, value) {
       return ruleContext.publicContext[sagaType][name] = value;
     },
-    getContext: function getContext(name) {
+    get: function get(name) {
       return ruleContext.publicContext.addUntil[name] || ruleContext.publicContext.addWhen[name] || ruleContext.publicContext.global[name];
     }
   };
@@ -113,7 +113,7 @@ function startSaga(sagaType, ruleContext, finCb, isReady) {
   var args = setup.createSagaArgs({ context: context });
   var iter = void 0;
   if (saga) {
-    iter = saga(nextFn, args.getState, args.context);
+    iter = saga(nextFn, args);
     iterate(iter);
   }
 }
