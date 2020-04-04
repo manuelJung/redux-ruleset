@@ -40,9 +40,9 @@ export default function consequence (actionExecution:t.ActionExecution, ruleCont
   ruleContext.events.trigger('CONSEQUENCE_START', ruleExecution)
   concurrency.running++
 
-  const context = {
-    setContext: () => {throw new Error('you cannot call setContext within a consequence or condition. check rule '+ rule.id)},
-    getContext: (name:string) => ruleContext.publicContext.addUntil[name] 
+  const context:t.CTX = {
+    set: () => {throw new Error('you cannot call setContext within a consequence or condition. check rule '+ rule.id)},
+    get: (name:string) => ruleContext.publicContext.addUntil[name] 
     || ruleContext.publicContext.addWhen[name]
     || ruleContext.publicContext.global[name]
   }

@@ -17,9 +17,9 @@ export type LogicConcurrency = 'DEFAULT' | 'FIRST' | 'LAST' | 'ONCE' | 'SWITCH' 
 
 export type ContextEvent = 'REMOVE_RULE' | 'ADD_RULE' | 'CANCEL_CONSEQUENCE' | 'CONSEQUENCE_START' | 'CONSEQUENCE_END'
 
-type CTX = {
-  setContext: (key:string, value:mixed) => mixed,
-  getContext: (key:string) => mixed
+export type CTX = {
+  set: (key:string, value:mixed) => mixed,
+  get: (key:string) => mixed
 }
 
 export type GetState = () => Object
@@ -33,8 +33,10 @@ export type Condition = (action:Action, {getState:GetState, context:CTX}) => boo
 
 export type Saga<Logic> = (
   action: (target:Target, cb?:(action:Action) => mixed)=>mixed,
-  getState: GetState,
-  context: CTX
+  {
+    getState: GetState,
+    context: CTX
+  }
 ) => Generator<any,Logic,mixed>
 
 export type Rule = {

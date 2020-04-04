@@ -91,9 +91,9 @@ export function startSaga (
   ruleContext.events.trigger('SAGA_START', sagaExecution)
   ruleContext.events.once('REMOVE_RULE', cancel)
 
-  const context = {
-    setContext: (name:string, value:mixed) => ruleContext.publicContext[sagaType][name] = value,
-    getContext: (name:string) => ruleContext.publicContext.addUntil[name] 
+  const context:t.CTX = {
+    set: (name:string, value:mixed) => ruleContext.publicContext[sagaType][name] = value,
+    get: (name:string) => ruleContext.publicContext.addUntil[name] 
     || ruleContext.publicContext.addWhen[name]
     || ruleContext.publicContext.global[name]
   }
@@ -102,7 +102,7 @@ export function startSaga (
   const args = setup.createSagaArgs({context})
   let iter
   if(saga){
-    iter = saga(nextFn, args.getState, args.context)
+    iter = saga(nextFn, args)
     iterate(iter)
   }
 }

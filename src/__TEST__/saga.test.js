@@ -113,13 +113,13 @@ describe('startSaga-fn', () => {
 
   test('add setup.sagaArgs as second arg for each saga', () => {
     let sagaArgs
-    setup.createSagaArgs = jest.fn(() => ({getState:'getState', context:'context'}))
+    setup.createSagaArgs = jest.fn(() => ({getState:'getState'}))
     ruleContext.rule.addWhen = function* (next, getState, context) {
       sagaArgs = {getState, context}
       yield next('NOT_CALLED')
     }
     saga.startSaga('addWhen', ruleContext, () => null)
-    expect(sagaArgs).toEqual({getState:'getState', context:'context'})
+    expect(sagaArgs).toEqual(expect.anything(), {getState:'getState'})
   })
 
   test('call callback after saga ends', () => {

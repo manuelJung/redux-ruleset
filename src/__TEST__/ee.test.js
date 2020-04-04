@@ -225,13 +225,13 @@ describe('access state', () => {
       id:'UNIT_TEST',
       target:'TEST_TYPE',
       consequence: () => null,
-      addWhen: jest.fn(function*(next,getState){
+      addWhen: jest.fn(function*(next,{getState}){
         const state = getState()
         expect(state.todos.filter).toBe('all')
         yield next('ADD')
         return 'ADD_RULE'
       }),
-      addUntil: jest.fn(function*(next,getState){
+      addUntil: jest.fn(function*(next,{getState}){
         const state = getState()
         expect(state.todos.filter).toBe('all')
         yield next('REMOVE')
@@ -256,14 +256,14 @@ describe('context', () => {
       id: 'UNIT_TEST',
       target: 'TEST_TYPE',
       consequence: jest.fn((_,{context}) => {
-        expect(context.getContext('foo')).toBe('bar')
+        expect(context.get('foo')).toBe('bar')
       }),
-      addWhen: jest.fn(function* (next, _, context){
-        context.setContext('foo', 'bar')
+      addWhen: jest.fn(function* (next, {context}){
+        context.set('foo', 'bar')
         return 'ADD_RULE'
       }),
-      addUntil: jest.fn(function* (next, _, context){
-        expect(context.getContext('foo')).toBe('bar')
+      addUntil: jest.fn(function* (next, {context}){
+        expect(context.get('foo')).toBe('bar')
         yield next('UNKNOWN')
         return 'REMOVE_RULE'
       })
@@ -280,18 +280,18 @@ describe('context', () => {
     const rule = index.addRule({
       id: 'UNIT_TEST',
       target: 'SHOW',
-      addWhen: function* (next, _, context) {
-        context.setContext('name', 'manu')
+      addWhen: function* (next, {context}) {
+        context.set('name', 'manu')
         return 'ADD_RULE_BEFORE'
       },
-      addUntil: function* (next, _, context) {
+      addUntil: function* (next, {context}) {
         yield next('RESET')
-        context.setContext('name', 'alex')
+        context.set('name', 'alex')
         yield next('RESET')
         return 'REAPPLY_ADD_UNTIL'
       },
-      consequence: (action,{context}) => {
-        const name = context.getContext('name')
+      consequence: (action, {context}) => {
+        const name = context.get('name')
         return {type:'SHOW_NAME', name}
       }
     })
@@ -318,7 +318,7 @@ describe('context', () => {
       id: 'UNIT_TEST',
       target: 'START',
       consequence: jest.fn((_,{context}) => {
-        expect(() => context.setContext('key', 'val')).toThrow('you cannot call setContext within a consequence or condition. check rule UNIT_TEST')
+        expect(() => context.set('key', 'val')).toThrow('you cannot call setContext within a consequence or condition. check rule UNIT_TEST')
       })
     })
 
@@ -331,7 +331,7 @@ describe('context', () => {
       id: 'UNIT_TEST',
       target: 'START',
       condition: jest.fn((_,{context}) => {
-        expect(() => context.setContext('key', 'val')).toThrow('you cannot call setContext within a consequence or condition. check rule UNIT_TEST')
+        expect(() => context.set('key', 'val')).toThrow('you cannot call setContext within a consequence or condition. check rule UNIT_TEST')
       }),
       consequence: () => null
     })
@@ -378,7 +378,7 @@ describe('subRules', () => {
         test: {
           target: 'PING',
           consequence: jest.fn((_,{context}) => {
-            expect(context.getContext('foo')).toBe('bar')
+            expect(context.get('foo')).toBe('bar')
           })
         }
       }
@@ -434,7 +434,7 @@ describe('subRules', () => {
           target: 'INNER_TYPE',
           consequence: (_,{context}) => ({
             type: 'RETURN_TYPE', 
-            key: context.getContext('key')
+            key: context.get('key')
           })
         }
       }
