@@ -18,6 +18,9 @@ if (typeof window !== 'undefined' && window.RULESET_DEVTOOLS || process.env.NODE
   var send = function send(e) {
     if (process.env.NODE_ENV === 'test') {
       buffer.push(e);
+    }
+    if (typeof window === 'undefined') {
+      return;
     } else if (window.__REDUX_RULESET_DEVTOOLS__) {
       if (buffer.length) {
         buffer.forEach(function (row) {
