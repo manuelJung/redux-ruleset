@@ -84,9 +84,13 @@ export default function consequence (actionExecution:t.ActionExecution, ruleCont
    */
 
   // later consequences can cancel this execution
-  const offCancel = ruleContext.events.on('CANCEL_CONSEQUENCE', newRuleExecution => {
+  const offCancel = ruleContext.events.on('CANCEL_CONSEQUENCE', (newRuleExecution,logic) => {
     if(newRuleExecution.concurrencyId !== ruleExecution.concurrencyId) return
     if(newRuleExecution.execId === ruleExecution.execId) return
+    // only cancel prev executions for switch
+    if(logic === 'SWITCH' && newRuleExecution.execId < ruleExecution.execId){
+      return
+    }
     cancel()
     status = 'CANCELED'
   })
@@ -191,7 +195,7 @@ export default function consequence (actionExecution:t.ActionExecution, ruleCont
       offCancel()
       unlisten()
     })
-    const offCancel = ruleContext.events.once('CANCEL_CONSEQUENCE', newRuleExecution => {
+    const offCancel = ruleContext.events.once('CANCEL_CONSEQUENCE', (newRuleExecution,logic) => {
       if(newRuleExecution.concurrencyId !== ruleExecution.concurrencyId) return
       if(newRuleExecution.execId === ruleExecution.execId) return
       offRemoveRule()
