@@ -467,7 +467,7 @@ describe('concurrency', () => {
       id: 'UNIT_TEST',
       target: 'PING',
       concurrency: 'SWITCH',
-      consequence: ({action, dispatch}) => {
+      consequence: (action, {dispatch}) => {
         return new Promise(resolve => {
           setTimeout(() => {
             dispatch({type:'PONG', timeout:action.timeout})
@@ -495,7 +495,7 @@ describe('concurrency', () => {
       id: 'UNIT_TEST',
       target: 'PING',
       concurrency: 'FIRST',
-      consequence: ({action, dispatch}) => {
+      consequence: (action, {dispatch}) => {
         return new Promise(resolve => {
           setTimeout(() => {
             dispatch({type:'PONG', timeout:action.timeout})
@@ -522,7 +522,7 @@ describe('concurrency', () => {
       id: 'UNIT_TEST',
       target: 'PING',
       concurrency: 'LAST',
-      consequence: ({action, dispatch}) => {
+      consequence: (action, {dispatch}) => {
         return new Promise(resolve => {
           setTimeout(() => {
             dispatch({type:'PONG', timeout:action.timeout})
@@ -549,7 +549,7 @@ describe('concurrency', () => {
       id: 'UNIT_TEST',
       target: 'PING',
       concurrency: 'ONCE',
-      consequence: ({action, dispatch}) => {
+      consequence: (action, {dispatch}) => {
         return new Promise(resolve => {
           setTimeout(() => {
             dispatch({type:'PONG', timeout:action.timeout})
