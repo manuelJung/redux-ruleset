@@ -114,9 +114,13 @@ function consequence(actionExecution, ruleContext) {
    */
 
   // later consequences can cancel this execution
-  var offCancel = ruleContext.events.on('CANCEL_CONSEQUENCE', function (newRuleExecution) {
+  var offCancel = ruleContext.events.on('CANCEL_CONSEQUENCE', function (newRuleExecution, logic) {
     if (newRuleExecution.concurrencyId !== ruleExecution.concurrencyId) return;
     if (newRuleExecution.execId === ruleExecution.execId) return;
+    // only cancel prev executions for switch
+    if (logic === 'SWITCH' && newRuleExecution.execId < ruleExecution.execId) {
+      return;
+    }
     cancel();
     status = 'CANCELED';
   });
@@ -224,7 +228,7 @@ function consequence(actionExecution, ruleContext) {
             _offCancel();
             unlisten();
           });
-          var _offCancel = ruleContext.events.once('CANCEL_CONSEQUENCE', function (newRuleExecution) {
+          var _offCancel = ruleContext.events.once('CANCEL_CONSEQUENCE', function (newRuleExecution, logic) {
             if (newRuleExecution.concurrencyId !== ruleExecution.concurrencyId) return;
             if (newRuleExecution.execId === ruleExecution.execId) return;
             _offRemoveRule();
