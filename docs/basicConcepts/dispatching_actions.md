@@ -119,7 +119,7 @@ addRule({
   id: 'ALERT_MISSING_FIELDS',
   target: 'SIGN_UP_REQUEST',
   position: 'INSTEAD',
-  condtion: action => {
+  condition: action => {
     const fields = actions.payload
     if(!fields.name || !field.password){
       // user forgot to set name or password
