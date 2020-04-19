@@ -4,6 +4,27 @@ All notable changes to this project will be documented in this file
 
 -----------------
 
+2.0.0
+
+### API changes
+
+consequence has now 2 arguments with the action as the first:
+
+- before: `consequence: ({action, ...rest}) => null`
+- after: `consequence: (action, {...rest}) => null`
+
+condition changed:
+
+- before: `condition: (action, getState, context) => null`
+- after: `condition: (action, {getState, context}) => null`
+
+sagas changed:
+
+- before: `addWhen: (next, getState, context) => null`
+- after: `addWhen: (next, {getState, context}) => null`
+
+-----------------
+
 1.2.1
 
 #### Bugfixes
