@@ -16,7 +16,7 @@ addRule({
   subRules: {
     cleanup: {
       target: 'ACTION_2',
-      consequence: (_,{context}) => console.log(context.getContext('foo'))
+      consequence: (_,{context}) => console.log(context.get('foo'))
     }
   }
 })
@@ -84,7 +84,7 @@ addRule({
         return 'REMOVE_RULE'
       },
       consequence: (_,{context}) => {
-        const pathname = context.getContext('originalUrl')
+        const pathname = context.get('originalUrl')
       // { type: 'LOCATION_CHANGE', payload: { method: 'REPLACE', pathname: pathname }}
         historyReplaceAction(pathname) // navigate to original target
       }
