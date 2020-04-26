@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.middleware = exports.skipRule = exports.addRule = exports.dispatchEvent = undefined;
+exports.middleware = exports.skipRule = exports.removeRule = exports.addRule = exports.dispatchEvent = undefined;
 
 var _toConsumableArray2 = require('babel-runtime/helpers/toConsumableArray');
 
@@ -38,6 +38,10 @@ var _registerRule = require('./registerRule');
 
 var _registerRule2 = _interopRequireDefault(_registerRule);
 
+var _ruleDB = require('./ruleDB');
+
+var ruleDB = _interopRequireWildcard(_ruleDB);
+
 require('./devtools');
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
@@ -45,12 +49,14 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 (0, _setup2.default)({ plugin: _reduxPlugin2.default });
+
 var addRule = exports.addRule = function addRule(rule) {
   return (0, _registerRule2.default)(rule);
 };
 
-// export const removeRule = (rule:Rule) => ruleDB.removeRule(rule)
-
+var removeRule = exports.removeRule = function removeRule(rule) {
+  return (0, _registerRule.dropRule)(rule);
+};
 
 var skipRule = exports.skipRule = function skipRule(ruleId, action) {
   if (action.meta && (0, _typeof3.default)(action.meta) !== 'object') throw new Error('Expect action.meta be be an action');

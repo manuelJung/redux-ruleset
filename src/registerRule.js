@@ -5,7 +5,7 @@ import {startSaga} from './saga'
 import {addRule, removeRule} from './ruleDB'
 import globalEvents from './globalEvents'
 
-const registeredDict = {}
+const registeredDict:{[id:string]:t.RuleContext|null} = {}
 
 const startAddWhen = (context:t.RuleContext) => startSaga('addWhen', context, result => {
   const add = () => {
@@ -128,6 +128,13 @@ export default function registerRule (rule:t.Rule, parentContext?:t.RuleContext,
   }
 
   return rule
+}
+
+export function dropRule (rule:t.Rule) {
+  const ruleContext = registeredDict[rule.id]
+  if(!ruleContext) return
+  removeRule(ruleContext)
+  registeredDict[rule.id] = null
 }
 
 export const testing = {startAddWhen, startAddUntil, registeredDict}

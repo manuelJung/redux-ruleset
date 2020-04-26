@@ -15,6 +15,7 @@ var _typeof3 = _interopRequireDefault(_typeof2);
 
 exports.activateSubRule = activateSubRule;
 exports.default = registerRule;
+exports.dropRule = dropRule;
 
 var _types = require('./types');
 
@@ -178,6 +179,13 @@ function registerRule(rule, parentContext, parameters) {
   }
 
   return rule;
+}
+
+function dropRule(rule) {
+  var ruleContext = registeredDict[rule.id];
+  if (!ruleContext) return;
+  (0, _ruleDB.removeRule)(ruleContext);
+  registeredDict[rule.id] = null;
 }
 
 var testing = exports.testing = { startAddWhen: startAddWhen, startAddUntil: startAddUntil, registeredDict: registeredDict };
