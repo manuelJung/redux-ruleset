@@ -607,4 +607,35 @@ describe('bugs', () => {
     expect(actions[1]).toEqual({type:'PING', status: 'resolved'})
     expect(actions[2]).toEqual({type:'PONG'})
   })
+
+  test('two sagas can react to the same action', () => {
+    index.addRule({
+      id: 'UNIT_TEST_1',
+      target: 'PING',
+      weight: 1,
+      addWhen: function* (next) {
+        yield next('START')
+        return 'ADD_RULE'
+      },
+      consequence: () => ({type:'PONG_1'})
+    })
+    index.addRule({
+      id: 'UNIT_TEST_2',
+      target: 'PING',
+      weight: 2,
+      addWhen: function* (next) {
+        yield next('START')
+        return 'ADD_RULE'
+      },
+      consequence: () => ({type:'PONG_2'})
+    })
+
+    store.dispatch({type:'START'})
+    store.dispatch({type:'PING'})
+    const actions = store.getActions()
+    expect(actions[0]).toEqual({type:'START'})
+    expect(actions[1]).toEqual({type:'PING'})
+    expect(actions[2]).toEqual({type:'PONG_1'})
+    expect(actions[3]).toEqual({type:'PONG_2'})
+  })
 })

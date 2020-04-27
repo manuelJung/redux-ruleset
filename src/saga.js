@@ -13,8 +13,15 @@ export function yieldAction (actionExecution:t.ActionExecution) {
   const targetList = listeners[actionExecution.action.type]
   let i = 0
 
-  if(globalList) for (i=0; i<globalList.length; i++) globalList[i](actionExecution)
-  if(targetList) for (i=0; i<targetList.length; i++) targetList[i](actionExecution)
+  if(globalList) {
+    const list = [].concat(globalList)
+    for (i=0; i<list.length; i++) list[i](actionExecution)
+  }
+  if(targetList) {
+    const list = [].concat(targetList)
+    
+    for (i=0; i<list.length; i++) list[i](actionExecution)
+  }
 }
 
 function addActionListener (

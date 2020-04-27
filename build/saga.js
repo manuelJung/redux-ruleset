@@ -30,10 +30,17 @@ function yieldAction(actionExecution) {
   var targetList = listeners[actionExecution.action.type];
   var i = 0;
 
-  if (globalList) for (i = 0; i < globalList.length; i++) {
-    globalList[i](actionExecution);
-  }if (targetList) for (i = 0; i < targetList.length; i++) {
-    targetList[i](actionExecution);
+  if (globalList) {
+    var list = [].concat(globalList);
+    for (i = 0; i < list.length; i++) {
+      list[i](actionExecution);
+    }
+  }
+  if (targetList) {
+    var _list = [].concat(targetList);
+    for (i = 0; i < _list.length; i++) {
+      _list[i](actionExecution);
+    }
   }
 }
 
