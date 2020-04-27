@@ -66,12 +66,19 @@ export const removeRule = (context:t.RuleContext) => {
 }
 
 export const forEachRuleContext = (target:string, position:t.Position, cb:Function) => {
-  const globalList = activeRules[position][GLOBAL_TYPE] || []
-  const targetList = activeRules[position][target] || []
+  const globalList = activeRules[position][GLOBAL_TYPE]
+  const targetList = activeRules[position][target]
   let i = 0
-  
-  for (i=0; i<globalList.length; i++) cb(globalList[i])
-  for (i=0; i<targetList.length; i++) cb(targetList[i])
+
+  if(globalList) {
+    const list = [].concat(globalList)
+    for (i=0; i<list.length; i++) cb(list[i])
+  }
+
+  if(targetList) {
+    const list = [].concat(targetList)
+    for (i=0; i<list.length; i++) cb(list[i])
+  }
 }
 
 function pushByWeight (list, ruleContext) {
