@@ -38,6 +38,7 @@ function yieldAction(actionExecution) {
   }
   if (targetList) {
     var _list = [].concat(targetList);
+
     for (i = 0; i < _list.length; i++) {
       _list[i](actionExecution);
     }

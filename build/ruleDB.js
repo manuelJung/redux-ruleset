@@ -73,14 +73,22 @@ var removeRule = exports.removeRule = function removeRule(context) {
 };
 
 var forEachRuleContext = exports.forEachRuleContext = function forEachRuleContext(target, position, cb) {
-  var globalList = activeRules[position][GLOBAL_TYPE] || [];
-  var targetList = activeRules[position][target] || [];
+  var globalList = activeRules[position][GLOBAL_TYPE];
+  var targetList = activeRules[position][target];
   var i = 0;
 
-  for (i = 0; i < globalList.length; i++) {
-    cb(globalList[i]);
-  }for (i = 0; i < targetList.length; i++) {
-    cb(targetList[i]);
+  if (globalList) {
+    var list = [].concat(globalList);
+    for (i = 0; i < list.length; i++) {
+      cb(list[i]);
+    }
+  }
+
+  if (targetList) {
+    var _list = [].concat(targetList);
+    for (i = 0; i < _list.length; i++) {
+      cb(_list[i]);
+    }
   }
 };
 
