@@ -1,6 +1,6 @@
 {
   "name": "redux-ruleset",
-  "version": "1.2.2",
+  "version": "1.2.4",
   "description": "A redux-middleware for managing data-flows",
   "keywords": [
     "react",
