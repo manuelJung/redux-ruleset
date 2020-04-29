@@ -661,4 +661,38 @@ describe('bugs', () => {
     expect(actions[1]).toEqual({type:'PONG_1'})
     expect(actions[2]).toEqual({type:'PONG_2'})
   })
+
+  test('ADD_RULE_BEFORE does not skip next rule execution', () => {
+    index.addRule({
+      id: 'RULE_1',
+      target: 'PING',
+      addOnce: true,
+      weight: 1,
+      addWhen: function* (next) {
+        yield next('PING')
+        return 'ADD_RULE_BEFORE'
+      },
+      consequence: () => ({type: 'PONG_1'})
+    })
+    index.addRule({
+      id: 'RULE_2',
+      target: 'PING',
+      weight: 2,
+      consequence: () => ({type: 'PONG_2'})
+    })
+    index.addRule({
+      id: 'RULE_3',
+      target: 'PING',
+      weight: 3,
+      consequence: () => ({type: 'PONG_3'})
+    })
+
+    store.dispatch({type:'PING'})
+    const actions = store.getActions()
+    expect(actions[0]).toEqual({type:'PING'})
+    expect(actions[1]).toEqual({type:'PONG_1'})
+    expect(actions[2]).toEqual({type:'PONG_2'})
+    expect(actions[3]).toEqual({type:'PONG_3'})
+    expect(actions.length).toBe(4)
+  })
 })
