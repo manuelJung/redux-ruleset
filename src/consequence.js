@@ -154,9 +154,9 @@ export default function consequence (actionExecution:t.ActionExecution, ruleCont
    */
   function unlisten () {
     rule.concurrency !== 'ONCE' && concurrency.running--
-    ruleContext.events.trigger('CONSEQUENCE_END', ruleExecution, status || 'RESOLVED')
-    offCancel()
     offRemoveRule()
+    offCancel()
+    ruleContext.events.trigger('CONSEQUENCE_END', ruleExecution, status || 'RESOLVED')
   }
 
   /**

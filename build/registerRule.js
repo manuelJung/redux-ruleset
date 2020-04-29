@@ -156,6 +156,7 @@ function registerRule(rule, parentContext, parameters) {
         ruleContext.publicContext.addUntil = {};
     }
   });
+  _globalEvents2.default.trigger('REGISTER_RULE', ruleContext);
 
   //remove addOnce rules
   if (rule.addOnce) {
@@ -163,8 +164,6 @@ function registerRule(rule, parentContext, parameters) {
       status === 'RESOLVED' && (0, _ruleDB.removeRule)(ruleContext);
     });
   }
-
-  _globalEvents2.default.trigger('REGISTER_RULE', ruleContext);
 
   if (parentContext) {
     ruleContext.publicContext.global = parameters || {};

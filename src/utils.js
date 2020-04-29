@@ -48,6 +48,9 @@ export function createEventContainer () {
         }
       }
     },
+    offOnce(event, cb) {
+      removeItem(onceList[event], cb)
+    },
     clearOnce(event){
       onceList[event] = []
     }

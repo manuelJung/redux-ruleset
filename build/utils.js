@@ -75,6 +75,9 @@ function createEventContainer() {
         }
       }
     },
+    offOnce: function offOnce(event, cb) {
+      removeItem(onceList[event], cb);
+    },
     clearOnce: function clearOnce(event) {
       onceList[event] = [];
     }

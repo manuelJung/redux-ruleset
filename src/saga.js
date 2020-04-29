@@ -19,7 +19,6 @@ export function yieldAction (actionExecution:t.ActionExecution) {
   }
   if(targetList) {
     const list = [].concat(targetList)
-    
     for (i=0; i<list.length; i++) list[i](actionExecution)
   }
 }
@@ -76,6 +75,7 @@ export function startSaga (
     if(result.done){
       ruleContext.runningSaga = null
       ruleContext.events.trigger('SAGA_END', sagaExecution, result.value)
+      ruleContext.events.offOnce('REMOVE_RULE', cancel)
       finCb({ logic: payload === 'CANCELED' || !result.value ? 'CANCELED' : result.value  })
     }
   }

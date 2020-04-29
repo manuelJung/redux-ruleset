@@ -104,6 +104,7 @@ export default function registerRule (rule:t.Rule, parentContext?:t.RuleContext,
         ruleContext.publicContext.addUntil = {}
     }
   })
+  globalEvents.trigger('REGISTER_RULE', ruleContext)
 
   //remove addOnce rules
   if(rule.addOnce){
@@ -112,7 +113,6 @@ export default function registerRule (rule:t.Rule, parentContext?:t.RuleContext,
     })
   }
   
-  globalEvents.trigger('REGISTER_RULE', ruleContext)
 
   if(parentContext) {
     ruleContext.publicContext.global = parameters || {}

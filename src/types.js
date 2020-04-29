@@ -87,7 +87,8 @@ export type RuleContext = {
     once: (event:string, cb:Function) => Function,
     on: (event:string, cb:Function) => Function,
     trigger: (event:string, ...args:any[]) => void,
-    clearOnce: (event:string) => void
+    clearOnce: (event:string) => void,
+    offOnce: (event:string, cb:Function) => void
   }
 }
 

@@ -38,7 +38,6 @@ function yieldAction(actionExecution) {
   }
   if (targetList) {
     var _list = [].concat(targetList);
-
     for (i = 0; i < _list.length; i++) {
       _list[i](actionExecution);
     }
@@ -86,6 +85,7 @@ function startSaga(sagaType, ruleContext, finCb, isReady) {
     if (result.done) {
       ruleContext.runningSaga = null;
       ruleContext.events.trigger('SAGA_END', sagaExecution, result.value);
+      ruleContext.events.offOnce('REMOVE_RULE', cancel);
       finCb({ logic: payload === 'CANCELED' || !result.value ? 'CANCELED' : result.value });
     }
   };
