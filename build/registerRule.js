@@ -133,10 +133,10 @@ function registerRule(rule, parentContext, parameters) {
 
   // check if rule is already registered
   if (registeredDict[rule.id]) {
+    dropRule(rule);
     if (process.env.NODE_ENV !== 'production') {
-      throw new Error('the rule-id "' + rule.id + '" is already registered. Either you want to register the same rule twice or you have two rules with the same id');
+      console.warn('you added the same rule "' + rule.id + '" twice. Either this comes from HMR (which can be ignored) or you defined two rules with the same id (which is an error)');
     }
-    return rule;
   }
 
   var ruleContext = (0, _utils.createRuleContext)(rule);
