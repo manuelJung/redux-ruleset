@@ -26,7 +26,7 @@ if (typeof window !== 'undefined' && window.RULESET_DEVTOOLS || process.env.NODE
         buffer.forEach(function (row) {
           return window.__REDUX_RULESET_DEVTOOLS__(row);
         });
-        buffer.length = [];
+        buffer = [];
       }
       window.__REDUX_RULESET_DEVTOOLS__(e);
     } else {

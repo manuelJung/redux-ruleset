@@ -14,7 +14,7 @@ if((typeof window !== 'undefined' && window.RULESET_DEVTOOLS) || process.env.NOD
     else if(window.__REDUX_RULESET_DEVTOOLS__){
       if(buffer.length) {
         buffer.forEach(row => window.__REDUX_RULESET_DEVTOOLS__(row))
-        buffer.length = []
+        buffer = []
       }
       window.__REDUX_RULESET_DEVTOOLS__(e)
     }
