@@ -10,6 +10,7 @@ let saga
 let appUtils
 let ruleDB
 let globalEvents
+let dispatchEvent
 
 const any = expect.anything()
 
@@ -19,7 +20,9 @@ const initTest = () => {
   saga = require('../saga')
   ruleDB = require('../ruleDB')
   globalEvents = require('../globalEvents')
+  dispatchEvent = require('../dispatchEvent')
   globalEvents.default.trigger = jest.fn(globalEvents.default.trigger)
+  dispatchEvent.getCurrentActionExecId = () => 1
   ruleDB.addRule = jest.fn()
   ruleDB.removeRule = jest.fn()
   appUtils = require('../utils')
@@ -80,7 +83,7 @@ describe('registerRule', () => {
     expect(ruleContext.publicContext.addWhen).toEqual({foo:'bar'})
 
     ruleContext.events.trigger('SAGA_END', {}, 'REAPPLY_ADD_WHEN')
-    globalEvents.default.trigger('END_ACTION_EXECUTION', {})
+    globalEvents.default.trigger('END_ACTION_EXECUTION', { execId: 1 })
     expect(ruleContext.publicContext.addWhen).toEqual({})
   })
 
@@ -91,13 +94,13 @@ describe('registerRule', () => {
     ruleContext.publicContext.addWhen = {foo:'bar'}
 
     ruleContext.events.trigger('SAGA_END', {}, 'REAPPLY_ADD_UNTIL')
-    globalEvents.default.trigger('END_ACTION_EXECUTION', {})
+    globalEvents.default.trigger('END_ACTION_EXECUTION', { execId: 1 })
     expect(ruleContext.publicContext.addUntil).toEqual({})
     expect(ruleContext.publicContext.addWhen).toEqual({foo:'bar'})
 
     ruleContext.publicContext.addUntil = {foo:'bar'}
     ruleContext.events.trigger('SAGA_END', {}, 'READD_RULE')
-    globalEvents.default.trigger('END_ACTION_EXECUTION', {})
+    globalEvents.default.trigger('END_ACTION_EXECUTION', { execId: 1 })
     expect(ruleContext.publicContext.addUntil).toEqual({})
     expect(ruleContext.publicContext.addWhen).toEqual({foo:'bar'})
 
@@ -114,7 +117,7 @@ describe('registerRule', () => {
     ruleContext.publicContext.addWhen = {foo:'bar'}
 
     ruleContext.events.trigger('SAGA_END', {}, 'RECREATE_RULE')
-    globalEvents.default.trigger('END_ACTION_EXECUTION', {})
+    globalEvents.default.trigger('END_ACTION_EXECUTION', { execId: 1 })
     expect(ruleContext.publicContext.addUntil).toEqual({})
     expect(ruleContext.publicContext.addWhen).toEqual({})
 
@@ -139,7 +142,7 @@ describe('startAddWhen', () => {
     saga.startSaga = (_,__,cb) => cb({logic:'ADD_RULE'})
     registerRule.testing.startAddWhen(ruleContext)
     expect(ruleDB.addRule).not.toBeCalled()
-    globalEvents.default.trigger('END_ACTION_EXECUTION')
+    globalEvents.default.trigger('END_ACTION_EXECUTION', { execId: 1 })
     expect(ruleDB.addRule).toBeCalledWith(ruleContext)
   })
 
@@ -153,7 +156,7 @@ describe('startAddWhen', () => {
     saga.startSaga = jest.fn().mockImplementationOnce((_,__,cb) => cb({logic:'REAPPLY_ADD_WHEN'}))
     registerRule.testing.startAddWhen(ruleContext)
     expect(saga.startSaga).toBeCalledTimes(1)
-    globalEvents.default.trigger('END_ACTION_EXECUTION')
+    globalEvents.default.trigger('END_ACTION_EXECUTION', { execId: 1 })
     expect(saga.startSaga).toBeCalledTimes(2)
   })
 
@@ -178,7 +181,7 @@ describe('startAddUntil', () => {
     saga.startSaga = (_,__,cb) => cb({logic:'REMOVE_RULE'})
     registerRule.testing.startAddUntil(ruleContext)
     expect(ruleDB.removeRule).not.toBeCalled()
-    globalEvents.default.trigger('END_ACTION_EXECUTION')
+    globalEvents.default.trigger('END_ACTION_EXECUTION', { execId: 1 })
     expect(ruleDB.removeRule).toBeCalledWith(ruleContext)
   })
 
@@ -194,7 +197,7 @@ describe('startAddUntil', () => {
     registerRule.testing.startAddUntil(ruleContext)
     expect(ruleDB.removeRule).not.toBeCalled()
     expect(saga.startSaga).not.toBeCalledWith('addWhen', any, any)
-    globalEvents.default.trigger('END_ACTION_EXECUTION')
+    globalEvents.default.trigger('END_ACTION_EXECUTION', { execId: 1 })
     expect(ruleDB.removeRule).toBeCalled()
     expect(saga.startSaga).toBeCalledWith('addWhen', any, any)
   })
@@ -211,7 +214,7 @@ describe('startAddUntil', () => {
     saga.startSaga = jest.fn().mockImplementationOnce((_,__,cb) => cb({logic:'REAPPLY_ADD_UNTIL'}))
     registerRule.testing.startAddUntil(ruleContext)
     expect(saga.startSaga).toBeCalledTimes(1)
-    globalEvents.default.trigger('END_ACTION_EXECUTION')
+    globalEvents.default.trigger('END_ACTION_EXECUTION', { execId: 1 })
     expect(saga.startSaga).toBeCalledTimes(2)
   })
 
@@ -220,7 +223,7 @@ describe('startAddUntil', () => {
     registerRule.testing.startAddUntil(ruleContext)
     expect(ruleDB.removeRule).not.toBeCalled()
     expect(saga.startSaga).toBeCalledTimes(1)
-    globalEvents.default.trigger('END_ACTION_EXECUTION')
+    globalEvents.default.trigger('END_ACTION_EXECUTION', { execId: 1 })
     expect(ruleDB.removeRule).toBeCalled()
     expect(saga.startSaga).toBeCalledTimes(2)
   })

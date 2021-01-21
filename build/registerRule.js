@@ -31,12 +31,13 @@ var _globalEvents = require('./globalEvents');
 
 var _globalEvents2 = _interopRequireDefault(_globalEvents);
 
+var _dispatchEvent = require('./dispatchEvent');
+
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var registeredDict = {};
-
 
 var startAddWhen = function startAddWhen(context) {
   return (0, _saga.startSaga)('addWhen', context, function (result) {
@@ -44,13 +45,19 @@ var startAddWhen = function startAddWhen(context) {
       context.rule.addUntil && startAddUntil(context);
       (0, _ruleDB.addRule)(context);
     };
+    var actionExecId = (0, _dispatchEvent.getCurrentActionExecId)();
+    var wait = function wait(cb) {
+      _globalEvents2.default.once('END_ACTION_EXECUTION', function (actionExecution) {
+        if (actionExecId === actionExecution.execId) cb(actionExecution);else wait(cb);
+      });
+    };
     switch (result.logic) {
       case 'ADD_RULE':
-        return _globalEvents2.default.once('END_ACTION_EXECUTION', add);
+        return wait(add);
       case 'ADD_RULE_BEFORE':
         return add();
       case 'REAPPLY_ADD_WHEN':
-        return _globalEvents2.default.once('END_ACTION_EXECUTION', function () {
+        return wait(function () {
           return startAddWhen(context);
         });
       case 'CANCELED':
@@ -68,15 +75,21 @@ var startAddWhen = function startAddWhen(context) {
 
 var startAddUntil = function startAddUntil(context) {
   return (0, _saga.startSaga)('addUntil', context, function (result) {
+    var actionExecId = (0, _dispatchEvent.getCurrentActionExecId)();
+    var wait = function wait(cb) {
+      _globalEvents2.default.once('END_ACTION_EXECUTION', function (actionExecution) {
+        if (actionExecId === actionExecution.execId) cb(actionExecution);else wait(cb);
+      });
+    };
     switch (result.logic) {
       case 'REMOVE_RULE':
-        return _globalEvents2.default.once('END_ACTION_EXECUTION', function () {
+        return wait(function () {
           return (0, _ruleDB.removeRule)(context);
         });
       case 'REMOVE_RULE_BEFORE':
         return (0, _ruleDB.removeRule)(context);
       case 'RECREATE_RULE':
-        return _globalEvents2.default.once('END_ACTION_EXECUTION', function () {
+        return wait(function () {
           (0, _ruleDB.removeRule)(context);
           if (context.rule.addWhen) startAddWhen(context);else startAddUntil(context);
         });
@@ -87,11 +100,11 @@ var startAddUntil = function startAddUntil(context) {
           return;
         }
       case 'REAPPLY_ADD_UNTIL':
-        return _globalEvents2.default.once('END_ACTION_EXECUTION', function () {
+        return wait(function () {
           return startAddUntil(context);
         });
       case 'READD_RULE':
-        return _globalEvents2.default.once('END_ACTION_EXECUTION', function () {
+        return wait(function () {
           (0, _ruleDB.removeRule)(context);
           startAddUntil(context);
         });
@@ -145,6 +158,12 @@ function registerRule(rule, parentContext, parameters) {
 
   // clear public context
   ruleContext.events.on('SAGA_END', function (_, result) {
+    var actionExecId = (0, _dispatchEvent.getCurrentActionExecId)();
+    var wait = function wait(cb) {
+      _globalEvents2.default.once('END_ACTION_EXECUTION', function (actionExecution) {
+        if (actionExecId === actionExecution.execId) cb(actionExecution);else wait(cb);
+      });
+    };
     switch (result) {
       case 'RECREATE_RULE_BEFORE':
         {
@@ -154,24 +173,20 @@ function registerRule(rule, parentContext, parameters) {
         }
       case 'RECREATE_RULE':
       case 'REAPPLY_ADD_WHEN':
-        {
-          _globalEvents2.default.once('END_ACTION_EXECUTION', function () {
-            ruleContext.publicContext.addWhen = {};
-            ruleContext.publicContext.addUntil = {};
-          });
-          return;
-        }
+        return wait(function () {
+          ruleContext.publicContext.addWhen = {};
+          ruleContext.publicContext.addUntil = {};
+        });
       case 'READD_RULE_BEFORE':
         {
           ruleContext.publicContext.addUntil = {};
+          return;
         }
       case 'READD_RULE':
       case 'REAPPLY_ADD_UNTIL':
-        {
-          _globalEvents2.default.once('END_ACTION_EXECUTION', function () {
-            ruleContext.publicContext.addUntil = {};
-          });
-        }
+        return wait(function () {
+          ruleContext.publicContext.addUntil = {};
+        });
     }
   });
   _globalEvents2.default.trigger('REGISTER_RULE', ruleContext);

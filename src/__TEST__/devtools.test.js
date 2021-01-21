@@ -55,7 +55,7 @@ describe('basic', () => {
     expect(buffer[0]).toEqual({
       type: 'EXEC_ACTION_START',
       timestamp: expect.anything(),
-      actionExecId: 1,
+      actionExecId: 2,
       ruleExecId: null,
       action: { type: 'TYPE_1'}
     })
@@ -63,7 +63,7 @@ describe('basic', () => {
     expect(buffer[1]).toEqual({
       type: 'EXEC_ACTION_START',
       timestamp: expect.anything(),
-      actionExecId: 2,
+      actionExecId: 3,
       ruleExecId: 1,
       action: { type: 'TYPE_2'}
     })

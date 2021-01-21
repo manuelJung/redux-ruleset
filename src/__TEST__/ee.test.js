@@ -24,7 +24,7 @@ const initTest = () => {
 describe('basic', () => {
   beforeEach(initTest)
 
-  test('dispatch returned action', () => {
+  test.only('dispatch returned action', () => {
     const rule = index.addRule({
       id: 'UNIT_TEST',
       target: 'PING',
@@ -39,7 +39,7 @@ describe('basic', () => {
     expect(actions[1]).toEqual({type: 'PONG'})
   })
 
-  test('dispatch promise wrapped action', async () => {
+  test.only('dispatch promise wrapped action', async () => {
     const rule = index.addRule({
       id: 'UNIT_TEST',
       target: ['PING'],
@@ -57,7 +57,7 @@ describe('basic', () => {
     expect(actions[1]).toEqual({type: 'PONG'})
   })
 
-  test('consequence cb is called when the rule gets removed', () => {
+  test.only('consequence cb is called when the rule gets removed', () => {
     const callback = jest.fn()
     const rule = index.addRule({
       id: 'UNIT_TEST',

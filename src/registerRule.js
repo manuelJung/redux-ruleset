@@ -1,9 +1,10 @@
 // @flow
 import * as t from './types'
-import {removeItem, createRuleContext} from './utils'
+import {createRuleContext} from './utils'
 import {startSaga} from './saga'
 import {addRule, removeRule} from './ruleDB'
 import globalEvents from './globalEvents'
+import {getCurrentActionExecId} from './dispatchEvent'
 
 const registeredDict:{[id:string]:t.RuleContext|null} = {}
 
@@ -12,10 +13,17 @@ const startAddWhen = (context:t.RuleContext) => startSaga('addWhen', context, re
     context.rule.addUntil && startAddUntil(context)
     addRule(context)
   }
+  const actionExecId = getCurrentActionExecId()
+  const wait = cb => {
+    globalEvents.once('END_ACTION_EXECUTION', actionExecution => {
+      if(actionExecId === actionExecution.execId) cb(actionExecution)
+      else wait(cb)
+    })
+  }
   switch (result.logic) {
-    case 'ADD_RULE': return globalEvents.once('END_ACTION_EXECUTION', add)
+    case 'ADD_RULE': return wait(add)
     case 'ADD_RULE_BEFORE': return add()
-    case 'REAPPLY_ADD_WHEN': return globalEvents.once('END_ACTION_EXECUTION', () => startAddWhen(context))
+    case 'REAPPLY_ADD_WHEN': return wait(() => startAddWhen(context))
     case 'CANCELED':
     case 'ABORT': return
     default: {
@@ -27,10 +35,17 @@ const startAddWhen = (context:t.RuleContext) => startSaga('addWhen', context, re
 })
 
 const startAddUntil = (context:t.RuleContext) => startSaga('addUntil', context, result => {
+  const actionExecId = getCurrentActionExecId()
+  const wait = cb => {
+    globalEvents.once('END_ACTION_EXECUTION', actionExecution => {
+      if(actionExecId === actionExecution.execId) cb(actionExecution)
+      else wait(cb)
+    })
+  }
   switch (result.logic) {
-    case 'REMOVE_RULE': return globalEvents.once('END_ACTION_EXECUTION', () => removeRule(context))
+    case 'REMOVE_RULE': return wait(() => removeRule(context))
     case 'REMOVE_RULE_BEFORE': return removeRule(context)
-    case 'RECREATE_RULE': return globalEvents.once('END_ACTION_EXECUTION', () => {
+    case 'RECREATE_RULE': return wait(() => {
       removeRule(context)
       if(context.rule.addWhen) startAddWhen(context)
       else startAddUntil(context)
@@ -41,8 +56,8 @@ const startAddUntil = (context:t.RuleContext) => startSaga('addUntil', context, 
       else startAddUntil(context)
       return
     }
-    case 'REAPPLY_ADD_UNTIL': return globalEvents.once('END_ACTION_EXECUTION', () => startAddUntil(context))
-    case 'READD_RULE': return globalEvents.once('END_ACTION_EXECUTION', () => {
+    case 'REAPPLY_ADD_UNTIL': return wait(() => startAddUntil(context))
+    case 'READD_RULE': return wait(() => {
       removeRule(context)
       startAddUntil(context)
     })
@@ -93,6 +108,13 @@ export default function registerRule (rule:t.Rule, parentContext?:t.RuleContext,
 
   // clear public context
   ruleContext.events.on('SAGA_END', (_,result) => {
+    const actionExecId = getCurrentActionExecId()
+    const wait = cb => {
+      globalEvents.once('END_ACTION_EXECUTION', actionExecution => {
+        if(actionExecId === actionExecution.execId) cb(actionExecution)
+        else wait(cb)
+      })
+    }
     switch(result){
       case 'RECREATE_RULE_BEFORE': {
         ruleContext.publicContext.addWhen = {}
@@ -100,22 +122,18 @@ export default function registerRule (rule:t.Rule, parentContext?:t.RuleContext,
         return
       }
       case 'RECREATE_RULE':
-      case 'REAPPLY_ADD_WHEN': {
-        globalEvents.once('END_ACTION_EXECUTION', () => {
-          ruleContext.publicContext.addWhen = {}
-          ruleContext.publicContext.addUntil = {}
-        })
-        return
-      }
+      case 'REAPPLY_ADD_WHEN': return wait(() => {
+        ruleContext.publicContext.addWhen = {}
+        ruleContext.publicContext.addUntil = {}
+      })
       case 'READD_RULE_BEFORE': {
         ruleContext.publicContext.addUntil = {}
+        return
       }
       case 'READD_RULE':
-      case 'REAPPLY_ADD_UNTIL': {
-        globalEvents.once('END_ACTION_EXECUTION', () => {
-          ruleContext.publicContext.addUntil = {}
-        })
-      }
+      case 'REAPPLY_ADD_UNTIL': return wait(() => {
+        ruleContext.publicContext.addUntil = {}
+      })
     }
   })
   globalEvents.trigger('REGISTER_RULE', ruleContext)
