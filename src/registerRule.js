@@ -94,14 +94,28 @@ export default function registerRule (rule:t.Rule, parentContext?:t.RuleContext,
   // clear public context
   ruleContext.events.on('SAGA_END', (_,result) => {
     switch(result){
-      case 'RECREATE_RULE':
-      case 'REAPPLY_ADD_WHEN':
-      case 'RECREATE_RULE_BEFORE': 
+      case 'RECREATE_RULE_BEFORE': {
         ruleContext.publicContext.addWhen = {}
-      case 'READD_RULE':
-      case 'READD_RULE_BEFORE':
-      case 'REAPPLY_ADD_UNTIL': 
         ruleContext.publicContext.addUntil = {}
+        return
+      }
+      case 'RECREATE_RULE':
+      case 'REAPPLY_ADD_WHEN': {
+        globalEvents.once('END_ACTION_EXECUTION', () => {
+          ruleContext.publicContext.addWhen = {}
+          ruleContext.publicContext.addUntil = {}
+        })
+        return
+      }
+      case 'READD_RULE_BEFORE': {
+        ruleContext.publicContext.addUntil = {}
+      }
+      case 'READD_RULE':
+      case 'REAPPLY_ADD_UNTIL': {
+        globalEvents.once('END_ACTION_EXECUTION', () => {
+          ruleContext.publicContext.addUntil = {}
+        })
+      }
     }
   })
   globalEvents.trigger('REGISTER_RULE', ruleContext)

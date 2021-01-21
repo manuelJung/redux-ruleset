@@ -146,14 +146,32 @@ function registerRule(rule, parentContext, parameters) {
   // clear public context
   ruleContext.events.on('SAGA_END', function (_, result) {
     switch (result) {
+      case 'RECREATE_RULE_BEFORE':
+        {
+          ruleContext.publicContext.addWhen = {};
+          ruleContext.publicContext.addUntil = {};
+          return;
+        }
       case 'RECREATE_RULE':
       case 'REAPPLY_ADD_WHEN':
-      case 'RECREATE_RULE_BEFORE':
-        ruleContext.publicContext.addWhen = {};
-      case 'READD_RULE':
+        {
+          _globalEvents2.default.once('END_ACTION_EXECUTION', function () {
+            ruleContext.publicContext.addWhen = {};
+            ruleContext.publicContext.addUntil = {};
+          });
+          return;
+        }
       case 'READD_RULE_BEFORE':
+        {
+          ruleContext.publicContext.addUntil = {};
+        }
+      case 'READD_RULE':
       case 'REAPPLY_ADD_UNTIL':
-        ruleContext.publicContext.addUntil = {};
+        {
+          _globalEvents2.default.once('END_ACTION_EXECUTION', function () {
+            ruleContext.publicContext.addUntil = {};
+          });
+        }
     }
   });
   _globalEvents2.default.trigger('REGISTER_RULE', ruleContext);

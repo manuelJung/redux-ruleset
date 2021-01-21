@@ -39,6 +39,7 @@ function dispatchEvent(action) {
   };
 
   cycle.step++;
+  debugger;
 
   // detect endless recursive loops
   if (process.env.NODE_ENV !== 'production') {

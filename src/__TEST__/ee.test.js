@@ -695,4 +695,32 @@ describe('bugs', () => {
     expect(actions[3]).toEqual({type:'PONG_3'})
     expect(actions.length).toBe(4)
   })
+
+  test('ADD_UNTIL persist context until action execution ends', () => {
+    index.addRule({
+      id: 'RULE_1',
+      target: 'FETCH_REQUEST',
+      output: 'END',
+      addWhen: function* (next, {context}) {
+        yield next('WIDGET_CLICK', action => {
+          context.set('msg', action.msg)
+          return true
+        })
+        return 'ADD_RULE'
+      },
+      addUntil: function* (next) {
+        yield next('FETCH_REQUEST')
+        return 'RECREATE_RULE'
+      },
+      consequence: (_, {context}) => ({type: 'FETCH_SUCCESS', msg: context.get('msg')})
+    })
+
+    store.dispatch({type:'WIDGET_CLICK', msg: 'my-msg'})
+    store.dispatch({type:'FETCH_REQUEST'})
+    const actions = store.getActions()
+    expect(actions[0]).toEqual({type:'WIDGET_CLICK', msg: 'my-msg'})
+    expect(actions[1]).toEqual({type:'FETCH_REQUEST'})
+    expect(actions[2]).toEqual({type:'FETCH_SUCCESS', msg: 'my-msg'})
+    expect(actions.length).toBe(3)
+  })
 })

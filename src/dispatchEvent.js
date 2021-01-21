@@ -14,6 +14,7 @@ const cycle = {
 
 export default function dispatchEvent (action:t.Action, cb:Function=()=>null) {
   cycle.step++
+  debugger
 
   // detect endless recursive loops
   if(process.env.NODE_ENV !== 'production'){
