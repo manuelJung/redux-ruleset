@@ -3,7 +3,6 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.getCurrentActionExecId = getCurrentActionExecId;
 exports.default = dispatchEvent;
 
 var _types = require('./types');
@@ -34,10 +33,6 @@ var cycle = {
   step: 0
 };
 
-function getCurrentActionExecId() {
-  return execId;
-}
-
 function dispatchEvent(action) {
   var cb = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : function () {
     return null;
@@ -62,7 +57,7 @@ function dispatchEvent(action) {
   }
 
   var actionExecution = {
-    execId: ++execId,
+    execId: execId++,
     ruleExecId: (0, _consequence.getCurrentRuleExecId)(),
     canceled: false,
     history: [],

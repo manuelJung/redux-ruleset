@@ -58,7 +58,7 @@ function yieldFn (
 export function startSaga (
   sagaType:'addUntil'|'addWhen', 
   ruleContext:t.RuleContext, 
-  finCb:(result:{logic:string})=>mixed, 
+  finCb:(result:{logic:string, actionExecution:t.ActionExecution})=>mixed, 
   isReady?:boolean
 ) {
   if(!isReady){
@@ -70,20 +70,20 @@ export function startSaga (
     sagaType: sagaType
   }
 
-  const iterate = (iter, payload) => {
+  const iterate = (iter, payload, actionExecution) => {
     const result = iter.next(payload)
     if(result.done){
       ruleContext.runningSaga = null
-      ruleContext.events.trigger('SAGA_END', sagaExecution, result.value)
+      ruleContext.events.trigger('SAGA_END', sagaExecution, result.value, actionExecution)
       ruleContext.events.offOnce('REMOVE_RULE', cancel)
-      finCb({ logic: payload === 'CANCELED' || !result.value ? 'CANCELED' : result.value  })
+      finCb({ logic: payload === 'CANCELED' || !result.value ? 'CANCELED' : result.value, actionExecution })
     }
   }
 
   const nextFn = (target, condition) => {
     yieldFn(target, condition, ruleContext, (result, actionExecution) => {
       ruleContext.events.trigger('SAGA_YIELD', sagaExecution, actionExecution, result)
-      iterate(iter, result)
+      iterate(iter, result, actionExecution)
     })
   }
 

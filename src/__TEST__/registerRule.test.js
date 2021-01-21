@@ -10,7 +10,6 @@ let saga
 let appUtils
 let ruleDB
 let globalEvents
-let dispatchEvent
 
 const any = expect.anything()
 
@@ -20,9 +19,7 @@ const initTest = () => {
   saga = require('../saga')
   ruleDB = require('../ruleDB')
   globalEvents = require('../globalEvents')
-  dispatchEvent = require('../dispatchEvent')
   globalEvents.default.trigger = jest.fn(globalEvents.default.trigger)
-  dispatchEvent.getCurrentActionExecId = () => 1
   ruleDB.addRule = jest.fn()
   ruleDB.removeRule = jest.fn()
   appUtils = require('../utils')

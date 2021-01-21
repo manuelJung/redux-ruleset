@@ -31,13 +31,12 @@ var _globalEvents = require('./globalEvents');
 
 var _globalEvents2 = _interopRequireDefault(_globalEvents);
 
-var _dispatchEvent = require('./dispatchEvent');
-
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var registeredDict = {};
+
 
 var startAddWhen = function startAddWhen(context) {
   return (0, _saga.startSaga)('addWhen', context, function (result) {
@@ -45,10 +44,9 @@ var startAddWhen = function startAddWhen(context) {
       context.rule.addUntil && startAddUntil(context);
       (0, _ruleDB.addRule)(context);
     };
-    var actionExecId = (0, _dispatchEvent.getCurrentActionExecId)();
     var wait = function wait(cb) {
       _globalEvents2.default.once('END_ACTION_EXECUTION', function (actionExecution) {
-        if (actionExecId === actionExecution.execId) cb(actionExecution);else wait(cb);
+        if (!result.actionExecution) cb();else if (result.actionExecution.execId === actionExecution.execId) cb();else wait(cb);
       });
     };
     switch (result.logic) {
@@ -75,10 +73,9 @@ var startAddWhen = function startAddWhen(context) {
 
 var startAddUntil = function startAddUntil(context) {
   return (0, _saga.startSaga)('addUntil', context, function (result) {
-    var actionExecId = (0, _dispatchEvent.getCurrentActionExecId)();
     var wait = function wait(cb) {
       _globalEvents2.default.once('END_ACTION_EXECUTION', function (actionExecution) {
-        if (actionExecId === actionExecution.execId) cb(actionExecution);else wait(cb);
+        if (!result.actionExecution) cb();else if (result.actionExecution.execId === actionExecution.execId) cb();else wait(cb);
       });
     };
     switch (result.logic) {
@@ -157,11 +154,10 @@ function registerRule(rule, parentContext, parameters) {
   registeredDict[rule.id] = ruleContext;
 
   // clear public context
-  ruleContext.events.on('SAGA_END', function (_, result) {
-    var actionExecId = (0, _dispatchEvent.getCurrentActionExecId)();
+  ruleContext.events.on('SAGA_END', function (_, result, sourceActionExecution) {
     var wait = function wait(cb) {
       _globalEvents2.default.once('END_ACTION_EXECUTION', function (actionExecution) {
-        if (actionExecId === actionExecution.execId) cb(actionExecution);else wait(cb);
+        if (!sourceActionExecution) cb();else if (sourceActionExecution.execId === actionExecution.execId) cb();else wait(cb);
       });
     };
     switch (result) {

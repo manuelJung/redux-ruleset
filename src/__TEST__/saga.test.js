@@ -93,7 +93,12 @@ describe('startSaga-fn', () => {
     saga.startSaga('addWhen', ruleContext, () => null)
     expect(ruleContext.events.trigger).not.toBeCalledWith('SAGA_END', 'ADD_RULE', 'addWhen')
     saga.yieldAction({action:{type:'MY_TYPE'}})
-    expect(ruleContext.events.trigger).toBeCalledWith('SAGA_END', {execId: 1, sagaType: "addWhen"}, 'ADD_RULE')
+    expect(ruleContext.events.trigger).toBeCalledWith(
+      'SAGA_END', 
+      {execId: 1, sagaType: "addWhen"}, 
+      'ADD_RULE', 
+      {"action": {"type": "MY_TYPE"}}
+    )
   })
 
   test('trigger "SAGA_YIELD" when saga yields', () => {
@@ -131,7 +136,11 @@ describe('startSaga-fn', () => {
     saga.startSaga('addWhen', ruleContext, callback)
     saga.yieldAction({action:{type:'MY_TYPE'}})
     
-    expect(callback).toBeCalledWith({logic:'ADD_RULE'})
+    expect(callback).toBeCalledWith({logic:'ADD_RULE', actionExecution: {
+      action: {
+        type: "MY_TYPE",
+      }
+    }})
   })
 
   test('remove running saga context for ruleContext after saga ends', () => {

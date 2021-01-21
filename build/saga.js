@@ -80,20 +80,20 @@ function startSaga(sagaType, ruleContext, finCb, isReady) {
     sagaType: sagaType
   };
 
-  var iterate = function iterate(iter, payload) {
+  var iterate = function iterate(iter, payload, actionExecution) {
     var result = iter.next(payload);
     if (result.done) {
       ruleContext.runningSaga = null;
-      ruleContext.events.trigger('SAGA_END', sagaExecution, result.value);
+      ruleContext.events.trigger('SAGA_END', sagaExecution, result.value, actionExecution);
       ruleContext.events.offOnce('REMOVE_RULE', cancel);
-      finCb({ logic: payload === 'CANCELED' || !result.value ? 'CANCELED' : result.value });
+      finCb({ logic: payload === 'CANCELED' || !result.value ? 'CANCELED' : result.value, actionExecution: actionExecution });
     }
   };
 
   var nextFn = function nextFn(target, condition) {
     yieldFn(target, condition, ruleContext, function (result, actionExecution) {
       ruleContext.events.trigger('SAGA_YIELD', sagaExecution, actionExecution, result);
-      iterate(iter, result);
+      iterate(iter, result, actionExecution);
     });
   };
 

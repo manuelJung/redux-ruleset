@@ -4,7 +4,6 @@ import {createRuleContext} from './utils'
 import {startSaga} from './saga'
 import {addRule, removeRule} from './ruleDB'
 import globalEvents from './globalEvents'
-import {getCurrentActionExecId} from './dispatchEvent'
 
 const registeredDict:{[id:string]:t.RuleContext|null} = {}
 
@@ -13,10 +12,10 @@ const startAddWhen = (context:t.RuleContext) => startSaga('addWhen', context, re
     context.rule.addUntil && startAddUntil(context)
     addRule(context)
   }
-  const actionExecId = getCurrentActionExecId()
   const wait = cb => {
     globalEvents.once('END_ACTION_EXECUTION', actionExecution => {
-      if(actionExecId === actionExecution.execId) cb(actionExecution)
+      if(!result.actionExecution) cb()
+      else if(result.actionExecution.execId === actionExecution.execId) cb()
       else wait(cb)
     })
   }
@@ -35,10 +34,10 @@ const startAddWhen = (context:t.RuleContext) => startSaga('addWhen', context, re
 })
 
 const startAddUntil = (context:t.RuleContext) => startSaga('addUntil', context, result => {
-  const actionExecId = getCurrentActionExecId()
   const wait = cb => {
     globalEvents.once('END_ACTION_EXECUTION', actionExecution => {
-      if(actionExecId === actionExecution.execId) cb(actionExecution)
+      if(!result.actionExecution) cb()
+      else if(result.actionExecution.execId === actionExecution.execId) cb()
       else wait(cb)
     })
   }
@@ -107,11 +106,11 @@ export default function registerRule (rule:t.Rule, parentContext?:t.RuleContext,
   registeredDict[rule.id] = ruleContext
 
   // clear public context
-  ruleContext.events.on('SAGA_END', (_,result) => {
-    const actionExecId = getCurrentActionExecId()
+  ruleContext.events.on('SAGA_END', (_,result, sourceActionExecution) => {
     const wait = cb => {
       globalEvents.once('END_ACTION_EXECUTION', actionExecution => {
-        if(actionExecId === actionExecution.execId) cb(actionExecution)
+        if(!sourceActionExecution) cb()
+        else if(sourceActionExecution.execId === actionExecution.execId) cb()
         else wait(cb)
       })
     }

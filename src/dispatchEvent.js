@@ -12,10 +12,6 @@ const cycle = {
   step: 0
 }
 
-export function getCurrentActionExecId () {
-  return execId
-}
-
 export default function dispatchEvent (action:t.Action, cb:Function=()=>null) {
   cycle.step++
 
@@ -34,7 +30,7 @@ export default function dispatchEvent (action:t.Action, cb:Function=()=>null) {
   }
   
   const actionExecution = {
-    execId: ++execId,
+    execId: execId++,
     ruleExecId: getCurrentRuleExecId(),
     canceled: false,
     history: [],
