@@ -62,11 +62,11 @@ function createEventContainer() {
       }
 
       if (once) {
+        onceList[event] = [];
         for (i = 0; i < once.length; i++) {
-          var cb = onceList[event][i];
+          var cb = once[i];
           cb.apply(undefined, (0, _toConsumableArray3.default)(args));
         }
-        onceList[event] = [];
       }
       if (on) {
         for (i = 0; i < on.length; i++) {

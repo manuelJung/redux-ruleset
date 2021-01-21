@@ -35,11 +35,11 @@ export function createEventContainer () {
       const on = onList[event]
 
       if(once){
+        onceList[event] = []
         for(i=0;i<once.length;i++){
-          const cb = onceList[event][i]
+          const cb = once[i]
           cb(...args)
         }
-        onceList[event] = []
       }
       if(on){
         for(i=0;i<on.length;i++){
