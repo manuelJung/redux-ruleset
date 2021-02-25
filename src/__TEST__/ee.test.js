@@ -24,7 +24,7 @@ const initTest = () => {
 describe('basic', () => {
   beforeEach(initTest)
 
-  test.only('dispatch returned action', () => {
+  test('dispatch returned action', () => {
     const rule = index.addRule({
       id: 'UNIT_TEST',
       target: 'PING',
@@ -39,7 +39,7 @@ describe('basic', () => {
     expect(actions[1]).toEqual({type: 'PONG'})
   })
 
-  test.only('dispatch promise wrapped action', async () => {
+  test('dispatch promise wrapped action', async () => {
     const rule = index.addRule({
       id: 'UNIT_TEST',
       target: ['PING'],
@@ -57,12 +57,11 @@ describe('basic', () => {
     expect(actions[1]).toEqual({type: 'PONG'})
   })
 
-  test.only('consequence cb is called when the rule gets removed', () => {
+  test('consequence cb is called when the rule gets removed', () => {
     const callback = jest.fn()
     const rule = index.addRule({
       id: 'UNIT_TEST',
       target: 'START',
-      addOnce: true,
       consequence: jest.fn(() => callback),
       addUntil: function* (next) {
         yield next('END')
@@ -152,9 +151,11 @@ describe('basic', () => {
     index.addRule({
       id: 'PING_PONG',
       target: 'PING',
-      addOnce:true,
+      onExecute:'REMOVE_RULE',
       consequence: () => ({type:'PONG'})
     })
+
+    console.log('test')
 
     store.dispatch({type:'PING'})
     store.dispatch({type:'PING'})
@@ -185,6 +186,74 @@ describe('basic', () => {
     expect(actions[2]).toEqual({type:'PING', meta: {skipRule:['PING_PONG']}})
     expect(actions[3]).toEqual({type:'PING', meta: {skipRule:'G_P'}})
     expect(actions[4]).toEqual(undefined)
+  })
+})
+
+describe('onExecute', () => {
+  beforeEach(initTest)
+  
+  test('REMOVE_RULE prevents further executions', () => {
+    index.addRule({
+      id: 'PING_PONG',
+      target: 'PING',
+      onExecute: 'REMOVE_RULE',
+      consequence: () => ({type:'PONG'})
+    })
+
+    store.dispatch({type: 'PING'})
+    store.dispatch({type: 'PING'})
+    
+    const actions = store.getActions()
+    expect(actions[0]).toEqual({type:'PING'})
+    expect(actions[1]).toEqual({type:'PONG'})
+    expect(actions[2]).toEqual({type:'PING'})
+    expect(actions[3]).toEqual(undefined)
+  })
+
+  test('REMOVE_RULE prevents further async executions', async () => {
+    index.addRule({
+      id: 'PING_PONG',
+      target: 'PING',
+      onExecute: 'REMOVE_RULE',
+      consequence: () => Promise.resolve({type:'PONG'})
+    })
+
+    store.dispatch({type: 'PING'})
+    store.dispatch({type: 'PING'})
+
+    await wait(50)
+    
+    const actions = store.getActions()
+    expect(actions[0]).toEqual({type:'PING'})
+    expect(actions[1]).toEqual({type:'PING'})
+    expect(actions[2]).toEqual({type:'PONG'})
+    expect(actions[3]).toEqual(undefined)
+  })
+
+  test('RECREATE_RULE prevents further async executions while not resolved', async () => {
+    index.addRule({
+      id: 'PING_PONG',
+      target: 'PING',
+      onExecute: 'RECREATE_RULE',
+      consequence: () => Promise.resolve({type:'PONG'})
+    })
+
+    store.dispatch({type: 'PING'})
+    store.dispatch({type: 'PING'})
+
+    await wait(50)
+
+    store.dispatch({type: 'PING'})
+
+    await wait(50)
+    
+    const actions = store.getActions()
+    expect(actions[0]).toEqual({type:'PING'})
+    expect(actions[1]).toEqual({type:'PING'})
+    expect(actions[2]).toEqual({type:'PONG'})
+    expect(actions[3]).toEqual({type:'PING'})
+    expect(actions[4]).toEqual({type:'PONG'})
+    expect(actions[5]).toEqual(undefined)
   })
 })
 
@@ -594,7 +663,7 @@ describe('bugs', () => {
     index.addRule({
       id: 'UNIT_TEST',
       target: 'PING',
-      addOnce: true,
+      onExecute: 'REMOVE_RULE',
       condition: action => action.status === 'resolved',
       consequence: () => ({type:'PONG'})
     })
@@ -644,14 +713,12 @@ describe('bugs', () => {
       id: 'UNIT_TEST_1',
       target: 'PING',
       weight: 1,
-      addOnce: true,
       consequence: () => ({type:'PONG_1'})
     })
     index.addRule({
       id: 'UNIT_TEST_2',
       target: 'PING',
       weight: 2,
-      addOnce: true,
       consequence: () => ({type:'PONG_2'})
     })
 
@@ -666,7 +733,6 @@ describe('bugs', () => {
     index.addRule({
       id: 'RULE_1',
       target: 'PING',
-      addOnce: true,
       weight: 1,
       addWhen: function* (next) {
         yield next('PING')

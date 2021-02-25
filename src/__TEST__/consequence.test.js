@@ -121,8 +121,16 @@ describe('skip rule', () => {
     expect(ruleContext.rule.consequence).not.toBeCalled()
   })
 
-  test('totally ignore when "addOnce" flag is set and the rule already has been executed', () => {
-    ruleContext.rule.addOnce = true
+  test('totally ignore consequence when "onExecute" is REMOVE_RULE and the rule already has been executed', () => {
+    ruleContext.rule.onExecute = 'REMOVE_RULE'
+    ruleContext.concurrency.default = { running: 1 }
+    consequence.default(actionExecution, ruleContext)
+    expect(ruleContext.events.trigger).not.toBeCalled()
+    expect(ruleContext.rule.consequence).not.toBeCalled()
+  })
+
+  test('totally ignore consequence when "onExecute" is RECREATE_RULE and the rule already has been executed', () => {
+    ruleContext.rule.onExecute = 'RECREATE_RULE'
     ruleContext.concurrency.default = { running: 1 }
     consequence.default(actionExecution, ruleContext)
     expect(ruleContext.events.trigger).not.toBeCalled()

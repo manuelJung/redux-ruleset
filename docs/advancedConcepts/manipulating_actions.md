@@ -34,7 +34,7 @@ addRule({
   id: 'develop/UPDATE_MAGAZINE_LIST_HPP',
   target: 'CREATE_MAGAZINE_LIST',
   position: 'INSTEAD',
-  addOnce: true, // remove the rule after first usage
+  onExecute: 'REMOVE_RULE', // remove the rule after first usage
   addWhen: function* (next) {
     const {pathname, search} = window.location
     // abort when not magazine-list-page

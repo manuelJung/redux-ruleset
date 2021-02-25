@@ -138,9 +138,12 @@ export default function registerRule (rule:t.Rule, parentContext?:t.RuleContext,
   globalEvents.trigger('REGISTER_RULE', ruleContext)
 
   //remove addOnce rules
-  if(rule.addOnce){
+  if(rule.addOnce || rule.onExecute === 'REMOVE_RULE' || rule.onExecute === 'RECREATE_RULE'){
     ruleContext.events.on('CONSEQUENCE_END', (_,status) => {
       status === 'RESOLVED' && removeRule(ruleContext)
+      if(rule.onExecute === 'RECREATE_RULE'){
+        registerRule(rule, parentContext, parameters)
+      }
     })
   }
   

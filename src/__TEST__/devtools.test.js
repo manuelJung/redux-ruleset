@@ -77,7 +77,7 @@ describe('bugs', () => {
     index.addRule({
       id: 'UNIT_TEST',
       target: 'FOO',
-      addOnce: true,
+      onExecute: 'REMOVE_RULE',
       addWhen: function* (next) {
         yield next('FOO')
         return 'ADD_RULE_BEFORE'

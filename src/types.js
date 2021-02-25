@@ -60,6 +60,8 @@ export type Rule = {
       effect: (()=>mixed)=>void,
       context: CTX
     }) => Action | Promise<Action> | Promise<void> | void | () => void,
+  onExecute?: 'REMOVE_RULE' | 'RECREATE_RULE',
+  /** @deprecated */
   addOnce?: boolean,
   // $FlowFixMe
   addWhen?: Saga<LogicAdd>,

@@ -18,5 +18,5 @@ A rule is an object with specific keys. Here are all available keys:
 * [debounce](./debounce.md)
 * [throttle](./throttle.md)
 * [weight](./weight.md)
-* [addOnce](./add_once.md)
+* [onExecute](./on_execute.md)
 * [delay](./delay.md)
