@@ -94,7 +94,7 @@ export function activateSubRule (parentContext:t.RuleContext, name:string, param
 export default function registerRule (rule:t.Rule, parentContext?:t.RuleContext, parameters?:Object) {
 
   // check if rule is already registered
-  if(registeredDict[rule.id]){
+  if(registeredDict[rule.id] && !registeredDict[rule.id].dropped){
     dropRule(rule)
     if(process.env.NODE_ENV !== 'production'){
       console.warn(`you added the same rule "${rule.id}" twice. Either this comes from HMR (which can be ignored) or you defined two rules with the same id (which is an error)`)
@@ -168,7 +168,21 @@ export function dropRule (rule:t.Rule) {
   const ruleContext = registeredDict[rule.id]
   if(!ruleContext) return
   removeRule(ruleContext)
-  registeredDict[rule.id] = null
+  registeredDict[rule.id].dropped = true
+}
+
+export function recreateRules (selector:'*'|string|string[]) {
+  let ruleIds:string[] = []
+  if(selector === '*') ruleIds = Object.keys(registeredDict)
+  else if(typeof selector === 'string') ruleIds = [selector]
+  else ruleIds = selector
+
+  for(const id of ruleIds) {
+    const context = registeredDict[id]
+    if(!context) continue
+    if(!context.dropped) dropRule(context.rule)
+    if(!context.parentContext) registerRule(context.rule)
+  }
 }
 
 export const testing = {startAddWhen, startAddUntil, registeredDict}

@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.middleware = exports.skipRule = exports.removeRule = exports.addRule = exports.dispatchEvent = undefined;
+exports.middleware = exports.skipRule = exports.recreateRules = exports.removeRule = exports.addRule = exports.dispatchEvent = undefined;
 
 var _toConsumableArray2 = require('babel-runtime/helpers/toConsumableArray');
 
@@ -56,6 +56,11 @@ var addRule = exports.addRule = function addRule(rule) {
 
 var removeRule = exports.removeRule = function removeRule(rule) {
   return (0, _registerRule.dropRule)(rule);
+};
+
+var recreateRules = exports.recreateRules = function recreateRules() {
+  var ruleId = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '*';
+  return (0, _registerRule.recreateRules)(ruleId);
 };
 
 var skipRule = exports.skipRule = function skipRule(ruleId, action) {

@@ -48,7 +48,7 @@ var addRule = exports.addRule = function addRule(context) {
 };
 
 var removeRule = exports.removeRule = function removeRule(context) {
-  if (context.active === false) return;
+  //if(context.active === false) return
 
   // remove child rules
   for (var i = 0; i < context.subRuleContexts.length; i++) {

@@ -61,6 +61,7 @@ export function createRuleContext (rule:t.Rule):t.RuleContext {
   return {
     rule: rule,
     active: false,
+    dropped: false,
     runningSaga: null,
     events: createEventContainer(),
     parentContext: null,

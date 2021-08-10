@@ -72,6 +72,7 @@ export type Rule = {
 export type RuleContext = {
   rule: Rule,
   active: boolean,
+  dropped: boolean,
   runningSaga: null | SagaExecution,
   parentContext: null | RuleContext,
   subRuleContextCounter: number,

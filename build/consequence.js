@@ -52,11 +52,11 @@ function consequence(actionExecution, ruleContext) {
   }
   var concurrency = ruleContext.concurrency[concurrencyId];
 
-  // addOnce rules may not be removed when they return a promise
+  // rules that terminate afterr execution should not be removed when they return a promise
   // so we totally ignore all futher consequence executions until the rule is removed
   if (concurrency.running) {
     // TODO: what happens when position === INSTEAD. will actionExecution be canceled?
-    if (rule.addOnce) return { resolved: false };
+    if (rule.addOnce || rule.onExecute === 'REMOVE_RULE' || rule.onExecute === 'RECREATE_RULE') return { resolved: false };
   }
 
   // setup ruleExecution

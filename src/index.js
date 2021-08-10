@@ -2,7 +2,7 @@
 import * as t from './types'
 import reduxPlugin, {middleware as _middleware} from './reduxPlugin'
 import setup from './setup'
-import registerRule, {dropRule} from './registerRule'
+import registerRule, {dropRule, recreateRules as _recreateRules} from './registerRule'
 import * as ruleDB from './ruleDB'
 import './devtools'
 
@@ -12,6 +12,10 @@ export {default as dispatchEvent} from './dispatchEvent'
 export const addRule = (rule:t.Rule) => registerRule(rule)
 
 export const removeRule = (rule:t.Rule) => dropRule(rule)
+
+export const recreateRules = (ruleId:'*'|string|string[]='*') => _recreateRules(ruleId)
+
+
 
 
 

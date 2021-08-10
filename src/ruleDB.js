@@ -39,7 +39,7 @@ export const addRule = (context:t.RuleContext) => {
 }
 
 export const removeRule = (context:t.RuleContext) => {
-  if(context.active === false) return
+  //if(context.active === false) return
   
   // remove child rules
   for(let i=0;i<context.subRuleContexts.length;i++){

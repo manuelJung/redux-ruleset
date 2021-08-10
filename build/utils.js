@@ -88,6 +88,7 @@ function createRuleContext(rule) {
   return {
     rule: rule,
     active: false,
+    dropped: false,
     runningSaga: null,
     events: createEventContainer(),
     parentContext: null,

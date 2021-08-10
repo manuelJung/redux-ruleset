@@ -155,8 +155,6 @@ describe('basic', () => {
       consequence: () => ({type:'PONG'})
     })
 
-    console.log('test')
-
     store.dispatch({type:'PING'})
     store.dispatch({type:'PING'})
 
