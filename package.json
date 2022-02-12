@@ -9,8 +9,8 @@
     "data-flow"
   ],
   "main": "build/index.js",
-  "dependencies": {},
   "devDependencies": {
+    "@types/node": "^17.0.17",
     "babel-core": "^6.26.3",
     "babel-jest": "^25.0.0",
     "babel-plugin-transform-runtime": "^6.23.0",
@@ -22,7 +22,8 @@
     "redux": "^4.0.1",
     "redux-mock-store": "^1.5.3",
     "regenerator-runtime": "^0.13.1",
-    "rewire": "^4.0.1"
+    "rewire": "^4.0.1",
+    "typescript": "^4.5.5"
   },
   "scripts": {
     "test": "jest --watch",
