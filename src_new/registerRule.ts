@@ -177,6 +177,20 @@ export default function createRegisterRuleFn (api:Api) {
     return rule
   }
 
-  return {registerRule, dropRule, activateSubRule}
+  function recreateRules (selector:'*'|string|string[]) {
+    let ruleIds:string[] = []
+    if(selector === '*') ruleIds = Object.keys(registeredDict)
+    else if(typeof selector === 'string') ruleIds = [selector]
+    else ruleIds = selector
+  
+    for(const id of ruleIds) {
+      const context = registeredDict[id]
+      if(!context) continue
+      if(!context.dropped) dropRule(context.rule)
+      if(!context.parentContext) registerRule(context.rule)
+    }
+  }
+
+  return {registerRule, dropRule, activateSubRule, recreateRules}
 }
 
