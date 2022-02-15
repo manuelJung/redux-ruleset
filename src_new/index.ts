@@ -5,11 +5,13 @@ import createRegisterRuleFn from './registerRule'
 import createDispatchEvent from './dispatchEvent'
 import createConsequenceFn from './consequence'
 import * as t from './types'
+import createDevtools from './devtools'
 
 export default function createMiddleware<Action extends {type:string}>() {
   let setup = false
-  const ruleDB = createRuleDB()
   const globalEvents = createEventContainer()
+  createDevtools({globalEvents})
+  const ruleDB = createRuleDB()
   let sagaContainer:ReturnType<typeof createSagaContainer>;
   let registerRuleFn:ReturnType<typeof createRegisterRuleFn>;
   let dispatchEvent:ReturnType<typeof createDispatchEvent>;
