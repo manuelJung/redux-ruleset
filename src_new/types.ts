@@ -50,9 +50,9 @@ export type Rule<AT,OUT> = {
     }
   ) => boolean,
   consequence: any,
-  addWhen: any,
-  addUntil: any,
-  subRules: any
+  addWhen?: any,
+  addUntil?: any,
+  subRules?: any
 }
 
 export type RuleContext = {
