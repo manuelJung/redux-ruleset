@@ -52,7 +52,7 @@ export default function createMiddleware<Action extends {type:string}>() {
     removeRule(rule:t.Rule<any,any>) {
       registerRuleFn.dropRule(rule)
     },
-    recreateRules:registerRuleFn.recreateRules,
+    recreateRules: (selector: string | string[]) => registerRuleFn.recreateRules(selector),
     skipRule(ruleId:'*'|string|string[], action:t.Action) {
       if(action.meta && typeof action.meta !== 'object') throw new Error('Expect action.meta be be an action')
       let newAction:t.Action = {type:'-'}

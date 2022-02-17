@@ -200,7 +200,7 @@ export default function createConsequenceFn (api:Api) {
 
     // dispatch returned action
     else if(typeof result === 'object' && result !== null && result.type){
-      effect(() => api.store.dispatch(action))
+      effect(() => api.store.dispatch(result))
       unlisten()
     }
 
@@ -210,7 +210,7 @@ export default function createConsequenceFn (api:Api) {
       result.then((action:t.Action) => {
         // if(rule.concurrency === 'ORDERED') effect(() => unlisten(context, execId, cancel, concurrency))
         // else unlisten(context, execId, cancel, concurrency)
-        action && action.type && effect(() => api.store.dispatch(action))
+        action && action.type && effect(() => api.store.dispatch(result))
         unlisten()
       })
     }
