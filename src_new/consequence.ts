@@ -210,7 +210,7 @@ export default function createConsequenceFn (api:Api) {
       result.then((action:t.Action) => {
         // if(rule.concurrency === 'ORDERED') effect(() => unlisten(context, execId, cancel, concurrency))
         // else unlisten(context, execId, cancel, concurrency)
-        action && action.type && effect(() => api.store.dispatch(result))
+        action && action.type && effect(() => api.store.dispatch(action))
         unlisten()
       })
     }
