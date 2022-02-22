@@ -1,29 +1,8 @@
-import configureStore from 'redux-mock-store'
-import createRuleset from '../index'
-
-
-const wait = ms => new Promise(resolve => setTimeout(() => resolve(null), ms))
-
-const createStore = () => {
-  jest.resetModules()
-  const ruleset = createRuleset()
-  const mockStore = configureStore([ruleset.middleware])
-  const defaultState = {
-    todos: {
-      filter: 'all',
-      data: [{id:'one'}, {id:'two'}]
-    }
-  }
-  const store = mockStore(defaultState)
-  return {
-    store,
-    ruleset
-  }
-}
+import * as utils from './utils'
 
 describe('basic', () => {
   test('dispatch returned action', () => {
-    const {ruleset, store} = createStore()
+    const {ruleset, store} = utils.createStore()
     const rule = ruleset.addRule({
       id: 'UNIT_TEST',
       target: 'PING',
@@ -39,7 +18,7 @@ describe('basic', () => {
   })
 
   test('dispatch promise wrapped action', async () => {
-    const {ruleset, store} = createStore()
+    const {ruleset, store} = utils.createStore()
     const rule = ruleset.addRule({
       id: 'UNIT_TEST',
       target: ['PING'],
@@ -48,7 +27,7 @@ describe('basic', () => {
 
     store.dispatch({type:'PING'})
 
-    await wait(1)
+    await utils.wait(1)
 
     expect(rule.consequence).toBeCalled()
 
@@ -58,7 +37,7 @@ describe('basic', () => {
   })
 
   test('consequence cb is called when the rule gets removed', () => {
-    const {ruleset, store} = createStore()
+    const {ruleset, store} = utils.createStore()
     const callback = jest.fn()
     const rule = ruleset.addRule({
       id: 'UNIT_TEST',
@@ -79,7 +58,7 @@ describe('basic', () => {
   })
 
   test('actions can be manipulated', () => {
-    const {ruleset, store} = createStore()
+    const {ruleset, store} = utils.createStore()
     ruleset.addRule({
       id: 'UNIT_TEST',
       target: 'TEST_TYPE',
@@ -93,7 +72,7 @@ describe('basic', () => {
   })
 
   test('actions can be canceled', () => {
-    const {ruleset, store} = createStore()
+    const {ruleset, store} = utils.createStore()
     ruleset.addRule({
       id: 'UNIT_TEST',
       target: 'TWO',
@@ -112,7 +91,7 @@ describe('basic', () => {
   })
 
   test('sagas manage active state', () => {
-    const {ruleset, store} = createStore()
+    const {ruleset, store} = utils.createStore()
     ruleset.addRule({
       id: 'PING_PONG',
       target: 'PING',
@@ -143,7 +122,7 @@ describe('basic', () => {
   })
 
   test('throw error on endless loops', () => {
-    const {ruleset, store} = createStore()
+    const {ruleset, store} = utils.createStore()
     ruleset.addRule({
       id:'UNIT_TEST',
       target:'TEST_TYPE',
@@ -155,7 +134,7 @@ describe('basic', () => {
   })
 
   test('addOnce rules are only executed once', () => {
-    const {ruleset, store} = createStore()
+    const {ruleset, store} = utils.createStore()
     ruleset.addRule({
       id: 'PING_PONG',
       target: 'PING',
@@ -174,7 +153,7 @@ describe('basic', () => {
   })
 
   test('skip rule', () => {
-    const {ruleset, store} = createStore()
+    const {ruleset, store} = utils.createStore()
     ruleset.addRule({
       id: 'PING_PONG',
       target: 'PING',

@@ -152,8 +152,9 @@ export default function createRegisterRuleFn (api:Api) {
     api.globalEvents.trigger('REGISTER_RULE', ruleContext)
 
     //remove addOnce rules
-    if(rule.addOnce || rule.onExecute === 'REMOVE_RULE' || rule.onExecute === 'RECREATE_RULE'){
+    if(rule.onExecute === 'REMOVE_RULE' || rule.onExecute === 'RECREATE_RULE'){
       ruleContext.events.on('CONSEQUENCE_END', (_,status) => {
+        registeredDict[rule.id].dropped = true
         status === 'RESOLVED' && api.removeRule(ruleContext)
         if(rule.onExecute === 'RECREATE_RULE'){
           registerRule(rule, parentContext, parameters)
