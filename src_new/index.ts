@@ -7,7 +7,7 @@ import createConsequenceFn from './consequence'
 import * as t from './types'
 import createDevtools from './devtools'
 
-export default function createMiddleware<Action extends {type:string}>() {
+export default function createMiddleware<Action extends {type:string}, RootState=any>() {
   let setup = false
   const globalEvents = createEventContainer()
   createDevtools({globalEvents})
@@ -46,10 +46,13 @@ export default function createMiddleware<Action extends {type:string}>() {
 
   return {
     middleware,
-    addRule(rule:t.Rule<any,any>) {
+    addRule: <
+      AT extends t.AT<Action>,
+      OUT extends t.AT<Action>
+    >(rule:t.Rule<AT,OUT,RootState,Action>) => {
       return registerRuleFn.registerRule(rule)
     },
-    removeRule(rule:t.Rule<any,any>) {
+    removeRule(rule:t.Rule<any,any,any,any>) {
       registerRuleFn.dropRule(rule)
     },
     recreateRules: (selector: string | string[]) => registerRuleFn.recreateRules(selector),

@@ -28,7 +28,18 @@ export type AddRule = (name:string, args:Object) => void
 export type RemoveRule = (name:string) => void
 export type Target = '*' | string | string[]
 
-export type Rule<AT,OUT> = {
+type Saga<R,RootState,Action> = (
+  next: <ATs extends AT<Action>>(
+    action: '*' | ATs | ATs[],
+    cb?: (action: A<ATs,Action>) => any
+  ) => IteratorResult<any>,
+  opt: {
+    context: any
+    getState: () => RootState
+  }
+) => Generator<any, R, any>
+
+export type Rule<AT,OUT,RootState,Action> = {
   id: string
   target: '*' | AT | AT[]
   output?: OUT | OUT[]
@@ -40,23 +51,33 @@ export type Rule<AT,OUT> = {
   delay?: number,
   concurrencyFilter?: (action:Action) => string,
   onExecute?: 'REMOVE_RULE' | 'RECREATE_RULE',
-  /** @deprecated */
+  /** @deprecated use onExecute='REMOVE_RULE' instead */
   addOnce?: boolean,
   condition?: (
-    action: Action,
+    action: A<AT,Action>,
     opt: {
-      getState: () => any
+      getState: () => RootState
       context: CTX
     }
   ) => boolean,
-  consequence: any,
-  addWhen?: any,
-  addUntil?: any,
-  subRules?: any
+  consequence: (
+    action: A<AT,Action>,
+    opt: {
+      getState: () => RootState
+      dispatch: (action: A<OUT,Action>) => void
+      context: CTX
+      addRule: (name: string, ctx: Record<string,any>) => void
+      removeRule: (name: string) => void
+      effect: (cb: () => void) => void
+    }
+  ) => void | A<OUT,Action> | Promise<A<OUT,Action>> | null | Promise<void> | Promise<null>,
+  addWhen?: Saga<'ADD_RULE' | 'ADD_RULE_BEFORE' | 'ABORT' | 'REAPPLY_ADD_WHEN', RootState, Action>,
+  addUntil?: Saga<'REMOVE_RULE' | 'REMOVE_RULE_BEFORE' | 'RECREATE_RULE' | 'RECREATE_RULE_BEFORE', RootState, Action>,
+  subRules?: Record<string, Omit<Rule<AT,OUT,RootState,Action>, 'id'>>
 }
 
 export type RuleContext = {
-  rule: Rule<any,any>,
+  rule: Rule<any,any,any,any>,
   active: boolean,
   dropped: boolean,
   runningSaga: null | SagaExecution,
@@ -98,3 +119,8 @@ export type SagaExecution = {
   execId: number,
   sagaType: 'addWhen' | 'addUntil'
 }
+
+// utils
+
+export type AT<Action> = Action extends { type: infer T } ? T : never
+export type A<AT,Action> = Extract<Action, { type: AT }>
